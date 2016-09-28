@@ -1,12 +1,12 @@
 /*
  * profiles.cpp
  *
- *  Created on: 18 Sep 2016
- *      Author: podonoghue
+ * The following profiles are from:
+ *
+ * https://github.com/UnifiedEngineering/T-962-improvements
+ *
  */
-
 #include "profiles.h"
-
 // Amtech 4300 63Sn/37Pb leaded profile
 const SolderProfile am4300profile = {
    "4300 63SN/37PB", {
