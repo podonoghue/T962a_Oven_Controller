@@ -15,9 +15,9 @@
  *
  * The switching waveform will be synchronised to the mains zero crossing
  *
- * @tparam OvenFan    Output controlling the oven fan SSD
- * @tparam Heater     Output controlling the oven heater SSD
- * @tparam FtmChannel Comparator used for mains sensing
+ * @tparam OvenFan    USBDM::Gpio controlling the oven fan SSD
+ * @tparam Heater     USBDM::Gpio controlling the oven heater SSD
+ * @tparam FtmChannel USBDM::Cmp used for mains sensing
  */
 template<typename Heater, typename Fan, typename Vmains>
 class ZeroCrossingPwm {
@@ -26,13 +26,12 @@ private:
    static int  heaterDutycycle;
    static int  fanDutycycle;
    static int  fanKick;
-   USBDM::Nonvolatile<int> &fanKickTime;
 
    /**
     * Number of mains half-cycles to run the fan before switching to PWM mode
     * This is to overcome the static friction of the fan on low duty-cycle
     */
-//   static constexpr int FAN_KICK_TIME = 20; // ~ 200 ms @50Hz
+   USBDM::Nonvolatile<int> &fanKickTime;
 
    /*
     * Function is called on zero-crossings of the mains
@@ -59,23 +58,32 @@ private:
       heaterDutycount -= 100*wholePart;
       Heater::write(wholePart>0);
 
-      if (fanKick-->0) {
+      if (fanKick>0) {
+         // Still kicking
+         fanKick--;
          Fan::set();
       }
       else {
+         // PWM
          fanDutycount += fanDutycycle;
          wholePart = fanDutycount/100;
          fanDutycount -= 100*wholePart;
          Fan::write(wholePart>0);
       }
 #endif
-
    }
 
 public:
+   /**
+    * Create Zero-crossing PWM
+    *
+    * @param fanKickTime Non-volatile variable used to control the fan kick time applied when starting
+    */
    ZeroCrossingPwm(USBDM::Nonvolatile<int> &fanKickTime) : fanKickTime(fanKickTime) {
+      initialise();
    }
 
+private:
    static void initialise() {
       heaterDutycycle = 0;
       fanDutycycle    = 0;
@@ -96,6 +104,7 @@ public:
       Vmains::selectInputs(1,7);
    }
 
+public:
    /**
     * Set duty cycle of fan
     *
