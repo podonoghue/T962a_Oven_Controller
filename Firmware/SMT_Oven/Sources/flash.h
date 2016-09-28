@@ -8,7 +8,7 @@
 #ifndef SOURCES_FLASH_H_
 #define SOURCES_FLASH_H_
 
-//#include <stdio.h>
+#include <assert.h>
 #include "derivative.h"
 #include "delay.h"
 
@@ -40,11 +40,14 @@ protected:
 
    /**
     * Constructor\n
-    * Typically this method would be overriden in a derived class
+    * Typically this method would be overridden in a derived class
     * to do the initialisation of the flash and non-volatile variables.
     * Alternatively, the startup code may call the static methods directly.
     */
    Flash() {
+      static int singletonFlag = false;
+      assert (!singletonFlag);
+      singletonFlag = true;
    }
 
    /** Selects EEPROM size */
@@ -58,7 +61,7 @@ protected:
       eeprom2KBytes,
    };
 
-//#define KINETIS_32K_FLEXRAM
+   //#define KINETIS_32K_FLEXRAM
 #define KINETIS_64K_FLEXRAM
 
 #if defined(KINETIS_32K_FLEXRAM)
@@ -157,23 +160,23 @@ public:
 
       return waitForFlashReady() && (FTFL->FCNFG&FTFL_FCNFG_EEERDY_MASK);
 
-   //   printf("FTFL->FCNFG = 0x%02X\n", FTFL->FCNFG);
-   //   printf("FTFL->FCNFG.FTFL_FCNFG_RAMRDY = %s\n", FTFL->FCNFG&FTFL_FCNFG_RAMRDY_MASK?"true":"false");
-   //   printf("FTFL->FCNFG.FTFL_FCNFG_EEERDY = %s\n", FTFL->FCNFG&FTFL_FCNFG_EEERDY_MASK?"true":"false");
+      //   printf("FTFL->FCNFG = 0x%02X\n", FTFL->FCNFG);
+      //   printf("FTFL->FCNFG.FTFL_FCNFG_RAMRDY = %s\n", FTFL->FCNFG&FTFL_FCNFG_RAMRDY_MASK?"true":"false");
+      //   printf("FTFL->FCNFG.FTFL_FCNFG_EEERDY = %s\n", FTFL->FCNFG&FTFL_FCNFG_EEERDY_MASK?"true":"false");
 
-   //   uint8_t result[4];
-   //   FlashDriverError_t rc = readFlashResource(0, DATA_ADDRESS_FLAG|0xFC, result);
-   //   if (rc != 0) {
-   ////      printf("IFR read failed, rc=%d\n", rc);
-   //      return false;
-   //   }
-   //   uint8_t flexNvmPartitionSize = result[0];
-   //   uint8_t eepromDatSetSize     = result[1];
+      //   uint8_t result[4];
+      //   FlashDriverError_t rc = readFlashResource(0, DATA_ADDRESS_FLAG|0xFC, result);
+      //   if (rc != 0) {
+      ////      printf("IFR read failed, rc=%d\n", rc);
+      //      return false;
+      //   }
+      //   uint8_t flexNvmPartitionSize = result[0];
+      //   uint8_t eepromDatSetSize     = result[1];
 
-   //   printf("FlexNVM partition code = 0x%02X\n", flexNvmPartitionSize);
-   //   printf("EEPROM data set size   = 0x%02X\n", eepromDatSetSize);
+      //   printf("FlexNVM partition code = 0x%02X\n", flexNvmPartitionSize);
+      //   printf("EEPROM data set size   = 0x%02X\n", eepromDatSetSize);
 
-//      return (FTFL->FCNFG&FTFL_FCNFG_EEERDY_MASK);
+      //      return (FTFL->FCNFG&FTFL_FCNFG_EEERDY_MASK);
    }
 
    /**
