@@ -8,19 +8,20 @@
 #ifndef SOURCES_CONFIGURE_H_
 #define SOURCES_CONFIGURE_H_
 
+#include <string.h>
+
 #include "derivative.h"
 #include "hardware.h"
+#include "cmp.h"
 #include "delay.h"
 #include "spi.h"
-#include "fonts.h"
-#include "string.h"
-#include "profiles.h"
-#include "pid.h"
-#include "cmp.h"
-#include "zerocrossing_pwm.h"
-#include "switch_debouncer.h"
 #include "lcd_st7920.h"
 #include "max31855.h"
+#include "fonts.h"
+#include "pid.h"
+#include "profiles.h"
+#include "zerocrossing_pwm.h"
+#include "switch_debouncer.h"
 #include "settings.h"
 
 // Function buttons
@@ -69,6 +70,22 @@ constexpr int profile_pit_channel = 2;
 // PWM for heater & oven fan
 extern ZeroCrossingPwm <Heater, OvenFan, Vmains> ovenControl;
 
-using Buttons = SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Button, SButton>;
+// Switch debouncer for front panel buttons
+extern SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Button, SButton> buttons;
+
+/** PID controller sample interval */
+constexpr float pidInterval = 1000 * USBDM::ms;
+
+/**
+ * PID controller
+ */
+extern float getTemperature();
+extern void setHeater(float dutyCycle);
+extern Pid_T<getTemperature, setHeater, pid_pit_channel> pid;
+
+#include "runProfile.h"
+
+/** Runs a SMT profile */
+extern RunProfile<profile_pit_channel> runProfile;
 
 #endif /* SOURCES_CONFIGURE_H_ */

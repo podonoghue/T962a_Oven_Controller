@@ -76,7 +76,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Sources/lcdTest.cpp|Sources/settingsMenu.cpp|Snippets" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Sources/i2c.cpp|Sources/lcdTest.cpp|Sources/settingsMenu.cpp|Snippets" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -157,7 +157,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Sources/lcdTest.cpp|Sources/settingsMenu.cpp|Snippets" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Sources/i2c.cpp|Sources/lcdTest.cpp|Sources/settingsMenu.cpp|Snippets" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

@@ -19,91 +19,18 @@
 #include "pid.h"
 #include "settings.h"
 
-float getTemperature() {
-   int foundSensorCount = 0;
-   float value = 0;
-   for (int overSample=0; overSample<4; overSample++) {
-      for (int t=0; t<=3; t++) {
-         float temperature, coldReference;
-         int status = temperatureSensors[t].getReading(temperature, coldReference);
-         if (status == 0) {
-            foundSensorCount++;
-            value += temperature;
-         }
-      }
-   }
-   if (foundSensorCount==0) {
-      // Safe value to return!
-      return 10000.0;
-   }
-   return value/foundSensorCount;
-}
-
-void setHeater(float dutyCycle) {
-   ovenControl.setHeaterDutycycle(dutyCycle);
-}
-
-static constexpr float pidInterval = 1000 * USBDM::ms;
-static constexpr float kp          = 4.0f;
-static constexpr float ki          = 0.0f;
-static constexpr float kd          = 0.0f;
-
-// PID controller
-static PID_T<getTemperature, setHeater, pid_pit_channel> pid(kp, ki, kd, pidInterval, 0, 100);
-
-static void thermocoupleStatus() {
-   lcd.clearFrameBuffer();
-   lcd.setInversion(false);
-   lcd.putSpace(14); lcd.putString("Status Oven  ColdJn\n");
-   lcd.drawHorizontalLine(9);
-   lcd.gotoXY(0, 12);
-   for (int t=0; t<=3; t++) {
-      float temperature, coldReference;
-      int status = temperatureSensors[t].getReading(temperature, coldReference);
-      //      temperature = 273.45;
-      //      coldReference = 123.45;
-
-      lcd.printf("T%d:", t+1); lcd.putSpace(2);
-      if (status == 0) {
-         lcd.printf("OK   %5.1f\x7F %5.1f\x7F\n", temperature, coldReference);
-      }
-      else if (status != 7) {
-         lcd.printf("%-4s  ----  %5.1f\x7F\n", Max31855::getStatusName(status), coldReference);
-      }
-      else {
-         lcd.printf("%-4s\n", Max31855::getStatusName(status));
-      }
-   }
-   if (pid.isEnabled()) {
-      lcd.printf("%3ds S=%d T=%0.1f\x7F \n", pid.getTicks(), (int)round(pid.getSetpoint()), pid.getInput());
-   }
-}
-
-void thermocoupleCheck() {
-   do {
-      thermocoupleStatus();
-      lcd.gotoXY(0, lcd.LCD_HEIGHT-8);
-      lcd.setInversion(false); lcd.putSpace(94);
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Exit"); lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(3);
-
-      lcd.refreshImage();
-      lcd.setGraphicMode();
-      __WFI();
-   } while (Buttons::getButton() != SW_S);
-}
-
-void logProgress() {
-   lcd.clearFrameBuffer();
-   lcd.putString(" Oven Status\n");
-   lcd.drawHorizontalLine(9);
-   lcd.gotoXY(0, 12);
-
-   unsigned ticks = pid.getTicks();
-   int temperature = (int)pid.getInput();
-   lcd.printf("Time        = %d\nTemperature = %d\n", (int)(ticks*pidInterval), temperature);
-   lcd.refreshImage();
-   lcd.setGraphicMode();
-}
+//void logProgress() {
+//   lcd.clearFrameBuffer();
+//   lcd.putString(" Oven Status\n");
+//   lcd.drawHorizontalLine(lcd.FONT_HEIGHT+1);
+//   lcd.gotoXY(0, lcd.FONT_HEIGHT+4);
+//
+//   unsigned ticks = pid.getTicks();
+//   int temperature = (int)pid.getInput();
+//   lcd.printf("Time        = %d\nTemperature = %d\n", (int)(ticks*pidInterval), temperature);
+//   lcd.refreshImage();
+//   lcd.setGraphicMode();
+//}
 
 void manualMode() {
    pid.setSetpoint(100);
@@ -111,9 +38,8 @@ void manualMode() {
    for(;;) {
       lcd.clearFrameBuffer();
 
-      lcd.setInversion(true); lcd.putString("Manual Mode"); lcd.setInversion(false);
+      lcd.setInversion(true); lcd.putString("Manual Mode\n"); lcd.setInversion(false);
 
-      lcd.gotoXY(0, 1*8);
       lcd.printf("On Time   = %4ds\n", pid.getTicks());
 
       lcd.printf("Set Temp  = %4d\x7F\n", (int)round(pid.getSetpoint()));
@@ -132,7 +58,7 @@ void manualMode() {
          lcd.printf("Fan    = Slow (%d%%) \n", ovenControl.getFanDutycycle());
       }
 
-      lcd.gotoXY(0, lcd.LCD_HEIGHT-8);
+      lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
       lcd.putSpace(4);
       lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Fan");  lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(3);
       lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Heat"); lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(3);
@@ -143,7 +69,7 @@ void manualMode() {
       lcd.refreshImage();
       lcd.setGraphicMode();
 
-      switch (Buttons::getButton()) {
+      switch (buttons.getButton()) {
       case SW_F1:
          // Fan toggle
          if (ovenControl.getFanDutycycle()>0) {
@@ -253,9 +179,9 @@ private:
       lcd.gotoXY(xMenuOffset, yMenuOffset);
       lcd.setInversion(true);
       lcd.putString("F1"); lcd.putRightArrow(); lcd.putSpace(2);
-      lcd.gotoXY(xMenuOffset, yMenuOffset+8*1);
+      lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*1);
       lcd.putString("F2"); lcd.putLeftArrow(); lcd.putSpace(2);
-      lcd.gotoXY(xMenuOffset, yMenuOffset+8*2);
+      lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*2);
       lcd.putString("S "); lcd.putEnter(); lcd.putSpace(2);
       lcd.setInversion(false);
 
@@ -290,7 +216,7 @@ public:
             lcd.setGraphicMode();
             needUpdate = false;
          }
-         switch(Buttons::getButton()) {
+         switch(buttons.getButton()) {
          case SW_F1:
             if (profileIndex>0) {
                profileIndex--;
@@ -317,69 +243,19 @@ public:
 
 };
 
-template<int timerChannel>
-class RunProfile {
+void thermocoupleCheck() {
+   do {
+      runProfile.thermocoupleStatus();
+      lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+      lcd.setInversion(false); lcd.putSpace(94);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Exit"); lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(3);
 
-private:
-   static volatile unsigned  time;
-   static volatile bool abort;
+      lcd.refreshImage();
+      lcd.setGraphicMode();
+      __WFI();
+   } while (buttons.getButton() != SW_S);
+}
 
-   static void handler() {
-      time++;
-      pid.setSetpoint(profiles[profileIndex].profile[time]);
-   };
-
-public:
-   void run() {
-
-      time = 0;
-      abort = false;
-
-
-      pid.setSetpoint(profiles[profileIndex].profile[0]);
-      pid.enable();
-
-      // Using PIT
-      USBDM::Pit::enable();
-      USBDM::Pit::setCallback(timerChannel, handler);
-
-      USBDM::Pit::setPeriod(timerChannel, 10000*USBDM::ms);
-      USBDM::Pit::enableChannel(timerChannel);
-      USBDM::Pit::enableInterrupts(timerChannel);
-
-      ovenControl.setFanDutycycle(minimumFanSpeed);
-      do {
-         thermocoupleStatus();
-         lcd.gotoXY(0, lcd.LCD_HEIGHT-8);
-         lcd.setInversion(false); lcd.putSpace(80);
-         lcd.setInversion(true); lcd.putString(" Abort "); lcd.setInversion(false); lcd.putSpace(3);
-         lcd.refreshImage();
-         lcd.setGraphicMode();
-         __WFI();
-
-         if (time >= 10) { //(sizeof(profiles[0].profile)/sizeof(profiles[0].profile[0]))) {
-            break;
-         }
-      } while (Buttons::getButton() != SW_S);
-
-      ovenControl.setHeaterDutycycle(0);
-      if (abort) {
-         ovenControl.setFanDutycycle(100);
-      }
-      else {
-         ovenControl.setFanDutycycle(0);
-      }
-      pid.setSetpoint(0);
-      pid.enable(false);
-      USBDM::Pit::enableChannel(timerChannel, false);
-      USBDM::Pit::enableInterrupts(timerChannel, false);
-   }
-};
-
-template<int channel> volatile unsigned RunProfile<channel>::time;
-template<int channel> volatile bool RunProfile<channel>::abort;
-
-RunProfile<profile_pit_channel> runProfile;
 
 class MainMenu {
 
@@ -399,13 +275,13 @@ private:
       lcd.setInversion(true); lcd.putString("Main Menu"); lcd.setInversion(false);
       for (uint item=0; item<(sizeof(menu)/sizeof(menu[0])); item++) {
          lcd.setInversion(item == selection);
-         lcd.gotoXY(0, (item+1)*8);
+         lcd.gotoXY(0, (item+1)*lcd.FONT_HEIGHT);
          lcd.putString(menu[item]);
       }
       lcd.setInversion(false);
-      lcd.gotoXY(0, 6*8);
+      lcd.gotoXY(0, lcd.LCD_HEIGHT-2*lcd.FONT_HEIGHT);
       lcd.putString(profiles[profileIndex].description);
-      lcd.gotoXY(0, lcd.LCD_HEIGHT-8);
+      lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
       lcd.setInversion(false); lcd.putSpace(4);
       lcd.setInversion(true);  lcd.putString(" ");     lcd.putUpArrow();   lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(3);
       lcd.setInversion(true);  lcd.putString(" ");     lcd.putDownArrow(); lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(3);
@@ -425,7 +301,7 @@ public:
             drawScreen();
             changed = false;
          }
-         switch(Buttons::getButton()) {
+         switch(buttons.getButton()) {
          case SW_F1:
             if (selection>0) {
                selection--;
@@ -484,12 +360,6 @@ void initialise() {
    CaseFan::setDutyCycle(0);
    Spare::enable();
    Spare::setDutyCycle(0);
-
-   ovenControl.initialise();
-   ovenControl.setFanDutycycle(0);
-   ovenControl.setHeaterDutycycle(0);
-
-   Buttons::initialise();
 }
 
 int main() {
