@@ -1,0 +1,32 @@
+Field=Comment~String~Comment~100|Field=Description~String~Description~100|Field=Designator~String~Designator~100|Field=Footprint~String~Footprint~100|Field=LibRef~String~LibRef~100|Field=Quantity~Integer~Quantity~100|Field=Farnell PN~String~Farnell PN~100|Field=Digikey~String~Digikey~100|ReportField=Currency~<none>|ReportField=ProductionQuantity~1|ReportField=ProjectFileName~T962a.PrjPCB|ReportField=ProjectFullPath~C:\Users\podonoghue\Documents\Development\PCB\T962a\T962a.PrjPCB|ReportField=Title~Bill of Materials For Project [T962a.PrjPCB] (No PCB Document Selected)|ReportField=TotalQuantity~52|ReportField=ReportTime~2:55:08 PM|ReportField=ReportDate~20/09/2016|ReportField=ReportDateTime~20/09/2016 2:55:08 PM|ReportField=OutputName~Bill of Materials|ReportField=OutputType~BOM_PartType|ReportField=GeneratorName~BOM|ReportField=GeneratorDescription~Bill of Materials|ReportField=VariantName~None|ReportField=Address1~|ReportField=Address2~|ReportField=Address3~|ReportField=Address4~|ReportField=Application_BuildNumber~|ReportField=ApprovedBy~|ReportField=Author~|ReportField=CheckedBy~|ReportField=CompanyName~|ReportField=CurrentDate~|ReportField=CurrentTime~|ReportField=Date~|ReportField=DocumentFullPathAndName~|ReportField=DocumentName~|ReportField=DocumentNumber~|ReportField=DrawnBy~|ReportField=Engineer~|ReportField=ImagePath~|ReportField=ModifiedDate~|ReportField=Organization~|ReportField=ProjectName~T-962a Oven Controller|ReportField=Revision~V1.0|ReportField=Rule~|ReportField=SheetNumber~|ReportField=SheetTotal~|ReportField=Time~|ReportField=Title~T-962a Oven Controller|ReportField=DataSourceFileName~T962a.PrjPCB|ReportField=DataSourceFullPath~C:\Users\podonoghue\Documents\Development\PCB\T962a\T962a.PrjPCB
+DF10S|bRIDGE rECTIFIER|BR1|Bridge-SMT|DF10S|1|2101164|
+Buzzer_PCB (Adafruit)||BZ1|BUZZER_Small|Buzzer_PCB (Adafruit)|1||
+100nF|Capacitor, Capacitor, Capacitor SMT 0805, Capacitor SMT 0805, Capacitor, Capacitor SMT 0805, Capacitor|C1, C5, C7, C10, C11, C12, C14|CCNP2012-0805|Cap, Cap, Cap_CCNP_0805, Cap_CCNP_0805, Cap, Cap_CCNP_0805, Cap|7||
+470uF/25V|Polarized Capacitor|C2, C3|RB5/10x13mm|Cap-25ZLS470MEFC10X12|2|2469425|
+4u7/10V|Capacitor SMT 0805|C4|CCNP2012-0805|Cap_CCNP_0805|1||
+2u2F|Capacitor|C6|CCNP2012-0805|Cap|1||
+2u2F/6V|Capacitor|C8|CCNP2012-0805|Cap|1||
+10nF|Capacitor SMT 0805|C9, C13|CCNP2012-0805|Cap_CCNP_0805|2||
+PMEG2005CT|Dual Schottky Diode (SMT)|D1|SOT23|PMEG2005CT|1|2459194|
+LED Red|LED (Red SMT)|D2, D3|LED-SMT-2|LED SMT,Red|2|5790839|
+2x5 Header|Header 2x5|H1|HDR2X5S|Header 2x5|1||
+FB|Ferrite Bead (0805) 0.045OHM, 2A|L1, L2|CR2012-0805|Ferrite Bead 0805|2|1515661|
+LCD-XC-4617|LCD 128 x 64 pixel, ST7920 controller & contrast pot (Jaycar XC-4617)|LCD1|LCD_XC-4617|LCD-XC-4617|1||
+Header 1x8|Header, 10-Pin, Right Angle|LCD1a|HDR1X8S|Header 1x8|1||
+Header 1x4H|Header, 5-Pin, Right Angle|P1|HDR1X4H|Header 1x4H|1||
+Keyboard|Header, 6-Pin|P2|HDR1X6H|Header 6|1||
+SWD2X5|SWD Connector 2x5-Pin|P3|SWD-2x5|SWD2X5|1||
+1K|Resistor|R1, R7|CR2012-0805|Res_CR0805|2||
+4K7|Resistor|R2, R3, R4, R5, R6|CR2012-0805|Res_CR0805|5||
+DNP|Resistor|R8|CR2012-0805|Res_CR0805|1||
+10K|Resistor|R9, R10|CR2012-0805|Res_CR0805|2||
+33R|Resistor|R11, R12|CR2012-0805|Res_CR0805|2||
+Terminal2|MULTICOMP  MC24366 Wire-To-Board Terminal Block|TB1|MOLEX-39544-3002|Terminal2|1|2396251|
+Terminal4|MULTICOMP MC24368 Wire-To-Board Terminal Block|TB2, TB3, TB4|MOLEX-39544-3004|Terminal4|3|1624302|
+TP|Test Point|TP1, TP2|PCBPIN - 0.9mm|TP|2||
+ULN2003ADR||U1|SO-16_N|ULN2003ADR|1|1470513|
+NCP5501DT50RKG|Fixed LDO Voltage Regulator, 2.5V-16V in, 230mV Dropout, 5V/500mA out, TO-252-3|U2|TO-252|NCP5501DT50RKG|1|2532866|
+74HCT157N|Quad 2-1 Multiplexor|U3|SO-16_N|74HCT157N|1||
+MK20DX128VLF5|Arm Cortex M4|U4|TSQFP50P900X900-48M|MK20DX128VLF5|1||
+MAX31855KASA+T||U5, U6|SO-8_L|MAX31855KASA+T|2|2515622|
+ABM3B-8.000MHZ-B2-T|Crystal 8MHz (MINIATURE SMT ABM3B)|Y1|Crystal_SMT - ABM3B|ABM3B-8.000MHZ-B2-T|1|2467818|
