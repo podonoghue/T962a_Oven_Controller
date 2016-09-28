@@ -22,10 +22,13 @@ extern USBDM::Nonvolatile<int> fanKickTime;
 
 /** Offset added to thermocouple #1 */
 extern USBDM::Nonvolatile<int> t1Offset;
+
 /** Offset added to thermocouple #2 */
 extern USBDM::Nonvolatile<int> t2Offset;
+
 /** Offset added to thermocouple #3 */
 extern USBDM::Nonvolatile<int> t3Offset;
+
 /** Offset added to thermocouple #4 */
 extern USBDM::Nonvolatile<int> t4Offset;
 
@@ -42,6 +45,9 @@ private:
    int lastSelection = 0;
    int offset        = 0;
 
+   /**
+    * Draws settings screen
+    */
    void drawScreen();
 
 public:
@@ -59,8 +65,25 @@ public:
    /*
     * Initialise settings to default values
     */
-   void initialiseSettings();
+   static void initialiseSettings();
 
+   /**
+    * Test Fan operation
+    */
+   static void testFan();
+
+   /**
+    * Test Beeper
+    */
+   static void testBeep();
+
+   /**
+    * Display testing screen
+    *
+    * @param title   Title string to display
+    * @param params  Parameter values to display
+    */
+   static void testingScreen(const char *title, const char *params);
 };
 
 extern Settings settings;
