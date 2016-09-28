@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include "fonts.h"
 #include "hardware.h"
 #include "spi.h"
@@ -364,7 +365,7 @@ public:
    }
 
    /**
-    * Write an Down arrow to the LCD in graphics mode at the current x,y location
+    * Write a Down arrow to the LCD in graphics mode at the current x,y location
     */
    void putDownArrow() {
       static const uint8_t downArrow[] = {0x00,0x10,0x10,0x10,0x54,0x38,0x10,0x00,0x00};
@@ -372,7 +373,7 @@ public:
    }
 
    /**
-    * Write an Up arrow to the LCD in graphics mode at the current x,y location
+    * Write a Left arrow to the LCD in graphics mode at the current x,y location
     */
    void putLeftArrow() {
       static const uint8_t leftArrow[]   = {0x00,0x10,0x20,0x7E,0x20,0x10,0x00,0x00,0x00};
@@ -380,7 +381,7 @@ public:
    }
 
    /**
-    * Write an Down arrow to the LCD in graphics mode at the current x,y location
+    * Write an Right arrow to the LCD in graphics mode at the current x,y location
     */
    void putRightArrow() {
       static const uint8_t rightArrow[] = {0x00,0x08,0x04,0x7E,0x04,0x08,0x00,0x00,0x00};
@@ -388,19 +389,11 @@ public:
    }
 
    /**
-    * Write an Down arrow to the LCD in graphics mode at the current x,y location
+    * Write an Enter symbol to the LCD in graphics mode at the current x,y location
     */
    void putEnter() {
       static const uint8_t enter[] = {0x00,0x02,0x12,0x22,0x7E,0x20,0x10,0x00,0x00};
       putCustomChar(enter, 7, 8);
-   }
-
-   /**
-    * Write an Degrees symbol to the LCD in graphics mode at the current x,y location
-    */
-   void putDegree() {
-      static const uint8_t enter[] = {0x00,0x18,0x24,0x24,0x18,0x00,0x00,0x00,0x00};
-      putCustomChar(enter, 6, 8);
    }
 
    /**
@@ -494,15 +487,16 @@ public:
    }
 
    /**
-    * Printf style formatted print
+    * Printf style formatted print\n
+    * The string is printed to the screen at the current x,y location
     *
     * @param format Format control string (as for printf())
     * @param ...    Arguments toprint
     *
-    * @note Limited to 24 characters ~ 1 line
+    * @note Limited to 21 characters ~ 1 line
     */
    int printf(const char *format, ...) __attribute__ ((format (printf, 2, 3))) {
-      static char buff[24];
+      static char buff[22];
       va_list args;
       va_start(args, format);
       int rc = vsnprintf(buff, sizeof(buff), format, args);
