@@ -1,2 +1,3 @@
-# T962a_Firmware
+# T962a Oven Controller
+==
 T962a replacement oven controller
