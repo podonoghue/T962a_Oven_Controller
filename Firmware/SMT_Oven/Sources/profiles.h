@@ -70,9 +70,12 @@ public:
 extern const SolderProfile am4300profile;
 extern const SolderProfile nc31profile;
 extern const SolderProfile syntechlfprofile;
+#ifdef DEBUG_BUILD
 extern const SolderProfile rampspeed_testprofile;
 extern const SolderProfile pidcontrol_testprofile;
+#endif
 
+/** Maximum number of profiles support in NV memory */
 constexpr unsigned MAX_PROFILES = 10;
 
 extern NvSolderProfile profiles[MAX_PROFILES];
