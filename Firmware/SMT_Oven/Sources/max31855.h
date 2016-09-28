@@ -24,9 +24,10 @@ protected:
    /** SPI used for LCD */
    USBDM::Spi &spi;
 
-   /* Number of PCS signal to use */
+   /** Number of PCS signal to use */
    const int pinNum;
 
+   /** Offset to add to reading from probe */
    USBDM::Nonvolatile<int> &offset;
 
    /**
@@ -53,6 +54,7 @@ public:
     *
     * @param spi     The SPI to use to communicate with MAX31855
     * @param pinNum  Number of PCS to use
+    * @param offset  Offset to add to reading from probe
     */
    Max31855(USBDM::Spi &spi, int pinNum, USBDM::Nonvolatile<int> &offset)
       : spi(spi), pinNum(pinNum), offset(offset) {
@@ -68,11 +70,11 @@ public:
     */
    static const char *getStatusName(int status) {
       switch (status&0x07) {
-      case 0  : return "OK";
-      case 1  : return "Open";
-      case 2  : return "Gnd";
-      case 4  : return "Vcc";
-      case 7  : return "----";
+      case 0  : return "OK";     // OK!
+      case 1  : return "Open";   // No probe or open circuit
+      case 2  : return "Gnd";    // Probe short to Gnd
+      case 4  : return "Vcc";    // Probe short to Vcc
+      case 7  : return "----";   // No response - Max31855 not present at that address
       default : return "???";
       }
    }
@@ -82,11 +84,12 @@ public:
     * @param temperature   Temperature reading of external probe (.25 degree resolution)
     * @param coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
     *
-    * @return error flag from sensor \n
+    * @return error flag from sensor @ref getStatusName() \n
     *    0     => OK, \n
     *    0bxx1 => Open circuit, \n
     *    0bx1x => Short to Gnd, \n
     *    0b1xx => Short to Vcc
+    *    0b111 => No response - Max31855 not present at that address
     */
    int getReading(float &temperature, float &coldReference) {
       uint8_t data[] = {
@@ -100,6 +103,7 @@ public:
       }
       // Temperature = sign-extended 14-bit value
       temperature = (((int16_t)((data[0]<<8)|data[1]))>>2)/4.0;
+
       // Add manual offset
       temperature += offset;
 
