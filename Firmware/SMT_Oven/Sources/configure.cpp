@@ -25,7 +25,7 @@ Max31855 temperatureSensors[4] = {
 };
 
 /** PWM for heater & oven fan */
-ZeroCrossingPwm <Heater, OvenFan, Vmains> ovenControl(fanKickTime);
+ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl(fanKickTime);
 
 /** Switch debouncer for front panel buttons */
 SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Button, SButton> buttons;
