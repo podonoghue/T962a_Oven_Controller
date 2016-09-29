@@ -8,9 +8,6 @@
 #ifndef SOURCES_RUNPROFILE_H_
 #define SOURCES_RUNPROFILE_H_
 
-#include "configure.h"
-#include "functional"
-
 using namespace USBDM;
 
 template<int timerChannel>
@@ -109,6 +106,9 @@ public:
       USBDM::Pit::enableChannel(timerChannel, false);
       USBDM::Pit::enableInterrupts(timerChannel, false);
       USBDM::Pit::setCallback(timerChannel, nullptr);
+
+      // Sound buzzer
+      Buzzer::play();
    }
 };
 
