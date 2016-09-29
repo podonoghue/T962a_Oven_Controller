@@ -19,12 +19,15 @@
  * @tparam Heater     USBDM::Gpio controlling the oven heater SSD
  * @tparam FtmChannel USBDM::Cmp used for mains sensing
  */
-template<typename Heater, typename Fan, typename Vmains>
+template<typename Heater, typename HeaterLed, typename Fan, typename FanLed, typename Vmains>
 class ZeroCrossingPwm {
 private:
 
+   /** Duty cycle for Heater */
    static int  heaterDutycycle;
+   /** Duty cycle for Fan */
    static int  fanDutycycle;
+   /** Count down for fan kick */
    static int  fanKick;
 
    /**
@@ -38,10 +41,13 @@ private:
     * Implements a simple PWM with variable period (~20ms - ~1s @50Hz mains)
     */
    static void callbackFunction(int status) {
+      // Keeps track of heater drive
       static int heaterDutycount = 0;
+      // Keeps track of fan drive
       static int fanDutycount = 0;
       (void)status;
 #if 0
+      // Simple PWM with fixed period
       static int cycleCount = 0;
       cycleCount++;
       if (cycleCount>=20) {
@@ -52,16 +58,19 @@ private:
       Heater::write(cycleCount<heaterDutycycle);
       Fan::write(cycleCount<fanDutycycle);
 #else
+      // Variable period PWM
       int wholePart;
       heaterDutycount += heaterDutycycle;
       wholePart = heaterDutycount/100;
       heaterDutycount -= 100*wholePart;
       Heater::write(wholePart>0);
+      HeaterLed::write(wholePart>0);
 
       if (fanKick>0) {
          // Still kicking
          fanKick--;
          Fan::set();
+         FanLed::set();
       }
       else {
          // PWM
@@ -69,6 +78,7 @@ private:
          wholePart = fanDutycount/100;
          fanDutycount -= 100*wholePart;
          Fan::write(wholePart>0);
+         FanLed::write(wholePart>0);
       }
 #endif
    }
@@ -92,6 +102,10 @@ private:
       Fan::low();
       Heater::setOutput();
       Heater::low();
+      FanLed::setOutput();
+      FanLed::low();
+      HeaterLed::setOutput();
+      HeaterLed::low();
 
       /**
        * Set up comparator to generate events on zero-crossings
@@ -118,6 +132,7 @@ public:
          fanKick = 0;
       }
       else if (fanDutycycle == 0) {
+         // Turn on - apply kick
          fanKick = fanKickTime;
       }
       fanDutycycle = dutycycle;
@@ -150,8 +165,11 @@ public:
    }
 };
 
-template<typename Heater, typename Fan, typename Vmains> int  ZeroCrossingPwm<Heater, Fan, Vmains>::heaterDutycycle = 0;
-template<typename Heater, typename Fan, typename Vmains> int  ZeroCrossingPwm<Heater, Fan, Vmains>::fanDutycycle = 0;
-template<typename Heater, typename Fan, typename Vmains> int  ZeroCrossingPwm<Heater, Fan, Vmains>::fanKick = 0;
+template<typename Heater, typename HeaterLed, typename Fan, typename FanLed, typename Vmains>
+int  ZeroCrossingPwm<Heater, HeaterLed, Fan, FanLed, Vmains>::heaterDutycycle = 0;
+template<typename Heater, typename HeaterLed, typename Fan, typename FanLed, typename Vmains>
+int  ZeroCrossingPwm<Heater, HeaterLed, Fan, FanLed, Vmains>::fanDutycycle = 0;
+template<typename Heater, typename HeaterLed, typename Fan, typename FanLed, typename Vmains>
+int  ZeroCrossingPwm<Heater, HeaterLed, Fan, FanLed, Vmains>::fanKick = 0;
 
 #endif /* SOURCES_ZEROCROSSING_PWM_H_ */
