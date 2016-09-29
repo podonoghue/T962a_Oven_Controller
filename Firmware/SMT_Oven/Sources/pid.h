@@ -132,6 +132,13 @@ public:
    }
 
    /**
+    * Get number of seconds since last enabled
+    */
+   double getElapsedTime() {
+      return (tickCount*interval);
+   }
+
+   /**
     * Change controller tuning
     *
     * @param Kp Proportional constant
@@ -220,7 +227,7 @@ public:
 
 private:
    /**
-    * Main Pid calculation
+    * Main PID calculation
     *
     * Executed at \ref interval by PIT callback
     */
@@ -243,9 +250,9 @@ private:
       else if(integral < outMin) {
          integral = outMin;
       }
-      double dInput = (currentInput - lastInput);
+      double deltaInput = (currentInput - lastInput);
 
-      currentOutput = kp * currentError + integral - kd * dInput;
+      currentOutput = kp * currentError + integral - kd * deltaInput;
       if(currentOutput > outMax) {
          currentOutput = outMax;
       }

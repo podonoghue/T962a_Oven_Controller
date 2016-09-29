@@ -40,11 +40,11 @@ void manualMode() {
 
       lcd.setInversion(true); lcd.putString("Manual Mode\n"); lcd.setInversion(false);
 
-      lcd.printf("On Time   = %4ds\n", pid.getTicks());
+      lcd.printf("On Time   = %5.1fs\n", pid.getElapsedTime());
 
-      lcd.printf("Set Temp  = %4d\x7F\n", (int)round(pid.getSetpoint()));
+      lcd.printf("Set Temp  = %5.1f\x7F\n", pid.getSetpoint());
 
-      lcd.printf("Oven Temp = %5.1f\x7F\n", pid.getInput());
+      lcd.printf("Oven Temp = %5.1f\x7F\n", getTemperature());
 
       lcd.printf("Heater = %s\n", pid.isEnabled()?"On":"Off");
 
@@ -69,6 +69,14 @@ void manualMode() {
       lcd.refreshImage();
       lcd.setGraphicMode();
 
+      /**
+       * Safety check
+       * Turn off after 800 seconds of operation
+       */
+      if (pid.getElapsedTime()>800.0) {
+         pid.enable(false);
+         ovenControl.setHeaterDutycycle(0);
+      }
       switch (buttons.getButton()) {
       case SW_F1:
          // Fan toggle
@@ -111,7 +119,7 @@ void manualMode() {
             pid.setSetpoint(t + 5);
          }
       }
-         break;
+      break;
       case SW_F4:
       {
          // Decrease Temp
@@ -120,7 +128,7 @@ void manualMode() {
             pid.setSetpoint(t - 5);
          }
       }
-         break;
+      break;
       case SW_S:
          // Exit
          pid.enable(false);
@@ -130,7 +138,7 @@ void manualMode() {
       default:
          break;
       }
-      __WFI();
+//      __WFI();
    }
 }
 
@@ -339,8 +347,9 @@ public:
             default:
                break;
             }
-            default:
-               break;
+            break;
+         default:
+            break;
          }
          __WFI();
       }
@@ -352,10 +361,10 @@ MainMenu mainMenu;
 void initialise() {
    Buzzer::setOutput();
    Buzzer::low();
-   LedFan::setOutput();
-   LedFan::low();
-   LedHeater::setOutput();
-   LedHeater::low();
+   OvenFanLed::setOutput();
+   OvenFanLed::low();
+   HeaterLed::setOutput();
+   HeaterLed::low();
    CaseFan::enable();
    CaseFan::setDutyCycle(0);
    Spare::enable();
