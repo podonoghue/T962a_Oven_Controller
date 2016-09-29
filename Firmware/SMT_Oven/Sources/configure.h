@@ -41,17 +41,18 @@ constexpr int t3_cs_num  = 0;
 constexpr int t4_cs_num  = 1;
 
 // PWM outputs
-using OvenFan  = USBDM::GpioC<1>;
-using Heater   = USBDM::GpioC<2>;
 using CaseFan  = USBDM::Ftm0Channel<2>;
 using Spare    = USBDM::Ftm0Channel<3>;
 
 // Simple GPIO outputs
-using Buzzer    = USBDM::GpioC<5>;
-using LedFan    = USBDM::GpioD<7>;
-using LedHeater = USBDM::GpioC<7>;
+using OvenFan    = USBDM::GpioC<1>;
+using OvenFanLed = USBDM::GpioD<7>;
+using Heater     = USBDM::GpioC<2>;
+using HeaterLed  = USBDM::GpioC<7>;
 
-using Vmains    = USBDM::Cmp0;
+//using Buzzer     = USBDM::GpioC<5>;
+
+using Vmains     = USBDM::Cmp0;
 
 // SPI used for LCD and Thermocouples
 extern USBDM::Spi0 spi;
@@ -68,7 +69,7 @@ constexpr int button_pit_channel  = 1;
 constexpr int profile_pit_channel = 2;
 
 // PWM for heater & oven fan
-extern ZeroCrossingPwm <Heater, OvenFan, Vmains> ovenControl;
+extern ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl;
 
 // Switch debouncer for front panel buttons
 extern SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Button, SButton> buttons;
@@ -77,11 +78,31 @@ extern SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Butto
 constexpr float pidInterval = 1000 * USBDM::ms;
 
 /**
- * PID controller
+ * Get oven temperature
+ * Averages multiple thermocouple inputs
  */
 extern float getTemperature();
+/*
+ * Set heater drive level
+ */
 extern void setHeater(float dutyCycle);
+/**
+ * PID controller
+ */
 extern Pid_T<getTemperature, setHeater, pid_pit_channel> pid;
+
+/**
+ * Buzzer
+ */
+class Buzzer : public USBDM::GpioC<5> {
+public:
+   // Sound buzzer with abort on button press
+   static void play() {
+      high();
+      USBDM::wait(beepTime, [](){ return buttons.getButton() != SW_NONE; });
+      low();
+   }
+};
 
 #include "runProfile.h"
 
@@ -89,3 +110,4 @@ extern Pid_T<getTemperature, setHeater, pid_pit_channel> pid;
 extern RunProfile<profile_pit_channel> runProfile;
 
 #endif /* SOURCES_CONFIGURE_H_ */
+
