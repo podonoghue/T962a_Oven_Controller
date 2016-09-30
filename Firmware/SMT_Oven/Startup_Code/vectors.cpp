@@ -13,8 +13,8 @@
 #include "hardware.h"
 
 /*********** $start(VectorsIncludeFiles) *** Do not edit after this comment ****************/
-#include "pit.h"
 #include "cmp.h"
+#include "pit.h"
 /*********** $end(VectorsIncludeFiles)   *** Do not edit above this comment ***************/
 
 /*
