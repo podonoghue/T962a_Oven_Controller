@@ -35,6 +35,9 @@ extern USBDM::Nonvolatile<int> t4Offset;
 /** Index of current profile */
 extern USBDM::Nonvolatile<int> profileIndex;
 
+/** Maximum on time for heater in manual mode */
+extern USBDM::Nonvolatile<int> maxHeaterTime;
+
 /**
  * Class to hold information about how to modify a non-volatile setting
  */

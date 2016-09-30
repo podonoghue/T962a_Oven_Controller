@@ -14,13 +14,25 @@
 
 class SolderProfile {
 public:
+   /** Number of seconds each step in the sequence represents */
+   static constexpr int SECONDS_PER_STEP = 10;
+
+   /** Description of the profile */
    char    description[40];
+
+   /** Profile steps */
    uint8_t profile[48];
 };
 
 class NvSolderProfile {
 public:
+   /** Number of seconds each step in the sequence represents */
+   static constexpr int SECONDS_PER_STEP = SolderProfile::SECONDS_PER_STEP;
+
+   /** Description of the profile */
    USBDM::NonvolatileArray<char,    40> description;
+
+   /** Profile steps */
    USBDM::NonvolatileArray<uint8_t, 48> profile;
 
    /**
@@ -51,6 +63,9 @@ public:
       description.set(0, '\0');
    }
 
+   /**
+    * Prints the profile to stdout
+    */
    void print() {
       printf("%s = {\n", (const char *)description);
       for (unsigned time=0; time<(sizeof(SolderProfile::profile)/sizeof(SolderProfile::profile[0])); time++) {
@@ -71,6 +86,7 @@ extern const SolderProfile am4300profile;
 extern const SolderProfile nc31profile;
 extern const SolderProfile syntechlfprofile;
 #ifdef DEBUG_BUILD
+extern const SolderProfile short_testprofile;
 extern const SolderProfile rampspeed_testprofile;
 extern const SolderProfile pidcontrol_testprofile;
 #endif

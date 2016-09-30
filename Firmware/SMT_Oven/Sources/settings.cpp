@@ -40,6 +40,18 @@ Nonvolatile<int> profileIndex;
 __attribute__ ((section(".flexRAM")))
 Nonvolatile<int> fanKickTime;
 
+__attribute__ ((section(".flexRAM")))
+USBDM::Nonvolatile<int> maxHeaterTime;
+
+extern const Setting fanSetting;
+extern const Setting kickSetting;
+extern const Setting heaterSetting;
+extern const Setting thermo1Setting;
+extern const Setting thermo2Setting;
+extern const Setting thermo3Setting;
+extern const Setting thermo4Setting;
+extern const Setting beepSetting;
+
 /**
  * Constructor - initialises the non-volatile storage\n
  * Must be a singleton!
@@ -55,10 +67,6 @@ Settings::Settings() : Flash() {
    initialiseSettings();
 }
 
-static constexpr int MIN_FAN_SPEED   = 10;
-static constexpr int FAN_KICK_CYCLES = 10;
-static constexpr int BEEP_TIME       = 1;
-
 void Settings::initialiseSettings() {
 
    // Write initial value for non-volatile variables
@@ -67,18 +75,20 @@ void Settings::initialiseSettings() {
    profiles[i++] = nc31profile;
    profiles[i++] = syntechlfprofile;
 #ifdef DEBUG_BUILD
+   profiles[i++] = short_testprofile;
    profiles[i++] = rampspeed_testprofile;
    profiles[i++] = pidcontrol_testprofile;
 #endif
    profiles[i++].reset();
 
-   minimumFanSpeed = MIN_FAN_SPEED;
-   fanKickTime     = FAN_KICK_CYCLES;
-   t1Offset        = 0;
-   t2Offset        = 0;
-   t3Offset        = 0;
-   t4Offset        = 0;
-   beepTime        = BEEP_TIME;
+   minimumFanSpeed = fanSetting.defaultValue;
+   fanKickTime     = kickSetting.defaultValue;
+   t1Offset        = thermo1Setting.defaultValue;
+   t2Offset        = thermo2Setting.defaultValue;
+   t3Offset        = thermo3Setting.defaultValue;
+   t4Offset        = thermo4Setting.defaultValue;
+   beepTime        = beepSetting.defaultValue;
+   maxHeaterTime   = heaterSetting.defaultValue;
 
    profileIndex    = 0;
 }
@@ -93,9 +103,6 @@ void Settings::testBeep(const Setting *setting) {
 //   testingScreen("Test Beep", buff);
    Buzzer::play();
 }
-
-extern const Setting &fanSetting;
-extern const Setting &kickSetting;
 
 class FanTest {
 private:
@@ -216,22 +223,34 @@ public:
    }
 };
 
+/**
+ * Describes the various settings for the menu
+ * Also controls range and default values etc.
+ *
+ *                              NV variable       Description                 Min  Max  Inc  Default   Test function
+ */
+const Setting fanSetting     = {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   10,      FanTest::testFan};
+const Setting kickSetting    = {fanKickTime,     "Fan Kick Cycles  %3d",       0,   50,  1,   10,      FanTest::testFan};
+const Setting thermo1Setting = {t1Offset,        "Thermo 1 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting thermo2Setting = {t2Offset,        "Thermo 2 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting thermo3Setting = {t3Offset,        "Thermo 3 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting thermo4Setting = {t4Offset,        "Thermo 4 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting heaterSetting  = {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 800,       nullptr};
+const Setting beepSetting    = {beepTime,        "Beep time        %3ds",      0,   30,  1,   1,       Settings::testBeep};
 
 /**
- * Describes the menu
+ * Describes the settings and limits for same
  */
-static const Setting menu[] = {
-      {minimumFanSpeed, "Reflow fan speed %3d%%",     5, 100, 5,   MIN_FAN_SPEED,   FanTest::testFan},
-      {fanKickTime,     "Fan Kick Cycles  %3d",       0,  50, 1,   FAN_KICK_CYCLES, FanTest::testFan},
-      {t1Offset,        "Thermo 1 Offset  %3d\x7F", -30,  30, 1,   0,               nullptr},
-      {t2Offset,        "Thermo 2 Offset  %3d\x7F", -30,  30, 1,   0,               nullptr},
-      {t3Offset,        "Thermo 3 Offset  %3d\x7F", -30,  30, 1,   0,               nullptr},
-      {t4Offset,        "Thermo 4 Offset  %3d\x7F", -30,  30, 1,   0,               nullptr},
-      {beepTime,        "Beep time        %3ds",      0,  30, 1,   BEEP_TIME,       Settings::testBeep},
+static const Setting * const menu[] = {
+      &fanSetting,
+      &kickSetting,
+      &thermo1Setting,
+      &thermo2Setting,
+      &thermo3Setting,
+      &thermo4Setting,
+      &heaterSetting,
+      &beepSetting,
 };
-
-const Setting &fanSetting  = menu[0];
-const Setting &kickSetting = menu[1];
 
 static constexpr int NUM_ITEMS         = sizeof(menu)/sizeof(menu[0]);
 static constexpr int MAX_VISIBLE_ITEMS = 6;
@@ -260,7 +279,7 @@ void Settings::drawScreen() {
       }
       lcd.setInversion(item == selection);
       lcd.gotoXY(0, (item+1-offset)*8);
-      lcd.printf(menu[item].getDescription(), menu[item].get());
+      lcd.printf(menu[item]->getDescription(), menu[item]->get());
    }
    lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
    lcd.setInversion(false); lcd.putSpace(4);
@@ -298,20 +317,20 @@ void Settings::runMenu() {
          }
          break;
       case SW_F3F4:
-         menu[selection].reset();
+         menu[selection]->reset();
          changed = true;
          break;
       case SW_F3:
-         menu[selection].increment();
+         menu[selection]->increment();
          if (!buttons.isRepeating()) {
-            menu[selection].action();
+            menu[selection]->action();
          }
          changed = true;
          break;
       case SW_F4:
-         menu[selection].decrement();
+         menu[selection]->decrement();
          if (!buttons.isRepeating()) {
-            menu[selection].action();
+            menu[selection]->action();
          }
          changed = true;
          break;

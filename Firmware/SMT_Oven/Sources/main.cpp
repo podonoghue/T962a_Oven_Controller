@@ -73,7 +73,7 @@ void manualMode() {
        * Safety check
        * Turn off after 800 seconds of operation
        */
-      if (pid.getElapsedTime()>800.0) {
+      if (pid.getElapsedTime()>=maxHeaterTime) {
          pid.enable(false);
          ovenControl.setHeaterDutycycle(0);
       }
@@ -138,7 +138,7 @@ void manualMode() {
       default:
          break;
       }
-//      __WFI();
+      //      __WFI();
    }
 }
 
@@ -279,6 +279,7 @@ private:
             "Select Profile",
             "Run Profile",
       };
+      lcd.setInversion(false);
       lcd.clearFrameBuffer();
       lcd.setInversion(true); lcd.putString("Main Menu"); lcd.setInversion(false);
       for (uint item=0; item<(sizeof(menu)/sizeof(menu[0])); item++) {
@@ -348,8 +349,8 @@ public:
                break;
             }
             break;
-         default:
-            break;
+            default:
+               break;
          }
          __WFI();
       }
@@ -366,6 +367,7 @@ void initialise() {
    HeaterLed::setOutput();
    HeaterLed::low();
    CaseFan::enable();
+   CaseFan::setPeriod(20*USBDM::ms);
    CaseFan::setDutyCycle(0);
    Spare::enable();
    Spare::setDutyCycle(0);
@@ -383,8 +385,9 @@ int main() {
       lcd.putString(buff);
       printf("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
    }
-
    initialise();
+
+//   CaseFan::setDutyCycle(20);
 
    lcd.clear();
 
