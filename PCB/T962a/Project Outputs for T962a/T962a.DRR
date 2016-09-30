@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------
-NCDrill File Report For: T962a.PcbDoc   25/09/2016  12:54:28 AM
+NCDrill File Report For: T962a.PcbDoc   30/09/2016  5:51:10 PM
 ---------------------------------------------------------------------------
 
 Layer Pair : Top Layer to Bottom Layer
@@ -7,15 +7,16 @@ ASCII RoundHoles File : T962a.TXT
 
 Tool         Hole Size           Hole Type     Hole Count Plated       Tool Travel
 ---------------------------------------------------------------------------
-T1        19.7mil (0.50038mm)      Round          133              32.07 Inch (814.69 mm)
+T1        19.7mil (0.50038mm)      Round          125              30.51 Inch (774.86 mm)
 T2        23.6mil (0.59944mm)      Round          9                0.42 Inch (10.69 mm)
-T3        28mil (0.7112mm)         Round          4                0.81 Inch (20.70 mm)
-T4        35.4mil (0.89916mm)      Round          52               13.70 Inch (347.88 mm)
-T5        39.4mil (1.00076mm)      Round          2                0.30 Inch (7.62 mm)
-T6        59.1mil (1.50114mm)      Round          14               4.14 Inch (105.24 mm)
-T7        122mil (3.0988mm)        Round          4                9.49 Inch (241.00 mm)
-T8        137.8mil (3.50012mm)     Round          1                0.00 Inch (0.00 mm)
+T3        27.6mil (0.70104mm)      Round          2                0.20 Inch (5.00 mm)
+T4        28mil (0.7112mm)         Round          4                0.81 Inch (20.70 mm)
+T5        35.4mil (0.89916mm)      Round          54               13.80 Inch (350.61 mm)
+T6        39.4mil (1.00076mm)      Round          2                0.30 Inch (7.62 mm)
+T7        59.1mil (1.50114mm)      Round          14               4.14 Inch (105.24 mm)
+T8        122mil (3.0988mm)        Round          4                9.49 Inch (241.00 mm)
+T9        157.5mil (4.0005mm)      Round          1                0.00 Inch (0.00 mm)
 ---------------------------------------------------------------------------
-Totals                                            219              60.94 Inch (1547.82 mm)
+Totals                                            215              59.67 Inch (1515.73 mm)
 
-Total Processing Time (hh:mm:ss) : 00:00:00
+Total Processing Time (hh:mm:ss) : 00:00:01
