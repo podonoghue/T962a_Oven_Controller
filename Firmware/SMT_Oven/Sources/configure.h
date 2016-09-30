@@ -48,7 +48,7 @@ using Spare    = USBDM::Ftm0Channel<3>;
 using OvenFan    = USBDM::GpioC<1>;
 using OvenFanLed = USBDM::GpioD<7>;
 using Heater     = USBDM::GpioC<2>;
-using HeaterLed  = USBDM::GpioC<7>;
+using HeaterLed  = USBDM::GpioC<6>;
 
 //using Buzzer     = USBDM::GpioC<5>;
 
