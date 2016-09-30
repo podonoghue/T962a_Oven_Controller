@@ -28,27 +28,27 @@
    <item key="$signal$PTA3_descriptionSetting"             value="SWD_DIO" />
    <item key="$signal$PTA3_muxSetting"                     value="mux7" />
    <item key="$signal$PTA3_pcrSetting"                     value="8000" />
-   <item key="$signal$PTA4_descriptionSetting"             value="N/C" />
+   <item key="$signal$PTA4_descriptionSetting"             value="EZP_CSb" />
    <item key="$signal$PTA4_pcrSetting"                     value="8000" />
-   <item key="$signal$PTB0_descriptionSetting"             value="SW_F4*" />
+   <item key="$signal$PTB0_descriptionSetting"             value="SW_F4b" />
    <item key="$signal$PTB0_muxSetting"                     value="mux1" />
    <item key="$signal$PTB0_pcrSetting"                     value="8003" />
-   <item key="$signal$PTB16_descriptionSetting"            value="SW_S*" />
+   <item key="$signal$PTB16_descriptionSetting"            value="SW_Sb" />
    <item key="$signal$PTB16_muxSetting"                    value="mux1" />
    <item key="$signal$PTB16_pcrSetting"                    value="8003" />
    <item key="$signal$PTB17_descriptionSetting"            value="TP1 (Debug UART_Tx)" />
    <item key="$signal$PTB17_muxSetting"                    value="mux3" />
    <item key="$signal$PTB17_pcrSetting"                    value="8000" />
-   <item key="$signal$PTB1_descriptionSetting"             value="SW_F3*" />
+   <item key="$signal$PTB1_descriptionSetting"             value="SW_F3b" />
    <item key="$signal$PTB1_muxSetting"                     value="mux1" />
    <item key="$signal$PTB1_pcrSetting"                     value="8003" />
-   <item key="$signal$PTB2_descriptionSetting"             value="SW_F2*" />
+   <item key="$signal$PTB2_descriptionSetting"             value="SW_F2b" />
    <item key="$signal$PTB2_muxSetting"                     value="mux1" />
    <item key="$signal$PTB2_pcrSetting"                     value="8003" />
-   <item key="$signal$PTB3_descriptionSetting"             value="SW_F1*" />
+   <item key="$signal$PTB3_descriptionSetting"             value="SW_F1b" />
    <item key="$signal$PTB3_muxSetting"                     value="mux1" />
    <item key="$signal$PTB3_pcrSetting"                     value="8003" />
-   <item key="$signal$PTC0_descriptionSetting"             value="LCD_CS*" />
+   <item key="$signal$PTC0_descriptionSetting"             value="LCD_CSb" />
    <item key="$signal$PTC0_muxSetting"                     value="mux2" />
    <item key="$signal$PTC0_pcrSetting"                     value="8044" />
    <item key="$signal$PTC1_descriptionSetting"             value="OvenFan" />
@@ -66,13 +66,13 @@
    <item key="$signal$PTC5_descriptionSetting"             value="Buzzer" />
    <item key="$signal$PTC5_muxSetting"                     value="mux1" />
    <item key="$signal$PTC5_pcrSetting"                     value="8000" />
-   <item key="$signal$PTC6_descriptionSetting"             value="LED-Fan" />
+   <item key="$signal$PTC6_descriptionSetting"             value="OvenFanLed" />
    <item key="$signal$PTC6_muxSetting"                     value="mux1" />
    <item key="$signal$PTC6_pcrSetting"                     value="8000" />
    <item key="$signal$PTC7_descriptionSetting"             value="Vmains" />
    <item key="$signal$PTC7_muxSetting"                     value="mux0" />
    <item key="$signal$PTC7_pcrSetting"                     value="8000" />
-   <item key="$signal$PTD0_descriptionSetting"             value="T3_CS*" />
+   <item key="$signal$PTD0_descriptionSetting"             value="T4_CSb" />
    <item key="$signal$PTD0_muxSetting"                     value="mux2" />
    <item key="$signal$PTD0_pcrSetting"                     value="8044" />
    <item key="$signal$PTD1_descriptionSetting"             value="SCK" />
@@ -84,19 +84,19 @@
    <item key="$signal$PTD3_descriptionSetting"             value="MISO" />
    <item key="$signal$PTD3_muxSetting"                     value="mux2" />
    <item key="$signal$PTD3_pcrSetting"                     value="8003" />
-   <item key="$signal$PTD4_descriptionSetting"             value="T4_CS*" />
+   <item key="$signal$PTD4_descriptionSetting"             value="T3_CSb" />
    <item key="$signal$PTD4_muxSetting"                     value="mux2" />
    <item key="$signal$PTD4_pcrSetting"                     value="8044" />
-   <item key="$signal$PTD5_descriptionSetting"             value="T1_CS*" />
+   <item key="$signal$PTD5_descriptionSetting"             value="T1_CSb" />
    <item key="$signal$PTD5_muxSetting"                     value="mux2" />
    <item key="$signal$PTD5_pcrSetting"                     value="8044" />
-   <item key="$signal$PTD6_descriptionSetting"             value="T2_CS*" />
+   <item key="$signal$PTD6_descriptionSetting"             value="T2_CSb" />
    <item key="$signal$PTD6_muxSetting"                     value="mux2" />
    <item key="$signal$PTD6_pcrSetting"                     value="8044" />
-   <item key="$signal$PTD7_descriptionSetting"             value="LED_Heater" />
+   <item key="$signal$PTD7_descriptionSetting"             value="HeaterLed" />
    <item key="$signal$PTD7_muxSetting"                     value="mux1" />
    <item key="$signal$PTD7_pcrSetting"                     value="8040" />
-   <item key="$signal$RESET_b_descriptionSetting"          value="Reset*" />
+   <item key="$signal$RESET_b_descriptionSetting"          value="Resetb" />
    <item key="$signal$USB0_DM_descriptionSetting"          value="USB_DM" />
    <item key="$signal$USB0_DP_descriptionSetting"          value="USB_DP" />
    <item key="$signal$VBAT_descriptionSetting"             value="3.3V" />
@@ -295,7 +295,7 @@
    <item key="/PIT/irqHandlerInstalled"                    value="true" />
    <item key="/PIT/irqLevel"                               value="0" />
    <item key="/PIT/pit_ldval"                              value="10000" />
-   <item key="/PIT/pit_mcr_frz"                            value="false" />
+   <item key="/PIT/pit_mcr_frz"                            value="true" />
    <item key="/PIT/pit_tctrl_ch1"                          value="false" />
    <item key="/PIT/pit_tctrl_ch3"                          value="false" />
    <item key="/RTC/irqHandlerInstalled"                    value="false" />
