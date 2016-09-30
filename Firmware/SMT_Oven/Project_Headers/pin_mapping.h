@@ -2271,7 +2271,7 @@ public:
 
    //! PIT operation in debug mode
    static constexpr uint32_t mcr = 
-      PIT_MCR_FRZ(0);
+      PIT_MCR_FRZ(1);
 
 };
 
@@ -2961,32 +2961,32 @@ extern void mapAllPins();
  *  PTA1                     | UART0_RX                                    | p18                       | SWD_Rx       
  *  PTA2                     | -                                           | p19                       | SWD_Tx       
  *  PTA3                     | JTAG_TMS/SWD_DIO                            | p20                       | SWD_DIO       
- *  PTA4                     | -                                           | p21                       | N/C       
+ *  PTA4                     | -                                           | p21                       | EZP_CSb       
  *  PTA18                    | EXTAL0                                      | p24                       | EXTAL       
  *  PTA19                    | XTAL0                                       | p25                       | XTAL       
- *  PTB0                     | GPIOB_0/LLWU_P5                             | p27                       | SW_F4*       
- *  PTB1                     | GPIOB_1                                     | p28                       | SW_F3*       
- *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2*       
- *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1*       
- *  PTB16                    | GPIOB_16                                    | p31                       | SW_S*       
+ *  PTB0                     | GPIOB_0/LLWU_P5                             | p27                       | SW_F4b       
+ *  PTB1                     | GPIOB_1                                     | p28                       | SW_F3b       
+ *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2b       
+ *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1b       
+ *  PTB16                    | GPIOB_16                                    | p31                       | SW_Sb       
  *  PTB17                    | UART0_TX                                    | p32                       | TP1 (Debug UART_Tx)       
- *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CS*       
+ *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CSb       
  *  PTC1                     | GPIOC_1/LLWU_P6                             | p34                       | OvenFan       
  *  PTC2                     | GPIOC_2                                     | p35                       | Heater       
  *  PTC3                     | FTM0_CH2                                    | p36                       | CaseFan       
  *  PTC4                     | FTM0_CH3                                    | p37                       | Spare       
  *  PTC5                     | GPIOC_5/LLWU_P9                             | p38                       | Buzzer       
- *  PTC6                     | GPIOC_6/LLWU_P10                            | p39                       | LED-Fan       
+ *  PTC6                     | GPIOC_6/LLWU_P10                            | p39                       | OvenFanLed       
  *  PTC7                     | CMP0_IN1                                    | p40                       | Vmains       
- *  PTD0                     | SPI0_PCS0                                   | p41                       | T3_CS*       
+ *  PTD0                     | SPI0_PCS0                                   | p41                       | T4_CSb       
  *  PTD1                     | SPI0_SCK                                    | p42                       | SCK       
  *  PTD2                     | SPI0_SOUT                                   | p43                       | MOSI       
  *  PTD3                     | SPI0_SIN                                    | p44                       | MISO       
- *  PTD4                     | SPI0_PCS1                                   | p45                       | T4_CS*       
- *  PTD5                     | SPI0_PCS2                                   | p46                       | T1_CS*       
- *  PTD6                     | SPI0_PCS3                                   | p47                       | T2_CS*       
- *  PTD7                     | GPIOD_7                                     | p48                       | LED_Heater       
- *  RESET_b                  | RESET_b                                     | p26                       | Reset*       
+ *  PTD4                     | SPI0_PCS1                                   | p45                       | T3_CSb       
+ *  PTD5                     | SPI0_PCS2                                   | p46                       | T1_CSb       
+ *  PTD6                     | SPI0_PCS3                                   | p47                       | T2_CSb       
+ *  PTD7                     | GPIOD_7                                     | p48                       | HeaterLed       
+ *  RESET_b                  | RESET_b                                     | p26                       | Resetb       
  *  USB0_DM                  | USB0_DM                                     | p4                        | USB_DM       
  *  USB0_DP                  | USB0_DP                                     | p3                        | USB_DP       
  *  VBAT                     | VBAT                                        | p16                       | 3.3V       
@@ -3028,41 +3028,41 @@ extern void mapAllPins();
  *  PTA1                     | UART0_RX                                    | p18                       | SWD_Rx       
  *  PTA2                     | -                                           | p19                       | SWD_Tx       
  *  PTA3                     | JTAG_TMS/SWD_DIO                            | p20                       | SWD_DIO       
- *  PTA4                     | -                                           | p21                       | N/C       
+ *  PTA4                     | -                                           | p21                       | EZP_CSb       
  *  VDD2                     | VDD2                                        | p22                       | 3.3V       
  *  VSS2                     | VSS2                                        | p23                       | Gnd       
  *  PTA18                    | EXTAL0                                      | p24                       | EXTAL       
  *  PTA19                    | XTAL0                                       | p25                       | XTAL       
- *  RESET_b                  | RESET_b                                     | p26                       | Reset*       
- *  PTB0                     | GPIOB_0/LLWU_P5                             | p27                       | SW_F4*       
- *  PTB1                     | GPIOB_1                                     | p28                       | SW_F3*       
- *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2*       
- *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1*       
- *  PTB16                    | GPIOB_16                                    | p31                       | SW_S*       
+ *  RESET_b                  | RESET_b                                     | p26                       | Resetb       
+ *  PTB0                     | GPIOB_0/LLWU_P5                             | p27                       | SW_F4b       
+ *  PTB1                     | GPIOB_1                                     | p28                       | SW_F3b       
+ *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2b       
+ *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1b       
+ *  PTB16                    | GPIOB_16                                    | p31                       | SW_Sb       
  *  PTB17                    | UART0_TX                                    | p32                       | TP1 (Debug UART_Tx)       
- *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CS*       
+ *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CSb       
  *  PTC1                     | GPIOC_1/LLWU_P6                             | p34                       | OvenFan       
  *  PTC2                     | GPIOC_2                                     | p35                       | Heater       
  *  PTC3                     | FTM0_CH2                                    | p36                       | CaseFan       
  *  PTC4                     | FTM0_CH3                                    | p37                       | Spare       
  *  PTC5                     | GPIOC_5/LLWU_P9                             | p38                       | Buzzer       
- *  PTC6                     | GPIOC_6/LLWU_P10                            | p39                       | LED-Fan       
+ *  PTC6                     | GPIOC_6/LLWU_P10                            | p39                       | OvenFanLed       
  *  PTC7                     | CMP0_IN1                                    | p40                       | Vmains       
- *  PTD0                     | SPI0_PCS0                                   | p41                       | T3_CS*       
+ *  PTD0                     | SPI0_PCS0                                   | p41                       | T4_CSb       
  *  PTD1                     | SPI0_SCK                                    | p42                       | SCK       
  *  PTD2                     | SPI0_SOUT                                   | p43                       | MOSI       
  *  PTD3                     | SPI0_SIN                                    | p44                       | MISO       
- *  PTD4                     | SPI0_PCS1                                   | p45                       | T4_CS*       
- *  PTD5                     | SPI0_PCS2                                   | p46                       | T1_CS*       
- *  PTD6                     | SPI0_PCS3                                   | p47                       | T2_CS*       
- *  PTD7                     | GPIOD_7                                     | p48                       | LED_Heater       
+ *  PTD4                     | SPI0_PCS1                                   | p45                       | T3_CSb       
+ *  PTD5                     | SPI0_PCS2                                   | p46                       | T1_CSb       
+ *  PTD6                     | SPI0_PCS3                                   | p47                       | T2_CSb       
+ *  PTD7                     | GPIOD_7                                     | p48                       | HeaterLed       
  *
  *
  * @section PinsByFunction Pins by Function
  *
  *    Pin Name               |   Functions                                 |  Location                 |  Description  
  *  ------------------------ | --------------------------------------------|---------------------------| ------------- 
- *  PTA4                     | -                                           | p21                       | N/C       
+ *  PTA4                     | -                                           | p21                       | EZP_CSb       
  *  ADC0_DM0                 | ADC0_DM0                                    | p8                        | N/C       
  *  ADC0_DP0                 | ADC0_DP0                                    | p7                        | N/C       
  *  PTC7                     | CMP0_IN1                                    | p40                       | Vmains       
@@ -3070,24 +3070,24 @@ extern void mapAllPins();
  *  EXTAL32                  | EXTAL32                                     | p15                       | N/C       
  *  PTC3                     | FTM0_CH2                                    | p36                       | CaseFan       
  *  PTC4                     | FTM0_CH3                                    | p37                       | Spare       
- *  PTB0                     | GPIOB_0/LLWU_P5                             | p27                       | SW_F4*       
- *  PTB1                     | GPIOB_1                                     | p28                       | SW_F3*       
- *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2*       
- *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1*       
- *  PTB16                    | GPIOB_16                                    | p31                       | SW_S*       
+ *  PTB0                     | GPIOB_0/LLWU_P5                             | p27                       | SW_F4b       
+ *  PTB1                     | GPIOB_1                                     | p28                       | SW_F3b       
+ *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2b       
+ *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1b       
+ *  PTB16                    | GPIOB_16                                    | p31                       | SW_Sb       
  *  PTC1                     | GPIOC_1/LLWU_P6                             | p34                       | OvenFan       
  *  PTC2                     | GPIOC_2                                     | p35                       | Heater       
  *  PTC5                     | GPIOC_5/LLWU_P9                             | p38                       | Buzzer       
- *  PTC6                     | GPIOC_6/LLWU_P10                            | p39                       | LED-Fan       
- *  PTD7                     | GPIOD_7                                     | p48                       | LED_Heater       
+ *  PTC6                     | GPIOC_6/LLWU_P10                            | p39                       | OvenFanLed       
+ *  PTD7                     | GPIOD_7                                     | p48                       | HeaterLed       
  *  PTA0                     | JTAG_TCLK/SWD_CLK                           | p17                       | SWD_CLK       
  *  PTA3                     | JTAG_TMS/SWD_DIO                            | p20                       | SWD_DIO       
- *  RESET_b                  | RESET_b                                     | p26                       | Reset*       
- *  PTD0                     | SPI0_PCS0                                   | p41                       | T3_CS*       
- *  PTD4                     | SPI0_PCS1                                   | p45                       | T4_CS*       
- *  PTD5                     | SPI0_PCS2                                   | p46                       | T1_CS*       
- *  PTD6                     | SPI0_PCS3                                   | p47                       | T2_CS*       
- *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CS*       
+ *  RESET_b                  | RESET_b                                     | p26                       | Resetb       
+ *  PTD0                     | SPI0_PCS0                                   | p41                       | T4_CSb       
+ *  PTD4                     | SPI0_PCS1                                   | p45                       | T3_CSb       
+ *  PTD5                     | SPI0_PCS2                                   | p46                       | T1_CSb       
+ *  PTD6                     | SPI0_PCS3                                   | p47                       | T2_CSb       
+ *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CSb       
  *  PTD1                     | SPI0_SCK                                    | p42                       | SCK       
  *  PTD3                     | SPI0_SIN                                    | p44                       | MISO       
  *  PTD2                     | SPI0_SOUT                                   | p43                       | MOSI       
