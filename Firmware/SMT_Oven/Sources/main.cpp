@@ -200,16 +200,33 @@ private:
       lcd.putString(name);
    }
 
-//   static void drawProfile(const NvSolderProfile &profile) {
-//      drawAxis(profile.description);
-//      for (unsigned int index=0; index<(sizeof(SolderProfile::profile)/sizeof(SolderProfile::profile[0])); index++) {
-//         int x = xOrigin+(index*hGridSize)/6;
-//         int y = lcd.LCD_HEIGHT-yOrigin-(profile.profile[index]*vGridSize/50);
-//         lcd.drawPixel(x,y);
-//      }
-//      lcd.refreshImage();
-//      lcd.setGraphicMode();
-//   }
+   static void drawProfile(const NvSolderProfile &profile) {
+      int step = 0;
+      drawAxis(profile.description);
+      SolderProfile::Point lastPoint = profile.profile[step];
+      SolderProfile::Point nextPoint = profile.profile[step+1];
+      for (unsigned int time=0;; time++) {
+         if (time >= nextPoint.time) {
+            step++;
+            if (step>=(sizeof(SolderProfile::profile)/sizeof(SolderProfile::profile[0]))) {
+               break;
+            }
+            lastPoint = profile.profile[step];
+            nextPoint = profile.profile[step+1];
+         }
+         if (lastPoint.stop) {
+            break;
+         }
+         int x = xOrigin+(time/6);
+         float setpoint = lastPoint.temperature +
+               (float)(nextPoint.temperature-lastPoint.temperature)*
+               (time - lastPoint.time)/(nextPoint.time-lastPoint.time);
+         int y = lcd.LCD_HEIGHT-yOrigin-(setpoint*vGridSize/50);
+         lcd.drawPixel(x,y);
+      }
+      lcd.refreshImage();
+      lcd.setGraphicMode();
+   }
 
 public:
    static void run() {
@@ -218,8 +235,7 @@ public:
 
       for(;;) {
          if (needUpdate) {
-            drawAxis(profiles[profileIndex].description);
-//            drawProfile(profiles[profileIndex]);
+            drawProfile(profiles[profileIndex]);
             lcd.refreshImage();
             lcd.setGraphicMode();
             needUpdate = false;
