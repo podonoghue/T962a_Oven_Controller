@@ -103,7 +103,7 @@ public:
       if (enable && !enabled) {
          // Just enabled
          currentInput = inputFn();
-         integral     = currentOutput;
+         integral     = 0; //currentOutput;
          tickCount    = 0;
       }
       enabled = enable;
@@ -149,7 +149,6 @@ public:
       if (Kp<0 || Ki<0 || Kd<0) {
          USBDM::setAndCheckErrorCode(USBDM::E_ILLEGAL_PARAM);
       }
-
       kp = Kp;
       ki = Ki * interval;
       kd = Kd / interval;

@@ -10,10 +10,14 @@
 
 // Amtech 4300 63Sn/37Pb leaded profile
 const SolderProfile am4300profile = {
-      "4300 63SN/37PB", {
-            /**           Initial      Ramp Up      Peak Up        Dwell    Ramp Down   Final
-             *         <-----------><-----------><----------><----------><----------><--------->   */
-            /* */ {  0,  AMBIENT_TEMP}, { 90,  140}, {210, 183}, {230, 210}, {250, 210}, {360,  AMBIENT_TEMP}, {361, STOP_TEMP},
+      "4300 63SN/37PB",
+      {//     Time  Temperature   Fan Stop
+            {   0,  AMBIENT_TEMP, 1,  0},  // Initial
+            {  90,  140,          1,  0},  // Start Soak
+            { 210,  183,          1,  0},  // Start Ramp Up
+            { 230,  210,          1,  0},  // Start Dwell
+            { 250,  210,          2,  0},  // Start Ramp down
+            { 360,  AMBIENT_TEMP, 0,  1},  // Stop
       }
 };
 
@@ -52,22 +56,38 @@ const SolderProfile am4300profile = {
 #ifdef DEBUG_BUILD
 // Short test temperature profile
 const SolderProfile short_testprofile = {
-      "SHORT TEST", {
-            /**           Initial      Soak       Ramp Up      Peak Up        Dwell    Ramp Down   Final
-             *         <-----------><----------><-----------><----------><----------><----------><--------->   */
-            /* */ {  0,  AMBIENT_TEMP}, { 20,  140}, {40, 183}, {600, 210}, {80, 210}, {100,  AMBIENT_TEMP}, {101, STOP_TEMP},
+      "SHORT TEST",
+      {//    Time  Temperature   Fan Stop
+            {  0,  AMBIENT_TEMP, 1,  0    },  // Initial
+            { 20,  140,          1,  0    },  // Start Soak
+            { 40,  183,          1,  0    },  // Start Ramp Up
+            { 60,  210,          1,  0    },  // Start Dwell
+            { 80,  210,          2,  0    },  // Start Ramp down
+            {100,  AMBIENT_TEMP, 0,  1    },  // Stop
       }
 };
 // Ramp speed test temperature profile
 const SolderProfile rampspeed_testprofile = {
-      "SHORT TEST", {
-            /* */ {  0,  AMBIENT_TEMP}, {100, 240}, {140, 240}, {240, AMBIENT_TEMP}, {241, STOP_TEMP},
+      "RAMP TEST",
+      {//    Time  Temperature   Fan Stop
+            {  0,  AMBIENT_TEMP, 1,  0    },  // Initial - Start Ramp Up
+            {200,  240,          1,  0    },  // End Ramp Up - Start flat
+            {300,  240,          2,  0    },  // End flat - Start Ramp Down
+            {500,  AMBIENT_TEMP, 0,  1    },  // Stop
       }
 };
-// Small step change
+// Step change
 const SolderProfile pidcontrol_testprofile = {
-      "SHORT TEST", {
-            /* */ {  0,  AMBIENT_TEMP}, {100, 200}, {101, 220}, {140, 220}, {141, 200}, {240, AMBIENT_TEMP}, {241, STOP_TEMP},
+      "STEP TEST",
+      {//    Time  Temperature   Fan Stop
+            {  0,  AMBIENT_TEMP, 1,  0},  // Initial - Start ramp to plateau
+            {100,  150,          1,  0},  // Start Flat
+            {200,  150,          1,  0},  // Start Step Up
+            {201,  220,          1,  0},  // Start Flat
+            {400,  220,          1,  0},  // Start Step Down
+            {401,  150,          1,  0},  // Start Flat
+            {500,  150,          1,  0},  // Start Ramp down
+            {600,  AMBIENT_TEMP, 0,  1},  // Stop
       }
 };
 #endif

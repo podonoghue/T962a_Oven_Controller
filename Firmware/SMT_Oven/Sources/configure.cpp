@@ -33,9 +33,9 @@ SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Button, SBut
 /**
  * PID controller parameters
  */
-static constexpr float kp = 4.0f;
-static constexpr float ki = 0.0f;
-static constexpr float kd = 0.0f;
+static constexpr float kp = 4.0f; // 20
+static constexpr float ki = 0.0f; // .016
+static constexpr float kd = 0.0f; // 62.5
 
 /**
  * Get current temperature\n

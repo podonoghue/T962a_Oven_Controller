@@ -12,8 +12,8 @@
 #include <stdint.h>
 #include <flash.h>
 
-constexpr int16_t AMBIENT_TEMP = -1;
-constexpr int16_t STOP_TEMP    = -2;
+
+constexpr uint16_t AMBIENT_TEMP = 0;  // Alias for starting temperature
 
 /**
  * Used to represent a solder profile in ROM
@@ -22,8 +22,10 @@ class SolderProfile {
 public:
    /** Point in solder profile */
    struct Point {
-      int16_t time;        // Seconds
-      int16_t temperature; // Degrees Celsius
+      uint16_t time;          // Seconds
+      uint16_t temperature:9; // Degrees Celsius
+      uint16_t fanSpeed:2;    // Fan speed
+      uint16_t stop:1;        // End of sequence
    };
 
    /** Description of the profile */

@@ -72,8 +72,8 @@ void Settings::initialiseSettings() {
    // Write initial value for non-volatile variables
    int i=0;
    profiles[i++] = am4300profile;
-   profiles[i++] = nc31profile;
-   profiles[i++] = syntechlfprofile;
+//   profiles[i++] = nc31profile;
+//   profiles[i++] = syntechlfprofile;
 #ifdef DEBUG_BUILD
    profiles[i++] = short_testprofile;
    profiles[i++] = rampspeed_testprofile;
