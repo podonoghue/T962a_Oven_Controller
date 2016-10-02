@@ -15,13 +15,22 @@ class RunProfile {
 
 private:
    /** Profile being run */
-   const NvSolderProfile * volatile profile;
+   const NvSolderProfile *profile;
+
+   /** Time in the sequence (seconds) */
+   volatile int  time;
 
    /** Step in the profile sequence */
    volatile unsigned  step;
 
+   /** Step in the profile sequence */
+   volatile int  microStep;
+
    /** Profile complete flag */
    volatile bool complete;
+
+   /** Used to record ambient temperature at start (Celsius) */
+   float ambient;
 
    class FunctionWrapper {
       static RunProfile      *This;
@@ -35,27 +44,66 @@ private:
       }
    };
 
+   /**
+    * Maps special temperature values
+    */
+   int mapTemp(int temp) {
+      if (temp < 0) {
+         temp = ambient;
+      }
+      return temp;
+   }
+
    /*
     * Handles the call-back from the PIT to step through the sequence
     */
    void handler() {
       if (complete) {
+         // Already completed
          return;
       }
       if (step>=(sizeof(profile->profile)/sizeof(profile->profile[0]))) {
+         // At end of array
          complete = true;
          return;
       }
-      step++;
-      int setpoint = profile->profile[step];
-      pid.setSetpoint(setpoint);
-      if (setpoint == 0) {
+      // Advance time
+      time++;
+      if (time>profile->profile[step+1].time) {
+         step++;
+      }
+      //  Last point - start temperature
+      int lastTemp = profile->profile[step].temperature;
+      if (lastTemp == STOP_TEMP) {
+         pid.setSetpoint(0);
          complete = true;
          return;
+      }
+      lastTemp = mapTemp(lastTemp);
+      // Next point - destination temperature
+      int nextTemp = mapTemp(profile->profile[step+1].temperature);
+
+      // Interpolate temperature
+      float setpoint = lastTemp;
+      setpoint +=
+            (double)(time-profile->profile[step].time)*(nextTemp-lastTemp)
+            /(profile->profile[step+1].time-profile->profile[step].time);
+      // Set controller
+      pid.setSetpoint(setpoint);
+      if (nextTemp>=lastTemp) {
+         // Ramp up or dwell
+         ovenControl.setFanDutycycle(minimumFanSpeed);
+      }
+      else if (nextTemp<(lastTemp-50)) {
+         // Cool down
+         ovenControl.setFanDutycycle(100);
       }
    };
 
 public:
+   /**
+    * Reports status to LCD and log
+    */
    void thermocoupleStatus() {
       lcd.setInversion(false);
       lcd.clearFrameBuffer();
@@ -64,7 +112,7 @@ public:
       lcd.gotoXY(0, 12+4*lcd.FONT_HEIGHT);
       if (pid.isEnabled()) {
          lcd.printf("%4ds S=%3d T=%0.1f\x7F", pid.getTicks(), (int)round(pid.getSetpoint()), pid.getInput());
-         printf("%4d, %4d, S=%4d, T=%5.1f,", step, pid.getTicks(), (int)round(pid.getSetpoint()), pid.getInput());
+         printf("%6.1f, %4d, %5.1f, %5.1f, %4d,", pid.getElapsedTime(), step, pid.getSetpoint(), pid.getInput(), ovenControl.getFanDutycycle());
       }
       lcd.gotoXY(0, 12);
       for (int t=0; t<=3; t++) {
@@ -88,14 +136,28 @@ public:
       puts("");
    }
 
+   /**
+    * Run sequence
+    */
    void run() {
-      step     = 0;
-      complete = false;
-      profile  = &profiles[profileIndex];
+      step      = 0;
+      time      = 0;
+      microStep = 0;
+      complete  = false;
+      profile   = &profiles[profileIndex];
+      /*
+       * Obtain ambient temperature as reference
+       */
+      ambient = getTemperature();
+      if (ambient>35) {
+         // Assume an ambient of 35 if oven is still hot
+         ambient = 35;
+      }
+      printf("Profile, %s\n",   (const char *)profile->description);
+      printf("Ambient, %5.1f\n\n", ambient);
+      printf("Time, Step, Target, Actual, Fan, T1-probe, T1-cold, T2-probe, T2-cold, T3-probe, T3-cold, T4-probe, T4-cold\n");
 
-      printf("Running: %s\n", (const char *)profile->description);
-
-      pid.setSetpoint(profile->profile[0]);
+      pid.setSetpoint(mapTemp(profile->profile[0].temperature));
       pid.enable();
 
       // Using PIT
@@ -104,12 +166,13 @@ public:
       FunctionWrapper fw(this);
       USBDM::Pit::setCallback(timerChannel, fw.f);
 
-      USBDM::Pit::setPeriod(timerChannel, (float)profile->SECONDS_PER_STEP);
+      USBDM::Pit::setPeriod(timerChannel, 1.0f);
       USBDM::Pit::enableChannel(timerChannel);
       USBDM::Pit::enableInterrupts(timerChannel);
 
       ovenControl.setFanDutycycle(minimumFanSpeed);
       float lastElapsedTime = -2;
+      // Wait for completion
       do {
          float elapsedTime = pid.getElapsedTime();
          if ((elapsedTime - lastElapsedTime) >= 1.0)  {
@@ -150,6 +213,7 @@ public:
 
       // Sound buzzer
       Buzzer::play();
+      // Wait for exit button before dialogue exit
       while (buttons.getButton() != SW_S) {
          __WFI();
       }

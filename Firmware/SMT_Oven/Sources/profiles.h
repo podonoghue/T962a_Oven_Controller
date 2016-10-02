@@ -12,28 +12,37 @@
 #include <stdint.h>
 #include <flash.h>
 
+constexpr int16_t AMBIENT_TEMP = -1;
+constexpr int16_t STOP_TEMP    = -2;
+
+/**
+ * Used to represent a solder profile in ROM
+ */
 class SolderProfile {
 public:
-   /** Number of seconds each step in the sequence represents */
-   static constexpr int SECONDS_PER_STEP = 10;
+   /** Point in solder profile */
+   struct Point {
+      int16_t time;        // Seconds
+      int16_t temperature; // Degrees Celsius
+   };
 
    /** Description of the profile */
    char    description[40];
 
    /** Profile steps */
-   uint8_t profile[48];
+   Point profile[10];
 };
 
+/**
+ * Used to represent a solder profile in nonvolatile memory
+ */
 class NvSolderProfile {
 public:
-   /** Number of seconds each step in the sequence represents */
-   static constexpr int SECONDS_PER_STEP = SolderProfile::SECONDS_PER_STEP;
-
    /** Description of the profile */
-   USBDM::NonvolatileArray<char,    40> description;
+   USBDM::NonvolatileArray<char, 40> description;
 
    /** Profile steps */
-   USBDM::NonvolatileArray<uint8_t, 48> profile;
+   USBDM::NonvolatileArray<SolderProfile::Point, 10> profile;
 
    /**
     * Assignment from SolderProfile
@@ -68,14 +77,8 @@ public:
     */
    void print() {
       printf("%s = {\n", (const char *)description);
-      for (unsigned time=0; time<(sizeof(SolderProfile::profile)/sizeof(SolderProfile::profile[0])); time++) {
-         if ((time%10) == 0) {
-            printf("%4d:", time*10);
-         }
-         printf("%3d, ", profile[time]);
-         if ((time%10) == 9) {
-            printf("\n");
-         }
+      for (unsigned index=0; index<(sizeof(NvSolderProfile::profile)/sizeof(NvSolderProfile::profile[0])); index++) {
+         printf("{%3d, %3d}", profile[index].time, profile[index].time);
       }
       printf("}\n");
    }
@@ -83,8 +86,8 @@ public:
 
 // Predefined profiles
 extern const SolderProfile am4300profile;
-extern const SolderProfile nc31profile;
-extern const SolderProfile syntechlfprofile;
+//extern const SolderProfile nc31profile;
+//extern const SolderProfile syntechlfprofile;
 #ifdef DEBUG_BUILD
 extern const SolderProfile short_testprofile;
 extern const SolderProfile rampspeed_testprofile;
