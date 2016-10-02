@@ -200,16 +200,16 @@ private:
       lcd.putString(name);
    }
 
-   static void drawProfile(const NvSolderProfile &profile) {
-      drawAxis(profile.description);
-      for (unsigned int index=0; index<(sizeof(SolderProfile::profile)/sizeof(SolderProfile::profile[0])); index++) {
-         int x = xOrigin+(index*hGridSize)/6;
-         int y = lcd.LCD_HEIGHT-yOrigin-(profile.profile[index]*vGridSize/50);
-         lcd.drawPixel(x,y);
-      }
-      lcd.refreshImage();
-      lcd.setGraphicMode();
-   }
+//   static void drawProfile(const NvSolderProfile &profile) {
+//      drawAxis(profile.description);
+//      for (unsigned int index=0; index<(sizeof(SolderProfile::profile)/sizeof(SolderProfile::profile[0])); index++) {
+//         int x = xOrigin+(index*hGridSize)/6;
+//         int y = lcd.LCD_HEIGHT-yOrigin-(profile.profile[index]*vGridSize/50);
+//         lcd.drawPixel(x,y);
+//      }
+//      lcd.refreshImage();
+//      lcd.setGraphicMode();
+//   }
 
 public:
    static void run() {
@@ -219,7 +219,7 @@ public:
       for(;;) {
          if (needUpdate) {
             drawAxis(profiles[profileIndex].description);
-            drawProfile(profiles[profileIndex]);
+//            drawProfile(profiles[profileIndex]);
             lcd.refreshImage();
             lcd.setGraphicMode();
             needUpdate = false;
@@ -366,9 +366,6 @@ void initialise() {
    OvenFanLed::low();
    HeaterLed::setOutput();
    HeaterLed::low();
-   CaseFan::enable();
-   CaseFan::setPeriod(20*USBDM::ms);
-   CaseFan::setDutyCycle(0);
    Spare::enable();
    Spare::setDutyCycle(0);
 }
@@ -386,8 +383,6 @@ int main() {
       printf("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
    }
    initialise();
-
-//   CaseFan::setDutyCycle(20);
 
    lcd.clear();
 

@@ -37,6 +37,10 @@ static constexpr float kp = 4.0f;
 static constexpr float ki = 0.0f;
 static constexpr float kd = 0.0f;
 
+/**
+ * Get current temperature\n
+ * This is an average of the active thermocouples
+ */
 float getTemperature() {
    int foundSensorCount = 0;
    float value = 0;
@@ -66,3 +70,6 @@ Pid_T<getTemperature, setHeater, pid_pit_channel> pid(kp, ki, kd, pidInterval, 0
 
 /** Runs a SMT profile */
 RunProfile<profile_pit_channel> runProfile;
+
+/** Monitor for case temperature */
+CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor(&temperatureSensors[0]);

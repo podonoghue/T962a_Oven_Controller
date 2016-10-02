@@ -23,6 +23,7 @@
 #include "zerocrossing_pwm.h"
 #include "switch_debouncer.h"
 #include "settings.h"
+#include "caseTemperatureMonitor.h"
 
 // Function buttons
 using F1Button = USBDM::GpioB<3>;
@@ -64,9 +65,10 @@ extern LCD_ST7920 lcd;
 extern Max31855 temperatureSensors[4];
 
 // PIT timer channels
-constexpr int pid_pit_channel     = 0;
-constexpr int button_pit_channel  = 1;
-constexpr int profile_pit_channel = 2;
+constexpr int pid_pit_channel          = 0;
+constexpr int button_pit_channel       = 1;
+constexpr int profile_pit_channel      = 2;
+constexpr int caseMonitor_pit_channel  = 3;
 
 // PWM for heater & oven fan
 extern ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl;
@@ -108,6 +110,11 @@ public:
 
 /** Runs a SMT profile */
 extern RunProfile<profile_pit_channel> runProfile;
+
+/**
+ * Monitor case temperature
+ */
+extern CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor;
 
 #endif /* SOURCES_CONFIGURE_H_ */
 
