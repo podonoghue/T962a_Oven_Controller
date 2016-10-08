@@ -15,6 +15,7 @@
 #include "fonts.h"
 #include "hardware.h"
 #include "spi.h"
+#include "delay.h"
 
 /**
  * Class representing an LCD connected over SPI
@@ -248,6 +249,15 @@ public:
     * @param height  Height of image
     */
    void writeImage(const uint8_t *dataPtr, int x, int y, int width, int height) {
+      if ((x>=LCD_WIDTH)||(y>=LCD_HEIGHT)) {
+         return;
+      }
+      if ((x+width) > LCD_WIDTH) {
+         width = LCD_WIDTH-x;
+      }
+      if ((y+height) > LCD_HEIGHT) {
+         height = LCD_HEIGHT-y;
+      }
       int offset          = x&0x07;
       int offsetPlusWidth = ((x+width-1)&0x07)+1;
       int startMask = (uint8_t)(0xFF>>offset);
@@ -328,11 +338,16 @@ public:
       int width  = USBDM::Fonts::FONT6x8[0][0];
       int height = USBDM::Fonts::FONT6x8[0][1];
       if (ch == '\n') {
+         putSpace(LCD_WIDTH-x-1);
          x  = 0;
          y += fontHeight;
          fontHeight = 0;
       }
       else {
+         if ((x+width)>LCD_WIDTH) {
+            // Don't display partial characters
+            return;
+         }
          writeImage((uint8_t*)(USBDM::Fonts::FONT6x8[ch-0x20+1]), x, y, width, height);
          x += width;
          fontHeight = max(fontHeight, height);
@@ -408,12 +423,20 @@ public:
    }
 
    /**
-    * Change the current X,Y location for graphics mode
+    * Get the current X,Y location for graphics mode
     */
    void gotoXY(int x, int y) {
       this->x = x;
       this->y = y;
       fontHeight = 0;
+   }
+
+   /**
+    * Change the current X,Y location for graphics mode
+    */
+   void getXY(int &x, int &y) {
+      x = this->x;
+      y = this->y;
    }
 
    /**
