@@ -70,7 +70,7 @@ private:
          // Still kicking
          fanKick--;
          Fan::set();
-         FanLed::set();
+         FanLed::on();
       }
       else {
          // PWM
@@ -97,15 +97,12 @@ private:
    static void initialise() {
       heaterDutycycle = 0;
       fanDutycycle    = 0;
-
-      Fan::setOutput();
-      Fan::low();
+      HeaterLed::init();
       Heater::setOutput();
       Heater::low();
-      FanLed::setOutput();
-      FanLed::low();
-      HeaterLed::setOutput();
-      HeaterLed::low();
+      FanLed::init();
+      Fan::setOutput();
+      Fan::low();
 
       /**
        * Set up comparator to generate events on zero-crossings
