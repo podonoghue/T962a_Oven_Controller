@@ -125,9 +125,6 @@ public:
     * Get number of ticks since last enabled
     */
    unsigned getTicks() {
-      if (!enabled) {
-         return 0;
-      }
       return tickCount;
    }
 
