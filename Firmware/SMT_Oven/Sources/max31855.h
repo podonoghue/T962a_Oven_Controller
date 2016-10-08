@@ -30,6 +30,9 @@ protected:
    /** Offset to add to reading from probe */
    USBDM::Nonvolatile<int> &offset;
 
+   /** Used to disable sensor */
+   bool enabled;
+
    /**
     * Initialise the LCD
     */
@@ -46,6 +49,8 @@ protected:
 
       // Record CTAR value in case SPI shared
       spiCtarValue = spi.getCTAR0Value();
+
+      enabled = true;
    }
 
 public:
@@ -57,7 +62,7 @@ public:
     * @param offset  Offset to add to reading from probe
     */
    Max31855(USBDM::Spi &spi, int pinNum, USBDM::Nonvolatile<int> &offset)
-      : spi(spi), pinNum(pinNum), offset(offset) {
+: spi(spi), pinNum(pinNum), offset(offset) {
       initialise();
    }
 
@@ -69,14 +74,34 @@ public:
     * @return Short string representing status
     */
    static const char *getStatusName(int status) {
-      switch (status&0x07) {
-      case 0  : return "OK";     // OK!
-      case 1  : return "Open";   // No probe or open circuit
-      case 2  : return "Gnd";    // Probe short to Gnd
-      case 4  : return "Vcc";    // Probe short to Vcc
-      case 7  : return "----";   // No response - Max31855 not present at that address
-      default : return "???";
+      if (status & 0x08) {
+         return "Dis.";
       }
+      switch (status) {
+      case   0  : return "OK";     // OK!
+      case   1  : return "Open";   // No probe or open circuit
+      case   2  : return "Gnd";    // Probe short to Gnd
+      case   4  : return "Vcc";    // Probe short to Vcc
+      case   7  : return "----";   // No response - Max31855 not present at that address
+      default   : return "????";   // Unknown
+      }
+   }
+   /**
+    * Enables/disables the sensor
+    *
+    * @param enable True to enable sensor
+    */
+   void enable(bool enable=true) {
+      enabled =enable;
+   }
+
+   /**
+    * Check if sensor is enabled
+    *
+    * @return true => enabled
+    */
+   bool isEnabled() {
+      return enabled;
    }
    /**
     * Read thermocouple
@@ -86,15 +111,17 @@ public:
     *
     * @return error flag from sensor @ref getStatusName() \n
     *    0     => OK, \n
-    *    0bxx1 => Open circuit, \n
-    *    0bx1x => Short to Gnd, \n
-    *    0b1xx => Short to Vcc
-    *    0b111 => No response - Max31855 not present at that address
+    *    0bxxx1 => Open circuit, \n
+    *    0bxx1x => Short to Gnd, \n
+    *    0bx1xx => Short to Vcc
+    *    0bx111 => No response - Max31855 not present at that address
+    *    0b1xxx => Max31855 is disabled (values MAY be valid)
     */
    int getReading(float &temperature, float &coldReference) {
       uint8_t data[] = {
             0xFF, 0xFF, 0xFF, 0xFF,
       };
+      int status;
       {
          IrqProtect protect;
          spi.setCTAR0Value(spiCtarValue);
@@ -110,8 +137,42 @@ public:
       // Cold junction = sign-extended 12-bit value
       coldReference = (((int16_t)((data[2]<<8)|data[3]))>>4)/16.0;
 
+      status = data[3]&0x07;
+
+      if (status == 7) {
+         temperature   = NAN;
+         coldReference = NAN;
+      }
+      else if (status != 0) {
+         // Temperature = sign-extended 14-bit value
+         temperature = NAN;
+      }
+      if (!enabled) {
+         status |= 8;
+      }
       // Return error flag
-      return data[3]&0x07;
+      return status;
+   }
+   /**
+    * Read thermocouple
+    *
+    * @param temperature   Temperature reading of external probe (.25 degree resolution)
+    * @param coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
+    *
+    * @return error flag from sensor @ref getStatusName() \n
+    *    0     => OK, \n
+    *    0b0xx1 => Open circuit, \n
+    *    0b0x1x => Short to Gnd, \n
+    *    0b01xx => Short to Vcc
+    *    0b0111 => No response - Max31855 not present or disabled
+    */
+   int getEnabledReading(float &temperature, float &coldReference) {
+      if (!enabled) {
+         temperature   = 0;
+         coldReference = 0;
+         return 7;
+      }
+      return getReading(temperature, coldReference);
    }
 };
 
