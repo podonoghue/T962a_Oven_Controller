@@ -11,94 +11,120 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <flash.h>
+#include <string.h>
 
+enum State {
+   s_off,
+   s_fail,
+   s_preheat,
+   s_soak,
+   s_ramp_up,
+   s_dwell,
+   s_ramp_down,
+   s_manual,
+};
 
-constexpr uint16_t AMBIENT_TEMP = 0;  // Alias for starting temperature
+class NvSolderProfile;
 
 /**
  * Used to represent a solder profile in ROM
  */
-class SolderProfile {
+struct SolderProfile {
 public:
-   /** Point in solder profile */
-   struct Point {
-      uint16_t time;          // Seconds
-      uint16_t temperature:9; // Degrees Celsius
-      uint16_t fanSpeed:2;    // Fan speed
-      uint16_t stop:1;        // End of sequence
-   };
+   char     description[40];  // Description of the profile
+   float    ramp1Slope;       // Slope up to soakTemp1
+   uint16_t soakTemp1;        // Temperature for start of soak
+   uint16_t soakTemp2;        // Temperature for end of soak
+   uint16_t soakTime;         // Length of soak
+   float    ramp2Slope;       // Slope up to peakTemp
+   uint16_t peakTemp;         // Peak reflow temperature
+   uint16_t peakDwell;        // How long to remain at peakTemp
+   float    rampDownSlope;    // Slope down after peakTemp
 
-   /** Description of the profile */
-   char    description[40];
+   /**
+    * Assignment from SolderProfile
+    *
+    * This adds a wait for the Flash to be updated after each element is assigned
+    *
+    * @param other Profile to copy from
+    */
+   void operator=(const SolderProfile &other );
 
-   /** Profile steps */
-   Point profile[10];
+   /**
+    * Assignment from NvSolderProfile
+    *
+    * This adds a wait for the Flash to be updated after each element is assigned
+    *
+    * @param other Profile to copy from
+    */
+   void operator=(const NvSolderProfile &other );
 };
 
 /**
  * Used to represent a solder profile in nonvolatile memory
  */
 class NvSolderProfile {
-public:
-   /** Description of the profile */
-   USBDM::NonvolatileArray<char, 40> description;
 
-   /** Profile steps */
-   USBDM::NonvolatileArray<SolderProfile::Point, 10> profile;
+private:
+   // Can't create these
+   NvSolderProfile (const NvSolderProfile &obj) {
+      (void) obj;
+   }
+
+public:
+   USBDM::NonvolatileArray<char, 40> description;    // Description of the profile
+   USBDM::Nonvolatile<float>         ramp1Slope;     // Slope up to soakTemp1
+   USBDM::Nonvolatile<uint16_t>      soakTemp1;      // Temperature for start of soak
+   USBDM::Nonvolatile<uint16_t>      soakTemp2;      // Temperature for end of soak
+   USBDM::Nonvolatile<uint16_t>      soakTime;       // Length of soak
+   USBDM::Nonvolatile<float>         ramp2Slope;     // Slope up to peakTemp
+   USBDM::Nonvolatile<uint16_t>      peakTemp;       // Peak reflow temperature
+   USBDM::Nonvolatile<uint16_t>      peakDwell;      // How long to remain at peakTemp
+   USBDM::Nonvolatile<float>         rampDownSlope;  // Slope down after peakTemp
+
+   NvSolderProfile () {
+   }
 
    /**
     * Assignment from SolderProfile
     *
     * This adds a wait for the Flash to be updated after each element is assigned
+    *
+    * @param other Profile to copy from
     */
-   void operator=(const SolderProfile &other ) {
-      description = other.description;
-      profile     = other.profile;
-   }
+   void operator=(const SolderProfile &other );
 
    /**
     * Assignment from NvSolderProfile
     *
     * This adds a wait for the Flash to be updated after each element is assigned
+    *
+    * @param other Profile to copy from
     */
-   void operator=(const NvSolderProfile &other ) {
-      description = other.description;
-      profile     = other.profile;
-   }
+   void operator=(const NvSolderProfile &other ) ;
 
    /**
     * Clear profile i.e. mark as empty
     * Empty is indicated by a zero-length description string
     */
-   void reset() {
-      description.set(0, '\0');
-   }
-
+   void reset();
    /**
     * Prints the profile to stdout
     */
-   void print() {
-      printf("%s = {\n", (const char *)description);
-      for (unsigned index=0; index<(sizeof(NvSolderProfile::profile)/sizeof(NvSolderProfile::profile[0])); index++) {
-         printf("{%3d, %3d}", profile[index].time, profile[index].time);
-      }
-      printf("}\n");
-   }
+   void print() const;
 };
 
 // Predefined profiles
-extern const SolderProfile am4300profile;
-//extern const SolderProfile nc31profile;
-//extern const SolderProfile syntechlfprofile;
-#ifdef DEBUG_BUILD
-extern const SolderProfile short_testprofile;
-extern const SolderProfile rampspeed_testprofile;
-extern const SolderProfile pidcontrol_testprofile;
-#endif
+extern const SolderProfile am4300profileA;
+extern const SolderProfile am4300profileB;
+extern const SolderProfile nc31profile;
+extern const SolderProfile syntechlfprofile;
+extern const SolderProfile defaultProfile;
 
-/** Maximum number of profiles support in NV memory */
+/** Maximum number of profiles supported in NV memory */
 constexpr unsigned MAX_PROFILES = 10;
 
+/** The actual profile in nonvolatile memory */
 extern NvSolderProfile profiles[MAX_PROFILES];
 
 #endif /* SOURCES_PROFILES_H_ */
