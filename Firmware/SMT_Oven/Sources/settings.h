@@ -148,7 +148,6 @@ class Settings : public USBDM::Flash {
 
 private:
    int selection     = 0;
-   int lastSelection = 0;
    int offset        = 0;
 
    /**

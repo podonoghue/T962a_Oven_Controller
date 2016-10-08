@@ -57,7 +57,6 @@ extern const Setting beepSetting;
  * Must be a singleton!
  */
 Settings::Settings() : Flash() {
-
    // Initialise EEPROM
    USBDM::FlashDriverError_t rc = initialiseEeprom(USBDM::Flash::eeprom2KBytes);
    if (rc == USBDM::FLASH_ERR_OK) {
@@ -70,16 +69,17 @@ Settings::Settings() : Flash() {
 void Settings::initialiseSettings() {
 
    // Write initial value for non-volatile variables
-   int i=0;
-   profiles[i++] = am4300profile;
-//   profiles[i++] = nc31profile;
-//   profiles[i++] = syntechlfprofile;
-#ifdef DEBUG_BUILD
-   profiles[i++] = short_testprofile;
-   profiles[i++] = rampspeed_testprofile;
-   profiles[i++] = pidcontrol_testprofile;
-#endif
-   profiles[i++].reset();
+   unsigned i=0;
+   profiles[i++] = am4300profileA;
+   profiles[i++] = am4300profileB;
+   profiles[i++] = nc31profile;
+   profiles[i++] = syntechlfprofile;
+   for (;i<(sizeof(profiles)/sizeof(profiles[0]));i++) {
+      char buff[40];
+      snprintf(buff, sizeof(buff), "Profile #%d", i);
+      profiles[i] = defaultProfile;
+      profiles[i].description = buff;
+   }
 
    minimumFanSpeed = fanSetting.defaultValue;
    fanKickTime     = kickSetting.defaultValue;
@@ -229,14 +229,14 @@ public:
  *
  *                              NV variable       Description                 Min  Max  Inc  Default   Test function
  */
-const Setting fanSetting     = {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   10,      FanTest::testFan};
+const Setting fanSetting     = {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   30,      FanTest::testFan};
 const Setting kickSetting    = {fanKickTime,     "Fan Kick Cycles  %3d",       0,   50,  1,   10,      FanTest::testFan};
 const Setting thermo1Setting = {t1Offset,        "Thermo 1 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
 const Setting thermo2Setting = {t2Offset,        "Thermo 2 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
 const Setting thermo3Setting = {t3Offset,        "Thermo 3 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
 const Setting thermo4Setting = {t4Offset,        "Thermo 4 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting heaterSetting  = {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 800,       nullptr};
-const Setting beepSetting    = {beepTime,        "Beep time        %3ds",      0,   30,  1,   1,       Settings::testBeep};
+const Setting heaterSetting  = {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 600,       nullptr};
+const Setting beepSetting    = {beepTime,        "Beep time        %3ds",      0,   30,  1,   0,       Settings::testBeep};
 
 /**
  * Describes the settings and limits for same
@@ -267,9 +267,7 @@ void Settings::drawScreen() {
       offset--;
    }
    lcd.setInversion(false); lcd.clearFrameBuffer();
-   lcd.setInversion(true);  lcd.putString("Settings Menu");
-
-   lcd.setInversion(false);
+   lcd.setInversion(true);  lcd.putString("  Settings Menu\n"); lcd.setInversion(false);
    for (int item=0; item<NUM_ITEMS; item++) {
       if (item<offset) {
          continue;
@@ -278,7 +276,7 @@ void Settings::drawScreen() {
          continue;
       }
       lcd.setInversion(item == selection);
-      lcd.gotoXY(0, (item+1-offset)*8);
+      lcd.gotoXY(0, (item+1-offset)*lcd.FONT_HEIGHT);
       lcd.printf(menu[item]->getDescription(), menu[item]->get());
    }
    lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
