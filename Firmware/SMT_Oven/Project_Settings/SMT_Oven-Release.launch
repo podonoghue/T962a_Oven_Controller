@@ -30,7 +30,7 @@
 <stringAttribute key="net.sourceforge.usbdm.gdb.restartPcRegisterValue" value="__HardReset"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.restartSetPcRegister" value="false"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.restartStopAtMainAdress" value="main"/>
-<booleanAttribute key="net.sourceforge.usbdm.gdb.restartUsesStartup" value="false"/>
+<booleanAttribute key="net.sourceforge.usbdm.gdb.restartUsesStartup" value="true"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.runCommands" value=""/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.securityOption" value="SECURITY_SMART"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.serverType" value="SERVER_SOCKET"/>
