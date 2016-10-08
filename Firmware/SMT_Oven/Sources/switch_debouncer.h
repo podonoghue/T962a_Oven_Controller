@@ -8,6 +8,8 @@
 #ifndef SOURCES_SWITCH_DEBOUNCER_H_
 #define SOURCES_SWITCH_DEBOUNCER_H_
 
+#include "pid.h"
+
 /**
  * Return values from switch debouncer
  */
@@ -35,8 +37,9 @@ template<unsigned timerChannel, typename f1, typename f2, typename f3, typename 
 class SwitchDebouncer {
 private:
    // Time to debounce the switch (ms)
+   // Long than about 100 ms is a perceptible delay
    // This also affects how easy it is to do intentional multi-presses
-   static constexpr int DEBOUNCE_THRESHOLD = 50;
+   static constexpr int DEBOUNCE_THRESHOLD = 100;
 
    // Auto-repeat delay (ms)
    static constexpr int REPEAT_THRESHOLD   = 1000;
@@ -45,7 +48,7 @@ private:
    static constexpr int REPEAT_PERIOD      = 200;
 
    // Last pressed switch
-   static volatile SwitchValue switchNum;
+   static volatile SwitchValue switchNum __attribute__((aligned (4)));
 
    // Indicates that the key is repeating
    static volatile bool repeating;
@@ -57,13 +60,12 @@ private:
       static uint debounceCount = 0;
       static uint lastSnapshot  = 0;
 
-      // Note - active low
       uint snapshot =
-            (f1::read()?0:SW_F1)|
-            (f2::read()?0:SW_F2)|
-            (f3::read()?0:SW_F3)|
-            (f4::read()?0:SW_F4)|
-            (sel::read()?0:SW_S);
+            (f1::read()?SW_F1:0)|
+            (f2::read()?SW_F2:0)|
+            (f3::read()?SW_F3:0)|
+            (f4::read()?SW_F4:0)|
+            (sel::read()?SW_S:0);
 
       if ((snapshot != 0) && (snapshot == lastSnapshot)) {
          debounceCount++;
@@ -125,10 +127,11 @@ public:
     * @return button value or SW_NONE if none pressed since last queried
     */
    static SwitchValue getButton() {
-      disableInterrupts();
-      SwitchValue t = switchNum;
-      switchNum = SW_NONE;
-      enableInterrupts();
+      SwitchValue t;
+      // Bit messy but avoids masking interrupts or clobbering a key press
+      do {
+         t = (SwitchValue)__LDREXW((volatile long unsigned *)&switchNum);
+      } while(__STREXW(SW_NONE, (volatile long unsigned *)&switchNum) != 0);
       return t;
    }
 };
