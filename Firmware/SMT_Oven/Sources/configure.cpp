@@ -33,9 +33,9 @@ SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Button, SBut
 /**
  * PID controller parameters
  */
-static constexpr float kp = 4.0f; // 20
-static constexpr float ki = 0.0f; // .016
-static constexpr float kd = 0.0f; // 62.5
+static constexpr float kp = 20.0;   //4.0f; // 20.0
+static constexpr float ki =  0.016; //0.0f; //  0.016
+static constexpr float kd = 62.5;   //0.0f; // 62.5
 
 /**
  * Get current temperature\n
@@ -47,7 +47,7 @@ float getTemperature() {
    for (int overSample=0; overSample<4; overSample++) {
       for (int t=0; t<=3; t++) {
          float temperature, coldReference;
-         int status = temperatureSensors[t].getReading(temperature, coldReference);
+         int status = temperatureSensors[t].getEnabledReading(temperature, coldReference);
          if (status == 0) {
             foundSensorCount++;
             value += temperature;
@@ -56,20 +56,33 @@ float getTemperature() {
    }
    if (foundSensorCount==0) {
       // Safe value to return!
-      return 10000.0;
+      return NAN;
    }
    return value/foundSensorCount;
 }
 
-void setHeater(float dutyCycle) {
-   ovenControl.setHeaterDutycycle(dutyCycle);
+void outPutControl(float dutyCycle) {
+   int heaterDutycycle;
+   int fanDutycycle;
+
+   if (dutyCycle>=0) {
+      heaterDutycycle = dutyCycle;
+      fanDutycycle    = minimumFanSpeed;
+   }
+   else {
+      heaterDutycycle = 0;
+      fanDutycycle    = -dutyCycle;
+      if (fanDutycycle<minimumFanSpeed) {
+         fanDutycycle = minimumFanSpeed;
+         heaterDutycycle = 10;
+      }
+   }
+   ovenControl.setHeaterDutycycle(heaterDutycycle);
+   ovenControl.setFanDutycycle(fanDutycycle);
 }
 
 /** PID controller */
-Pid_T<getTemperature, setHeater, pid_pit_channel> pid(kp, ki, kd, pidInterval, 0, 100);
-
-/** Runs a SMT profile */
-RunProfile<profile_pit_channel> runProfile;
+Pid_T<getTemperature, outPutControl, pid_pit_channel> pid(kp, ki, kd, pidInterval, -100, 100);
 
 /** Monitor for case temperature */
 CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor(&temperatureSensors[0]);

@@ -26,13 +26,13 @@
 #include "caseTemperatureMonitor.h"
 
 // Function buttons
-using F1Button = USBDM::GpioB<3>;
-using F2Button = USBDM::GpioB<2>;
-using F3Button = USBDM::GpioB<1>;
-using F4Button = USBDM::GpioB<0>;
+using F1Button = USBDM::GpioB<3, USBDM::ActiveLow>;
+using F2Button = USBDM::GpioB<2, USBDM::ActiveLow>;
+using F3Button = USBDM::GpioB<1, USBDM::ActiveLow>;
+using F4Button = USBDM::GpioB<0, USBDM::ActiveLow>;
 
 // Select button
-using SButton  = USBDM::GpioB<16>;
+using SButton  = USBDM::GpioB<16, USBDM::ActiveLow>;
 
 // PCS # for SPI
 constexpr int lcd_cs_num = 4;
@@ -46,12 +46,52 @@ using CaseFan  = USBDM::Ftm0Channel<2>;
 using Spare    = USBDM::Ftm0Channel<3>;
 
 // Simple GPIO outputs
+class OvenFanLed : public USBDM::GpioC<6> {
+public:
+   /**
+    * Turn on LED
+    */
+   static void on() {
+      high();
+   }
+   /**
+    * Turn off LED
+    */
+   static void off() {
+      low();
+   }
+   /**
+    * Initialise LED
+    */
+   static void init() {
+     setOutput();
+     off();
+   }
+};
+class HeaterLed : public USBDM::GpioD<7> {
+public:
+   /**
+    * Turn on LED
+    */
+   static void on() {
+      high();
+   }
+   /**
+    * Turn off LED
+    */
+   static void off() {
+      low();
+   }
+   /**
+    * Initialise LED
+    */
+   static void init() {
+     setOutput();
+     off();
+   }
+};
 using OvenFan    = USBDM::GpioC<1>;
-using OvenFanLed = USBDM::GpioD<7>;
 using Heater     = USBDM::GpioC<2>;
-using HeaterLed  = USBDM::GpioC<6>;
-
-//using Buzzer     = USBDM::GpioC<5>;
 
 using Vmains     = USBDM::Cmp0;
 
@@ -76,8 +116,8 @@ extern ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenCont
 // Switch debouncer for front panel buttons
 extern SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Button, SButton> buttons;
 
-/** PID controller sample interval */
-constexpr float pidInterval = 1000 * USBDM::ms;
+/** PID controller sample interval - seconds */
+constexpr float pidInterval = 1.0f;
 
 /**
  * Get oven temperature
@@ -87,18 +127,28 @@ extern float getTemperature();
 /*
  * Set heater drive level
  */
-extern void setHeater(float dutyCycle);
+extern void outPutControl(float dutyCycle);
 /**
  * PID controller
  */
-extern Pid_T<getTemperature, setHeater, pid_pit_channel> pid;
+extern Pid_T<getTemperature, outPutControl, pid_pit_channel> pid;
 
 /**
  * Buzzer
  */
-class Buzzer : public USBDM::GpioC<5> {
+class Buzzer : private USBDM::GpioC<5> {
 public:
-   // Sound buzzer with abort on button press
+   /**
+    * Initialise buzzer
+    */
+   static void init() {
+      Buzzer::setOutput();
+      Buzzer::low();
+   }
+   /**
+    * Sound buzzer with abort on button press.\n
+    * Button press is consumed.
+    */
    static void play() {
       high();
       USBDM::wait(beepTime, [](){ return buttons.getButton() != SW_NONE; });
@@ -106,10 +156,10 @@ public:
    }
 };
 
-#include "runProfile.h"
+#include <runProfile.h>
 
 /** Runs a SMT profile */
-extern RunProfile<profile_pit_channel> runProfile;
+//extern RunProfile<profile_pit_channel> runProfile;
 
 /**
  * Monitor case temperature
