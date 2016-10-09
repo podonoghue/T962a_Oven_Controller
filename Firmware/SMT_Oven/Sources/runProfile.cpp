@@ -5,42 +5,104 @@
  *      Author: podonoghue
  */
 #include <math.h>
+#include <solderProfiles.h>
 #include "hardware.h"
 #include "configure.h"
-#include "profiles.h"
 #include "messageBox.h"
+#include "editProfile.h"
 
 using namespace USBDM;
 using namespace std;
 
 namespace RunProfile {
-
+/**
+ * Functions associated with drawing profiles and related
+ */
 namespace Draw {
 
+// Origin for plot
 static constexpr int X_ORIGIN   = 16; // Pixels from left edge
 static constexpr int Y_ORIGIN   = 7;  // Pixels from bottom edge
 
+// Location of profile name
+static constexpr int NAME_OFFSET_X = 17; // Pixels from left
+static constexpr int NAME_OFFSET_Y = 0;  // Pixels from top
+
 static constexpr int MIN_TEMP   = 50;   // Minimum temperature to plot (C)
-static constexpr int MAX_TEMP   = 280;  // Maximum temperature to plot  (C)
+static constexpr int MAX_TEMP   = 305;  // Maximum temperature to plot  (C)
 static constexpr int MAX_TIME   = 9*60; // Maximum time to plot (s)
 static constexpr int GRID_TIME  = 60;   // Time grid spacing (s) must be 60*N
 static constexpr int GRID_TEMP  = 50;   // Temperature grid spacing (C)
-static constexpr int SCALE_TIME = 6;    // Time -> pixel scaling (s/pixel)
-static constexpr int SCALE_TEMP = 5;    // Temperature -> pixel scaling (C/pixel)
 
-/** State when drawing profile */
-static State state;
+// These stop the plot resizing when too small
+static constexpr int MIN_SCALE_TEMP  = 150;   // Minimum temperature for scaling (C)
+static constexpr int MIN_SCALE_TIME  = 200;   // Minimum time for scaling (s)
 
-/** Time when drawing profile */
-static int   time;
+/** Points to plot */
+static uint16_t points[MAX_TIME];
 
-/** Set-point when drawing profile */
-static float setpoint;
+/** Maximum time to plot (# of points in points) */
+int maxTime     = 0;
 
+/** Maximum temperature to plot */
+int maxTemperature    = 0;
+/**
+ *  Calculated time scale (from points[])
+ *  Time -> pixel scaling (s/pixel)
+ */
+float timeScale        = 4;
+/**
+ *  Calculated temperature scale (from points[])
+ *  Temperature -> pixel scaling (C/pixel)
+ */
+float temperatureScale = 4;
+/**
+ * Determines the plot scaling from the points array
+ */
+static void calculateScales() {
+   // Don't scale below this
+   maxTemperature = MIN_SCALE_TEMP;
+   for (int time=0; time<maxTime; time++) {
+      //      printf("points[%d]=%d, maxTemperature=%d\n",
+      //            time, points[time], maxTemperature);
+      if (points[time]>maxTemperature) {
+         maxTemperature = points[time];
+      }
+   }
+   temperatureScale = (maxTemperature-MIN_TEMP)/(float)(lcd.LCD_HEIGHT-lcd.FONT_HEIGHT-10);
+   timeScale        = ((maxTime<MIN_SCALE_TIME)?MIN_SCALE_TIME:maxTime)/(float)(lcd.LCD_WIDTH-12-24);
+   //   printf("temperatureScale=%f, timeScale=%f\n",
+   //         temperatureScale, timeScale);
+}
+/**
+ * Clears the plot
+ */
+static void reset() {
+   maxTime = 0;
+   memset(points, 0, sizeof(points));
+   calculateScales();
+}
+/**
+ * Adds a point to the plot array
+ *
+ * @param time        Time in seconds [0..MAX_TIME]
+ * @param temperature Temperature in Celsius
+ */
+static void addPoint(int time, int temperature) {
+   //   printf("time=%d, temperature=%d, maxTime=%d\n",
+   //         time, temperature, maxTime);
+   if (time>MAX_TIME) {
+      return;
+   }
+   if (time>maxTime) {
+      maxTime = time;
+   }
+   points[time] = temperature;
+}
 /**
  * Plot temperature point on screen.\n
- * Temperatures [51..270]\n
- * Time [0s..540s]
+ * Temperatures [MIN_TEMP..MAX_TEMP] C\n
+ * Time [0s..MAX_TIME] s
  *
  * @param time        Time for horizontal axis
  * @param temperature Temperature to plot
@@ -53,11 +115,23 @@ static void plotPoint(int time, int temperature) {
    if ((time<0)||(time>MAX_TIME)) {
       return;
    }
-   int x = X_ORIGIN+(time/SCALE_TIME);
-   int y = lcd.LCD_HEIGHT-Y_ORIGIN-((temperature-MIN_TEMP)/SCALE_TEMP);
+   int x = (int)(X_ORIGIN+round(time/timeScale));
+   int y = (int)round(lcd.LCD_HEIGHT-Y_ORIGIN-round((temperature-MIN_TEMP)/temperatureScale));
    lcd.drawPixel(x,y);
 }
-
+/**
+ * Plot points array on screen
+ */
+static void drawPoints() {
+   for (int time=0; time<maxTime; time++) {
+      plotPoint(time, points[time]);
+   }
+}
+/**
+ * Draw the axis for the plot
+ *
+ * @param name Name of profile to print
+ */
 static void drawAxis(const char *name) {
    lcd.setInversion(false);
    lcd.clearFrameBuffer();
@@ -65,7 +139,7 @@ static void drawAxis(const char *name) {
    // Horizontal axis minute axis ticks
    lcd.drawHorizontalLine(lcd.LCD_HEIGHT-Y_ORIGIN);
    for (int time=60; time<=MAX_TIME; time+=GRID_TIME) {
-      lcd.gotoXY(X_ORIGIN+(time/SCALE_TIME)-3, lcd.LCD_HEIGHT-5);
+      lcd.gotoXY((X_ORIGIN+round(time/timeScale)-3), lcd.LCD_HEIGHT-5);
       lcd.putSmallDigit(time/60);
    }
    static uint8_t min[] = {
@@ -79,7 +153,7 @@ static void drawAxis(const char *name) {
 
    // Vertical axis
    for (int temp=MIN_TEMP; temp<=MAX_TEMP; temp+=GRID_TEMP) {
-      lcd.gotoXY(0, lcd.LCD_HEIGHT-Y_ORIGIN-((temp-MIN_TEMP)/SCALE_TEMP)-2);
+      lcd.gotoXY(0, lcd.LCD_HEIGHT-Y_ORIGIN-round((temp-MIN_TEMP)/temperatureScale)-2);
       if (temp<100) {
          lcd.putSpace(5);
       }
@@ -112,14 +186,26 @@ static void drawAxis(const char *name) {
    lcd.setInversion(false);
 
    // Name
-   constexpr int xNameOffset = 0;
-   constexpr int yNameOffset = 0;
-   lcd.gotoXY(xNameOffset, yNameOffset);
+   lcd.gotoXY(NAME_OFFSET_X, NAME_OFFSET_Y);
+   lcd.setInversion(true);
    lcd.putString(name);
+   lcd.putChar('\n');
+   lcd.setInversion(false);
 }
+
+/** State when drawing profile */
+static State state;
+
+/** Time when drawing profile */
+static int   time;
+
+/** Set-point when drawing profile */
+static float setpoint;
 
 /*
  * Calculates one step of the profile
+ *
+ * @param profile Profile to use
  */
 void calculate(const NvSolderProfile &profile) {
    static int  startOfSoakTime;
@@ -185,26 +271,78 @@ void calculate(const NvSolderProfile &profile) {
       break;
    }
 };
-
-void plot(const NvSolderProfile &profile) {
+/**
+ * Plot the profile to the points buffer
+ *
+ * @param profile Profile to use
+ */
+static void plot(const NvSolderProfile &profile) {
    state    = s_preheat;
    time     = 0;
    setpoint = 50;
    while (state != s_off) {
       calculate(profile);
-      Draw::plotPoint(time, setpoint);
+      addPoint(time, setpoint);
    }
-   lcd.setGraphicMode();
-   lcd.refreshImage();
 }
 
 }; // end namespace Draw
 
+/**
+ * Draw a profile to LCD
+ *
+ * @param profile The profile to draw
+ */
 void drawProfile(const NvSolderProfile &profile) {
-   Draw::drawAxis(profile.description);
+   Draw::reset();
    Draw::plot(profile);
+   Draw::calculateScales();
+   Draw::drawAxis(profile.description);
+   Draw::drawPoints();
    lcd.refreshImage();
    lcd.setGraphicMode();
+}
+/**
+ * Display profiles for selection or editing
+ *
+ * On exit the current profile may be changed
+ */
+void profileMenu() {
+   unsigned profileIndex = ::profileIndex;
+   bool needUpdate = true;
+
+   for(;;) {
+      if (needUpdate) {
+         RunProfile::drawProfile(profiles[profileIndex]);
+         lcd.refreshImage();
+         lcd.setGraphicMode();
+         needUpdate = false;
+      }
+      switch(buttons.getButton()) {
+      case SW_F1:
+         if (profileIndex>0) {
+            profileIndex--;
+            needUpdate = true;
+         }
+         break;
+      case SW_F2:
+         if ((profileIndex+1)<(sizeof(profiles)/sizeof(profiles[0]))) {
+            profileIndex++;
+            needUpdate = true;
+         }
+         break;
+      case SW_F3:
+         EditProfile::run(profiles[profileIndex]);
+         needUpdate = true;
+         break;
+      case SW_S:
+         ::profileIndex.operator =(profileIndex);
+         return;
+      default:
+         break;
+      }
+      __WFI();
+   };
 }
 
 /** Profile being run */
@@ -216,14 +354,10 @@ static volatile int time;
 /** Heater set-point */
 static volatile float setpoint;
 
-/** Profile complete flag */
-static volatile bool complete;
-
 /** Used to record ambient temperature at start (Celsius) */
 static float ambient;
 
-
-State state = s_off;
+static State state = s_off;
 
 static const char *getStateName(State state) {
    switch(state) {
@@ -234,6 +368,7 @@ static const char *getStateName(State state) {
    case s_ramp_up   : return "ramp_up";
    case s_dwell     : return "dwell";
    case s_ramp_down : return "ramp_down";
+   case s_complete  : return "complete";
    case s_manual    : return "manual";
    }
    return "invalid";
@@ -245,17 +380,15 @@ static void handler() {
    static int startOfSoakTime;
    static int startOfDwellTime;
 
-   if (complete) {
-      // Already completed
-      return;
-   }
+   /** Used for timeout for profile changes */
+   static volatile int timeout;
+
    // Advance time
    time++;
 
    // Handle state
    switch (state) {
-   case s_off:
-   case s_manual:
+   case s_complete:
    case s_fail:
       // Not operating
       pid.setSetpoint(0);
@@ -263,11 +396,21 @@ static void handler() {
       ovenControl.setHeaterDutycycle(0);
       ovenControl.setFanDutycycle(0);
       return;
+   case s_off:
+   case s_manual:
+      return;
    case s_preheat:
       // Heat from ambient to start of soak temperature
       // A -> soakTemp1 @ ramp1Slope
       if (setpoint<currentProfile->soakTemp1) {
          setpoint += currentProfile->ramp1Slope;
+         timeout = 0;
+      }
+      else {
+         timeout++;
+         if (timeout>20) {
+            state = s_fail;
+         }
       }
       pid.setSetpoint(setpoint);
       if (getTemperature()>=currentProfile->soakTemp1) {
@@ -280,10 +423,19 @@ static void handler() {
       // soakTemp1 -> soakTemp2 over soakTime time
       if (setpoint<currentProfile->soakTemp2) {
          setpoint = currentProfile->soakTemp1 + (time-startOfSoakTime)*(currentProfile->soakTemp2-currentProfile->soakTemp1)/currentProfile->soakTime;
+         timeout = 0;
       }
       pid.setSetpoint(setpoint);
-      if ((time >= (startOfSoakTime+currentProfile->soakTime)) && (getTemperature()>=currentProfile->soakTemp2)) {
-         state = s_ramp_up;
+      if (time >= (startOfSoakTime+currentProfile->soakTime)) {
+         if (getTemperature()>=currentProfile->soakTemp2) {
+            state = s_ramp_up;
+         }
+         else {
+            timeout++;
+            if (timeout>40) {
+               state = s_fail;
+            }
+         }
       }
       break;
    case s_ramp_up:
@@ -291,11 +443,18 @@ static void handler() {
       // soakTemp2 -> peakTemp @ ramp2Slope
       if (setpoint < currentProfile->peakTemp) {
          setpoint += currentProfile->ramp2Slope;
+         timeout = 0;
       }
       pid.setSetpoint(setpoint);
       if (getTemperature() >= currentProfile->peakTemp) {
          state = s_dwell;
          startOfDwellTime = time;
+      }
+      else {
+         timeout++;
+         if (timeout>40) {
+            state = s_fail;
+         }
       }
       break;
    case s_dwell:
@@ -313,8 +472,7 @@ static void handler() {
       }
       pid.setSetpoint(setpoint);
       if (getTemperature()<ambient) {
-         state = s_off;
-         complete = true;
+         state = s_complete;
       }
       break;
    }
@@ -362,6 +520,8 @@ static void thermocoupleStatus() {
 
 /**
  * Reports thermocouple status to LCD and log
+ *
+ * @param prompt Method to print the menu prompt
  */
 static void thermocoupleStatus(void (*prompt)()) {
    thermocoupleStatus();
@@ -376,12 +536,15 @@ static void thermocoupleStatus(void (*prompt)()) {
    lcd.setGraphicMode();
 }
 
-/** Flag used to cause report once per second */
+/** Flag used to limit reporting to once per second */
 static bool doReport = true;
 
 /** Dialogue prompt */
 static void (*prompt)();
 
+/**
+ * Report oven state
+ */
 static bool report() {
    if (doReport) {
       thermocoupleStatus(prompt);
@@ -390,7 +553,6 @@ static bool report() {
    }
    return buttons.peekButton() != SW_NONE;
 };
-
 /**
  * Monitor thermocouple status
  * Also allows thermocouples to be disabled
@@ -398,7 +560,6 @@ static bool report() {
 void monitor() {
 
    time      = 0;
-   complete  = false;
    state     = s_off;
 
    printf(title);
@@ -413,7 +574,6 @@ void monitor() {
       lcd.setInversion(true); lcd.putSpace(3); lcd.putString("T4");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(4);
       lcd.setInversion(true); lcd.putSpace(4); lcd.putString("Exit"); lcd.putSpace(4); lcd.setInversion(false);
    };
-
    // Report every second
    do {
       do {
@@ -431,37 +591,28 @@ void monitor() {
       }
    } while (true);
 }
-
 /**
  * Run profile
  *
  * @param profile The profile to run
  */
-void run(const NvSolderProfile &profile) {
+void runProfile(const NvSolderProfile &profile) {
 
    if (!checkThermocouples()) {
       return;
    }
-
    char buff[100];
    snprintf(buff, sizeof(buff), "%s\n\nRun Profile?", (const char *)profile.description);
    MessageBoxResult rc = messageBox("Run Profile", buff, MSG_YES_NO);
    if (rc != MSG_IS_YES) {
       return;
    }
-
    state          = s_preheat;
    time           = 0;
-   complete       = false;
    currentProfile = &profile;
 
-   if (isnan(getTemperature())) {
-      messageBox("Error", "No thermocouples");
-      return;
-   }
    printf("\nProfile\n");
    currentProfile->print();
-
    /*
     * Obtain ambient temperature as reference
     */
@@ -469,10 +620,6 @@ void run(const NvSolderProfile &profile) {
    printf("Ambient, %5.1f\n", ambient);
    printf(title);
 
-   if (isnan(ambient)) {
-      // Dummy value for testing without probes
-      ambient = 25.0f;
-   }
    setpoint = ambient;
    pid.setSetpoint(ambient);
    pid.enable();
@@ -485,8 +632,9 @@ void run(const NvSolderProfile &profile) {
    USBDM::Pit::enableInterrupts(profile_pit_channel);
 
    prompt = []() {
-      lcd.gotoXY(128-4-lcd.FONT_WIDTH*7, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-      lcd.setInversion(true); lcd.putString(" Abort "); lcd.setInversion(false);
+      lcd.gotoXY(lcd.LCD_WIDTH-4-lcd.FONT_WIDTH*9-5*3, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Plot"); lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(3);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Abort"); lcd.putSpace(3); lcd.setInversion(false);
    };
    int lastTime = -2;
    // Wait for completion
@@ -496,7 +644,7 @@ void run(const NvSolderProfile &profile) {
          thermocoupleStatus(prompt);
          lastTime = time;
       }
-      if (complete) {
+      if ((state == s_complete) || (state == s_fail)) {
          break;
       }
    } while (buttons.getButton() != SW_S);
@@ -512,14 +660,15 @@ void run(const NvSolderProfile &profile) {
 
    // Sound buzzer
    Buzzer::play();
-
+   if (state != s_complete) {
+      state = s_fail;
+   }
    prompt = []() {
-      lcd.gotoXY(128-4-lcd.FONT_WIDTH*17, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-      lcd.setInversion(true); lcd.putString(complete?" Complete - Exit ":" Aborted  - Exit "); lcd.setInversion(false);
+      lcd.gotoXY(128-4-lcd.FONT_WIDTH*17+2*4, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+      lcd.setInversion(true); lcd.putSpace(3);
+      lcd.putString((state==s_complete)?"Complete - Exit":"Failed   - Exit");
+      lcd.putSpace(3); lcd.setInversion(false);
    };
-
-   state = s_off;
-
    // Report every second until key-press
    do {
       doReport = true;
@@ -528,8 +677,11 @@ void run(const NvSolderProfile &profile) {
    // Discard key
    buttons.getButton();
    ovenControl.setFanDutycycle(0);
+   state = s_off;
 }
-
+/**
+ * Logs oven status to stdout
+ */
 static void logger() {
    time ++;
    printf(" %9s,  %4d,  %5.1f,  %5.1f,   %4d, %4d,", getStateName(state), time, pid.getSetpoint(), pid.getInput(), ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
@@ -549,7 +701,6 @@ static void logger() {
    }
    puts("");
 }
-
 /**
  * Manually control oven
  */

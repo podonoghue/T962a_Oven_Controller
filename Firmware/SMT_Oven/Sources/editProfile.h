@@ -8,7 +8,7 @@
 #ifndef SOURCES_EDITPROFILE_H_
 #define SOURCES_EDITPROFILE_H_
 
-#include "profiles.h"
+#include <solderProfiles.h>
 
 class ProfileSetting {
 public:
@@ -110,10 +110,10 @@ private:
    SolderProfile &profile;
 
    /** Current menu selection */
-   int selection = 0;
+   static int selection;
 
    /** Offset scrolled for menu items */
-   int offset    = 0;
+   static int offset;
 
    /** Number of editable items in menu */
    static constexpr int NUM_ITEMS = 8;
@@ -128,7 +128,7 @@ private:
          new ProfileSetting_T<float>   (profile.ramp2Slope,    "Ramp 2 up    %3.1f\177C/s",  0.1f,  3.0f,  0.1f,   6.0f),
          new ProfileSetting_T<uint16_t>(profile.peakTemp,      "Peak temp.   %3d\177C",        1,    210,   180,    300),
          new ProfileSetting_T<uint16_t>(profile.peakDwell,     "Peak dwell   %3ds",            1,     20,     1,     30),
-         new ProfileSetting_T<float>   (profile.rampDownSlope, "Ramp down    %3.1f\177C/s", 0.1f,   3.0f, -6.0f,  -0.1f),
+         new ProfileSetting_T<float>   (profile.rampDownSlope, "Ramp down    %3.1f\177C/s", 0.1f,  -3.0f, -6.0f,  -0.1f),
    };
 
    /**

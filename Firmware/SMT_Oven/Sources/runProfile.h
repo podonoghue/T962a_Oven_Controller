@@ -22,7 +22,7 @@ extern void drawProfile(const NvSolderProfile &profile);
  *
  * @param profile The profile to run
  */
-extern void run(const NvSolderProfile &profile);
+extern void runProfile(const NvSolderProfile &profile);
 
 /**
  * Monitor thermocouple status
@@ -34,6 +34,13 @@ extern void monitor();
  * Manually control oven
  */
 extern void manualMode();
+
+/**
+ * Display profiles for selection or editing
+ *
+ * On exit the current profile may be changed
+ */
+extern void profileMenu();
 
 }; // namespace RunProfile
 

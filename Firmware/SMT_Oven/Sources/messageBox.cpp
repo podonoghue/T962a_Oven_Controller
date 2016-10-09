@@ -33,7 +33,7 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
    lcd.setInversion(false);
    lcd.clearFrameBuffer();
    lcd.gotoXY(0,0);
-   lcd.putSpace(14); lcd.setInversion(true); lcd.putChar(' '); lcd.putString(title); lcd.putChar(' '); lcd.setInversion(false);
+   lcd.putSpace(5); lcd.setInversion(true); lcd.putChar(' '); lcd.putString(title); lcd.putChar(' '); lcd.setInversion(false);
 
    lcd.gotoXY(0, 12+lcd.FONT_HEIGHT);
    lcd.putString(message);

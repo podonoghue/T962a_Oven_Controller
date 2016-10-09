@@ -8,6 +8,7 @@
 #ifndef SOURCES_CONFIGURE_H_
 #define SOURCES_CONFIGURE_H_
 
+#include <solderProfiles.h>
 #include <string.h>
 
 #include "derivative.h"
@@ -19,7 +20,6 @@
 #include "max31855.h"
 #include "fonts.h"
 #include "pid.h"
-#include "profiles.h"
 #include "zerocrossing_pwm.h"
 #include "switch_debouncer.h"
 #include "settings.h"

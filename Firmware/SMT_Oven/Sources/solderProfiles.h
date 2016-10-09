@@ -5,8 +5,8 @@
  *      Author: podonoghue
  */
 
-#ifndef SOURCES_PROFILES_H_
-#define SOURCES_PROFILES_H_
+#ifndef SOURCES_SOLDERPROFILES_H_
+#define SOURCES_SOLDERPROFILES_H_
 
 #include <stdio.h>
 #include <stdint.h>
@@ -21,7 +21,12 @@ enum State {
    s_ramp_up,
    s_dwell,
    s_ramp_down,
+   s_complete,
    s_manual,
+};
+
+enum {
+   P_UNLOCKED = (1<<0),
 };
 
 class NvSolderProfile;
@@ -31,7 +36,8 @@ class NvSolderProfile;
  */
 struct SolderProfile {
 public:
-   char     description[40];  // Description of the profile
+   uint8_t  flags;            // Various flags
+   char     description[39];  // Description of the profile
    float    ramp1Slope;       // Slope up to soakTemp1
    uint16_t soakTemp1;        // Temperature for start of soak
    uint16_t soakTemp2;        // Temperature for end of soak
@@ -58,6 +64,19 @@ public:
     * @param other Profile to copy from
     */
    void operator=(const NvSolderProfile &other );
+
+   bool isValid() {
+      if (this->soakTemp2<this->soakTemp1) {
+         return false;
+      }
+      if (this->peakTemp<this->soakTemp2) {
+         return false;
+      }
+      if (this->peakTemp<this->soakTemp2) {
+         return false;
+      }
+      return true;
+   }
 };
 
 /**
@@ -72,7 +91,9 @@ private:
    }
 
 public:
-   USBDM::NonvolatileArray<char, 40> description;    // Description of the profile
+   USBDM::Nonvolatile<uint8_t>       flags;          // Description of the profile
+   USBDM::NonvolatileArray<char, sizeof(SolderProfile::description)>
+                                     description;    // Description of the profile
    USBDM::Nonvolatile<float>         ramp1Slope;     // Slope up to soakTemp1
    USBDM::Nonvolatile<uint16_t>      soakTemp1;      // Temperature for start of soak
    USBDM::Nonvolatile<uint16_t>      soakTemp2;      // Temperature for end of soak
@@ -127,4 +148,4 @@ constexpr unsigned MAX_PROFILES = 10;
 /** The actual profile in nonvolatile memory */
 extern NvSolderProfile profiles[MAX_PROFILES];
 
-#endif /* SOURCES_PROFILES_H_ */
+#endif /* SOURCES_SOLDERPROFILES_H_ */

@@ -10,13 +10,13 @@
    <i> In CMSIS this will determine the ISR stack size
    <0x0-0x8000> 
 */
-__stack_size = 0x2000;
+__stack_size = 0x3000;
 
 /* <o> Minimum Heap Size 
    <i> Actual heap may be larger as it fills all unused RAM up to STACK
    <0x0-0x8000> 
 */
-__heap_size  = 0x2000;
+__heap_size  = 0x1000;
 
 /* <o0> Size of RAM region reserved for bit-band or bit-manipulation-engine (bytes) 
    <i>  Space is allocated in SRAM_U memory region

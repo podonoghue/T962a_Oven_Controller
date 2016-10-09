@@ -8,8 +8,8 @@
 #ifndef SOURCES_SETTINGS_H_
 #define SOURCES_SETTINGS_H_
 
+#include <solderProfiles.h>
 #include "flash.h"
-#include "profiles.h"
 
 /** Length of beep in seconds */
 extern USBDM::Nonvolatile<int> beepTime;
@@ -31,6 +31,18 @@ extern USBDM::Nonvolatile<int> t3Offset;
 
 /** Offset added to thermocouple #4 */
 extern USBDM::Nonvolatile<int> t4Offset;
+
+/** Whether thermocouple #1 is enabled */
+extern USBDM::Nonvolatile<bool> t1Enable;
+
+/** Whether thermocouple #1 is enabled */
+extern USBDM::Nonvolatile<bool> t2Enable;
+
+/** Whether thermocouple #1 is enabled */
+extern USBDM::Nonvolatile<bool> t3Enable;
+
+/** Whether thermocouple #1 is enabled */
+extern USBDM::Nonvolatile<bool> t4Enable;
 
 /** Index of current profile */
 extern USBDM::Nonvolatile<int> profileIndex;

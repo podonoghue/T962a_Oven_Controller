@@ -31,7 +31,7 @@ protected:
    USBDM::Nonvolatile<int> &offset;
 
    /** Used to disable sensor */
-   bool enabled;
+   USBDM::Nonvolatile<bool> &enabled;
 
    /**
     * Initialise the LCD
@@ -49,8 +49,6 @@ protected:
 
       // Record CTAR value in case SPI shared
       spiCtarValue = spi.getCTAR0Value();
-
-      enabled = true;
    }
 
 public:
@@ -61,8 +59,8 @@ public:
     * @param pinNum  Number of PCS to use
     * @param offset  Offset to add to reading from probe
     */
-   Max31855(USBDM::Spi &spi, int pinNum, USBDM::Nonvolatile<int> &offset)
-: spi(spi), pinNum(pinNum), offset(offset) {
+   Max31855(USBDM::Spi &spi, int pinNum, USBDM::Nonvolatile<int> &offset, USBDM::Nonvolatile<bool> &enabled) :
+      spi(spi), pinNum(pinNum), offset(offset), enabled(enabled) {
       initialise();
    }
 

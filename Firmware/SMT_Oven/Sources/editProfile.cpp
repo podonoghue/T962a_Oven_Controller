@@ -11,11 +11,17 @@
 
 template<typename T> char ProfileSetting_T<T>::buff[];
 
+/** Current menu selection */
+int EditProfile::selection = 0;
+
+/** Offset scrolled for menu items */
+int EditProfile::offset = 0;
+
 /**
  * Draw screen
  */
 void EditProfile::drawScreen() {
-   static constexpr int MAX_VISIBLE_ITEMS = 6;
+   static constexpr int MAX_VISIBLE_ITEMS = (lcd.LCD_HEIGHT/8)-2;
 
    // Adjust menu so selected item is visible
    if ((selection-offset) >= MAX_VISIBLE_ITEMS) {
@@ -106,12 +112,17 @@ bool EditProfile::doit() {
  * @param nvProfile The profile to edit
  */
 void EditProfile::run(NvSolderProfile &nvProfile) {
+
+   if ((nvProfile.flags&P_UNLOCKED) == 0) {
+      messageBox("Profile is locked", " Profile cannot be\n changed", MSG_OK);
+      return;
+   }
    // Make copy of profile to edit
-   SolderProfile sp;
-   sp = nvProfile;
+   SolderProfile tempProfile;
+   tempProfile = nvProfile;
 
    // Do the editing
-   EditProfile editProfile(sp);
+   EditProfile editProfile(tempProfile);
 
    // Prompt user to save any changes
    MessageBoxResult rc;
@@ -120,11 +131,18 @@ void EditProfile::run(NvSolderProfile &nvProfile) {
       if (editProfile.doit() || changed) {
          changed = true;
          char buff[100];
-         snprintf(buff, sizeof(buff), "%s\n\nSave Profile changes?", sp.description);
-         rc = messageBox("Profile changed", buff, MSG_YES_NO_CANCEL);
-         if (rc == MSG_IS_YES) {
-            // Update profile in NV ram
-            nvProfile = sp;
+         if (!tempProfile.isValid()) {
+            snprintf(buff, sizeof(buff), "%s\n\nProfile is invalid\nPlease check", tempProfile.description);
+            messageBox("Profile changed", buff, MSG_OK);
+            rc = MSG_IS_CANCEL;
+         }
+         else {
+            snprintf(buff, sizeof(buff), "%s\n\nSave Profile changes?", tempProfile.description);
+            rc = messageBox("Profile changed", buff, MSG_YES_NO_CANCEL);
+            if (rc == MSG_IS_YES) {
+               // Update profile in NV ram
+               nvProfile = tempProfile;
+            }
          }
       }
       else {

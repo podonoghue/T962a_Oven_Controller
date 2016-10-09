@@ -35,6 +35,18 @@ __attribute__ ((section(".flexRAM")))
 Nonvolatile<int> t4Offset;
 
 __attribute__ ((section(".flexRAM")))
+Nonvolatile<bool> t1Enable;
+
+__attribute__ ((section(".flexRAM")))
+Nonvolatile<bool> t2Enable;
+
+__attribute__ ((section(".flexRAM")))
+Nonvolatile<bool> t3Enable;
+
+__attribute__ ((section(".flexRAM")))
+Nonvolatile<bool> t4Enable;
+
+__attribute__ ((section(".flexRAM")))
 Nonvolatile<int> profileIndex;
 
 __attribute__ ((section(".flexRAM")))
@@ -75,7 +87,7 @@ void Settings::initialiseSettings() {
    profiles[i++] = nc31profile;
    profiles[i++] = syntechlfprofile;
    for (;i<(sizeof(profiles)/sizeof(profiles[0]));i++) {
-      char buff[40];
+      char buff[sizeof(NvSolderProfile::description)];
       snprintf(buff, sizeof(buff), "Profile #%d", i);
       profiles[i] = defaultProfile;
       profiles[i].description = buff;
@@ -87,6 +99,10 @@ void Settings::initialiseSettings() {
    t2Offset        = thermo2Setting.defaultValue;
    t3Offset        = thermo3Setting.defaultValue;
    t4Offset        = thermo4Setting.defaultValue;
+   t1Enable        = true;
+   t2Enable        = true;
+   t3Enable        = true;
+   t4Enable        = true;
    beepTime        = beepSetting.defaultValue;
    maxHeaterTime   = heaterSetting.defaultValue;
 
@@ -98,13 +114,14 @@ void Settings::initialiseSettings() {
  */
 void Settings::testBeep(const Setting *setting) {
    (void)setting;
-   char buff[lcd.LCD_WIDTH/lcd.FONT_WIDTH+2];
-   snprintf(buff, sizeof(buff), "Duration = %ds", (int)beepTime);
+//   char buff[lcd.LCD_WIDTH/lcd.FONT_WIDTH+2];
+//   snprintf(buff, sizeof(buff), "Duration = %ds", (int)beepTime);
 //   testingScreen("Test Beep", buff);
    Buzzer::play();
 }
 
 class FanTest {
+
 private:
    /**
     * Display testing screen

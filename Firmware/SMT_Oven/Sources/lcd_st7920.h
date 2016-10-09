@@ -249,13 +249,20 @@ public:
     * @param height  Height of image
     */
    void writeImage(const uint8_t *dataPtr, int x, int y, int width, int height) {
+      if ((x<0)||(y<0)) {
+         // Doesn't support negative clipping
+         return;
+      }
       if ((x>=LCD_WIDTH)||(y>=LCD_HEIGHT)) {
+         // Entirely off screen
          return;
       }
       if ((x+width) > LCD_WIDTH) {
+         // Clip on right
          width = LCD_WIDTH-x;
       }
       if ((y+height) > LCD_HEIGHT) {
+         // Clip at bottom
          height = LCD_HEIGHT-y;
       }
       int offset          = x&0x07;
@@ -338,7 +345,7 @@ public:
       int width  = USBDM::Fonts::FONT6x8[0][0];
       int height = USBDM::Fonts::FONT6x8[0][1];
       if (ch == '\n') {
-         putSpace(LCD_WIDTH-x-1);
+         putSpace(LCD_WIDTH-x);
          x  = 0;
          y += fontHeight;
          fontHeight = 0;
@@ -468,6 +475,10 @@ public:
     * @param y2 Vertical end position in pixels
     */
    void drawVerticalLine(int x, int y1=0, int y2=LCD_HEIGHT-1) {
+      if ((x<0)||(x>=LCD_WIDTH)) {
+         // Off screen
+         return;
+      }
       uint8_t mask = 0x80>>(x&7);
       int    offset = x>>3;
       for (int yy=y1*(LCD_WIDTH/8); yy<=y2*(LCD_WIDTH/8); yy+=(LCD_WIDTH/8)) {
@@ -486,6 +497,10 @@ public:
     * @param y Vertical position in pixels
     */
    void drawHorizontalLine(int y) {
+      if ((y<0)||(y>=LCD_HEIGHT)) {
+         // Off screen
+         return;
+      }
       uint8_t mask = invertMask?0x00:0xFF;
       for (int xx=0; xx<(LCD_WIDTH/8); xx++) {
          frameBuffer[(y*(LCD_WIDTH/8))+xx] = mask;
@@ -499,6 +514,14 @@ public:
     * @param y Vertical position in pixel
     */
    void drawPixel(int x, int y) {
+      if ((x<0)||(x>=LCD_WIDTH)) {
+         // Off screen
+         return;
+      }
+      if ((y<0)||(y>=LCD_HEIGHT)) {
+         // Off screen
+         return;
+      }
       uint8_t mask    = 0x80>>(x&7);
       int     hOffset = x>>3;
       if (invertMask) {

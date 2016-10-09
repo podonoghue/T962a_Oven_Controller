@@ -18,10 +18,10 @@ LCD_ST7920 lcd(spi, lcd_cs_num);
 
 /** Temperature sensors */
 Max31855 temperatureSensors[4] = {
-   Max31855(spi, t1_cs_num, t1Offset),
-   Max31855(spi, t2_cs_num, t2Offset),
-   Max31855(spi, t3_cs_num, t3Offset),
-   Max31855(spi, t4_cs_num, t4Offset),
+   Max31855(spi, t1_cs_num, t1Offset, t1Enable),
+   Max31855(spi, t2_cs_num, t2Offset, t2Enable),
+   Max31855(spi, t3_cs_num, t3Offset, t3Enable),
+   Max31855(spi, t4_cs_num, t4Offset, t4Enable),
 };
 
 /** PWM for heater & oven fan */
@@ -61,6 +61,11 @@ float getTemperature() {
    return value/foundSensorCount;
 }
 
+/**
+ * Set output controlling oven
+ *
+ * @param dutyCycle Controls the Heater/Fan
+ */
 void outPutControl(float dutyCycle) {
    int heaterDutycycle;
    int fanDutycycle;
