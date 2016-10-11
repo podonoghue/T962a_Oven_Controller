@@ -130,7 +130,7 @@ OutputEnabled5_OutputMedium3=0
 OutputEnabled5_OutputMedium4=2
 OutputDefault5=0
 Configuration5_Name1=OutputConfigurationParameter1
-Configuration5_Item1=BoardEdgeRoutToolDia=2000000|GenerateBoardEdgeRout=False|GenerateDrilledSlotsG85=False|GenerateEIADrillFile=False|GenerateSeparatePlatedNonPlatedFiles=False|NumberOfDecimals=4|NumberOfUnits=2|OptimizeChangeLocationCommands=True|OriginPosition=Relative|Record=DrillView|Units=Imperial|ZeroesMode=KeepLeadingAndTrailingZeroes
+Configuration5_Item1=BoardEdgeRoutToolDia=2000000|GenerateBoardEdgeRout=False|GenerateDrilledSlotsG85=False|GenerateEIADrillFile=False|GenerateSeparatePlatedNonPlatedFiles=False|NumberOfDecimals=2|NumberOfUnits=4|OptimizeChangeLocationCommands=True|OriginPosition=Relative|Record=DrillView|Units=Metric|ZeroesMode=KeepLeadingAndTrailingZeroes
 OutputType6=Assembly
 OutputName6=Assembly Drawings
 OutputCategory6=Assembly
@@ -252,7 +252,7 @@ MarkNetLabels3=1
 MarkPortsId3=1
 WebOutputMediumType3=FS
 OutputDirectory3=C:\Peter\Development\USBDM\PCB\USBDM_JS16_SOIC20[Minimal]
-OutputFilePath4=C:\Users\podonoghue\Documents\Development\PCB\T962a\Project Outputs for T962a\
+OutputFilePath4=C:\Users\podonoghue\Documents\Development\T962a_Oven_Controller\PCB\T962a\Project Outputs for T962a\
 ReleaseManaged4=1
 OutputBasePath4=Project Outputs for T962a
 OutputPathMedia4=
@@ -271,7 +271,7 @@ RelativeOutputPath2=C:\Users\podonoghue\Documents\Development\PCB\T962a\Project 
 OpenOutputs2=1
 RelativeOutputPath3=
 OpenOutputs3=1
-RelativeOutputPath4=C:\Users\podonoghue\Documents\Development\PCB\T962a\Project Outputs for T962a\
+RelativeOutputPath4=C:\Users\podonoghue\Documents\Development\T962a_Oven_Controller\PCB\T962a\Project Outputs for T962a\
 OpenOutputs4=0
 AddToProject4=1
 TimestampFolder4=0

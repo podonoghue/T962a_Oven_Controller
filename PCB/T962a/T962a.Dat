@@ -1,5 +1,5 @@
-Field=Comment~String~Comment~100|Field=Description~String~Description~100|Field=Designator~String~Designator~100|Field=Footprint~String~Footprint~100|Field=LibRef~String~LibRef~100|Field=Quantity~Integer~Quantity~100|Field=Farnell PN~String~Farnell PN~100|Field=Digikey~String~Digikey~100|ReportField=Currency~<none>|ReportField=ProductionQuantity~1|ReportField=ProjectFileName~T962a.PrjPCB|ReportField=ProjectFullPath~C:\Users\podonoghue\Documents\Development\T962a_Oven_Controller\PCB\T962a\T962a.PrjPCB|ReportField=Title~Bill of Materials For Project [T962a.PrjPCB] (No PCB Document Selected)|ReportField=TotalQuantity~65|ReportField=ReportTime~1:25:06 AM|ReportField=ReportDate~5/10/2016|ReportField=ReportDateTime~5/10/2016 1:25:06 AM|ReportField=OutputName~Bill of Materials|ReportField=OutputType~BOM_PartType|ReportField=GeneratorName~BOM|ReportField=GeneratorDescription~Bill of Materials|ReportField=VariantName~None|ReportField=Address1~|ReportField=Address2~|ReportField=Address3~|ReportField=Address4~|ReportField=Application_BuildNumber~|ReportField=ApprovedBy~|ReportField=Author~|ReportField=CheckedBy~|ReportField=CompanyName~|ReportField=CurrentDate~|ReportField=CurrentTime~|ReportField=Date~|ReportField=DocumentFullPathAndName~|ReportField=DocumentName~|ReportField=DocumentNumber~|ReportField=DrawnBy~|ReportField=Engineer~|ReportField=ImagePath~|ReportField=ModifiedDate~|ReportField=Organization~|ReportField=ProjectName~T-962a Oven Controller|ReportField=Revision~V1.0|ReportField=Rule~|ReportField=SheetNumber~|ReportField=SheetTotal~|ReportField=Time~|ReportField=Title~T-962a Oven Controller|ReportField=DataSourceFileName~T962a.PrjPCB|ReportField=DataSourceFullPath~C:\Users\podonoghue\Documents\Development\T962a_Oven_Controller\PCB\T962a\T962a.PrjPCB
-TP|Test Point|5V, 12V, GND1, GND2, MISO, MOSI, SCK, TP1, Vmains|PCBPIN - 0.9mm|TP|9||
+Field=Comment~String~Comment~100|Field=Description~String~Description~100|Field=Designator~String~Designator~100|Field=Footprint~String~Footprint~100|Field=LibRef~String~LibRef~100|Field=Quantity~Integer~Quantity~100|Field=Farnell PN~String~Farnell PN~100|Field=Digikey~String~Digikey~100|ReportField=Currency~<none>|ReportField=ProductionQuantity~1|ReportField=ProjectFileName~T962a.PrjPCB|ReportField=ProjectFullPath~C:\Users\podonoghue\Documents\Development\T962a_Oven_Controller\PCB\T962a\T962a.PrjPCB|ReportField=Title~Bill of Materials For Project [T962a.PrjPCB] (No PCB Document Selected)|ReportField=TotalQuantity~71|ReportField=ReportTime~9:45:41 AM|ReportField=ReportDate~12/10/2016|ReportField=ReportDateTime~12/10/2016 9:45:41 AM|ReportField=OutputName~Bill of Materials|ReportField=OutputType~BOM_PartType|ReportField=GeneratorName~BOM|ReportField=GeneratorDescription~Bill of Materials|ReportField=VariantName~None|ReportField=Address1~|ReportField=Address2~|ReportField=Address3~|ReportField=Address4~|ReportField=Application_BuildNumber~|ReportField=ApprovedBy~|ReportField=Author~|ReportField=CheckedBy~|ReportField=CompanyName~|ReportField=CurrentDate~|ReportField=CurrentTime~|ReportField=Date~|ReportField=DocumentFullPathAndName~|ReportField=DocumentName~|ReportField=DocumentNumber~|ReportField=DrawnBy~|ReportField=Engineer~|ReportField=ImagePath~|ReportField=ModifiedDate~|ReportField=Organization~|ReportField=ProjectName~T-962a Oven Controller|ReportField=Revision~V1.0|ReportField=Rule~|ReportField=SheetNumber~|ReportField=SheetTotal~|ReportField=Time~|ReportField=Title~T-962a Oven Controller|ReportField=DataSourceFileName~T962a.PrjPCB|ReportField=DataSourceFullPath~C:\Users\podonoghue\Documents\Development\T962a_Oven_Controller\PCB\T962a\T962a.PrjPCB
+TP|Test Point|5V, 12V, GND1, GND2, MISO, MOSI, SCK, T1_CS, T2_CS, T3_CS, T4_CS, TP1, Vmains|PCBPIN - 0.9mm|TP|13||
 DF10S|bRIDGE rECTIFIER|BR1|Bridge-SMT|DF10S|1|2101164|
 Buzzer_PCB|Buzzer (Adafruit 1536)|BZ1|BUZZER_Small|Buzzer_PCB|1||
 4u7/10V|Capacitor SMT 0805|C1|CCNP2012-0805|Cap_CCNP_0805|1||
@@ -13,9 +13,9 @@ Buzzer_PCB|Buzzer (Adafruit 1536)|BZ1|BUZZER_Small|Buzzer_PCB|1||
 PMEG2005CT|Dual Schottky Diode (SMT)|D1|SOT23|PMEG2005CT|1|2459194|
 BAT54S|Dual Diode (SMT)|D2|SOT23|BAT54S|1|F1467519|
 LED Red|LED (Red SMT)|D3, D4|LED-SMT-2|LED SMT,Red|2|5790839|
-Header 1x4|Header, 5-Pin, Right Angle|H1|HDR1X4S|Header 1x4|1||
+Header 1x4|Header, 5-Pin, Right Angle|H1, P2|HDR1X4S|Header 1x4|2||
 Keyboard|Header, 6-Pin|H2|HDR1X6H|Header 6|1||
-2x5 Header|Header 2x5|H3|HDR2X5H|Header 2x5H|1||
+2x5 Header|Header 2x7|H3|HDR2X7H|Header 2x7H|1||
 FB|Ferrite Bead (0805) 0.045OHM, 2A|L2, L3|CR2012-0805|Ferrite Bead 0805|2|1515661|
 LCD-XC-4617|LCD 128 x 64 pixel, ST7920 controller & contrast pot (Jaycar XC-4617)|LCD1|LCD_XC-4617|LCD-XC-4617|1||
 IT-IM130731001|Itead Buck converter|M1|IT-IM130731001|IT-IM130731001|1||
@@ -26,7 +26,8 @@ SWD2X5|SWD Connector 2x5-Pin|P1|SWD-2x5|SWD2X5|1||
 DNP|Resistor|R9|CR2012-0805|Res_CR0805|1||
 10K|Resistor|R10, R11|CR2012-0805|Res_CR0805|2||
 33R|Resistor|R12, R13|CR2012-0805|Res_CR0805|2||
-100R|Resistor|R14|CR2012-0805|Res_CR0805|1||
+85R|Resistor|R14|CR2012-0805|Res_CR0805|1||
+1K|Resistor|R15|CR2012-0805|Res_CR0805|1||
 Terminal2|MULTICOMP  MC24366 Wire-To-Board Terminal Block|TB1|MOLEX-39544-3002|Terminal2|1|2396251|
 Terminal4|MULTICOMP MC24368 Wire-To-Board Terminal Block|TB2, TB3, TB4|MOLEX-39544-3004|Terminal4|3|1624302|
 NCP5501DT50RKG|Fixed LDO Voltage Regulator, 2.5V-16V in, 230mV Dropout, 5V/500mA out, TO-252-3|U1|TO-252|NCP5501DT50RKG|1|2532866|
