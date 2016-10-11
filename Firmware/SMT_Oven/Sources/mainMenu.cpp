@@ -9,6 +9,8 @@
 #include "configure.h"
 #include "mainMenu.h"
 #include "editProfile.h"
+#include "settings.h"
+#include "messageBox.h"
 
 namespace MainMenu {
 
@@ -17,13 +19,25 @@ struct MenuItem {
    void (*action)();
 };
 
+/**
+ * Resets to factory defaults.\n
+ * The user is prompted to confirm before doing so.
+ */
+static void factoryDefaults() {
+   int rc = messageBox("Factory Defaults", "Reset ALL settings\nto Factory defaults?", MSG_YES_NO);
+   if (rc == MSG_IS_YES) {
+      // Reset all to factory defaults
+      Settings::initialiseSettings();
+   }
+}
+
 static MenuItem menu[] = {
       {"Manual Mode",          RunProfile::manualMode,                                 },
       {"Run Profile",          [](){RunProfile::runProfile(profiles[profileIndex]);},  },
-      {"Edit Current Profile", [](){EditProfile::run(profiles[profileIndex]);},        },
+      {"Manage Profiles",      RunProfile::profileMenu,                                },
       {"Thermocouples",        RunProfile::monitor,                                    },
       {"Settings",             [](){settings.runMenu();},                              },
-      {"Select Profile",       RunProfile::profileMenu,                                },
+      {"Factory defaults",     factoryDefaults,                           },
 };
 
 static constexpr int NUM_ITEMS = sizeof(menu)/sizeof(menu[0]);
