@@ -66,7 +66,8 @@ private:
    static char buff[STRING_LENGTH];
 
 public:
-   ProfileSetting_T(T &value,
+   ProfileSetting_T(
+         T &value,
          const char *description,
          T delta,
          T defaultValue,
@@ -102,6 +103,50 @@ public:
    virtual ~ProfileSetting_T() {}
 };
 
+class ProfileNameSetting : public ProfileSetting {
+
+private:
+   /** Variable value */
+   char *name;
+   char nameBuffer[sizeof(SolderProfile::description)+1];
+
+   /** Maximum length of completed description string */
+   static constexpr int STRING_LENGTH = 30;
+
+   unsigned editPosition;
+   unsigned letterPosition;
+
+   bool inName;
+
+public:
+   ProfileNameSetting(char *name) : name(name) {
+      reset();
+   }
+   void draw();
+   bool edit();
+
+   virtual const char *getDescription() const {
+      static char buff[STRING_LENGTH];
+      snprintf(buff, sizeof(buff), "Name:%s", nameBuffer);
+      return buff;
+   }
+   virtual bool increment() {
+      return edit();
+   }
+   virtual bool decrement() {
+      return edit();
+   }
+   virtual bool reset() {
+      strncpy(nameBuffer, name, sizeof(nameBuffer));
+      unsigned i = strlen(name);
+      if (i<sizeof(nameBuffer)) {
+         memset(nameBuffer+i, ' ', sizeof(nameBuffer)-i);
+      }
+      nameBuffer[sizeof(nameBuffer)] = '\0';
+      return true;
+   }
+   virtual ~ProfileNameSetting() {}
+};
 
 class EditProfile {
 
@@ -116,11 +161,12 @@ private:
    static int offset;
 
    /** Number of editable items in menu */
-   static constexpr int NUM_ITEMS = 8;
+   static constexpr int NUM_ITEMS = 9;
 
    /** Describes the editable items */
    ProfileSetting *items[NUM_ITEMS] = {
          //                             value,                 description                  delta default minimum maximum
+         new ProfileNameSetting        (profile.description),
          new ProfileSetting_T<float>   (profile.ramp1Slope,    "Ramp 1 up    %3.1f\177C/s", 0.1f,   1.0f,  0.1f,   6.0f),
          new ProfileSetting_T<uint16_t>(profile.soakTemp1,     "Soak temp. 1 %3d\177C",        1,    140,    80,    160),
          new ProfileSetting_T<uint16_t>(profile.soakTemp2,     "Soak temp. 2 %3d\177C",        1,    183,   150,    250),

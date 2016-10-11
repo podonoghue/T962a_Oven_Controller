@@ -171,6 +171,15 @@ static void drawAxis(const char *name) {
          plotPoint(time, temperature);
       }
    }
+   // Name
+   lcd.gotoXY(NAME_OFFSET_X, NAME_OFFSET_Y);
+   lcd.setInversion(true);
+   lcd.putString(name);
+   lcd.putChar('\n');
+   lcd.setInversion(false);
+}
+
+static void putProfileMenu() {
    // Menu
    constexpr int xMenuOffset = lcd.LCD_WIDTH-21;
    constexpr int yMenuOffset = 8;
@@ -182,14 +191,9 @@ static void drawAxis(const char *name) {
    lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*2);
    lcd.putSpace(1); lcd.putString("F3"); lcd.putSpace(2); lcd.putString("E"); lcd.putSpace(1);
    lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*3);
+   lcd.putSpace(1); lcd.putString("F4"); lcd.putSpace(2); lcd.putString("C"); lcd.putSpace(1);
+   lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*4);
    lcd.putSpace(1); lcd.putString("S "); lcd.putEnter(); lcd.putSpace(2);
-   lcd.setInversion(false);
-
-   // Name
-   lcd.gotoXY(NAME_OFFSET_X, NAME_OFFSET_Y);
-   lcd.setInversion(true);
-   lcd.putString(name);
-   lcd.putChar('\n');
    lcd.setInversion(false);
 }
 
@@ -219,6 +223,7 @@ void calculate(const NvSolderProfile &profile) {
    case s_off:
    case s_manual:
    case s_fail:
+   case s_complete:
       return;
    case s_preheat:
       // Heat from ambient to start of soak temperature
@@ -288,6 +293,88 @@ static void plot(const NvSolderProfile &profile) {
 
 }; // end namespace Draw
 
+namespace CopyProfile {
+static unsigned sourceProfileIndex;
+static unsigned destinationProfileIndex;
+
+void draw() {
+   lcd.setInversion(false);
+   lcd.clearFrameBuffer();
+
+   lcd.gotoXY(10,0);
+   lcd.setInversion(true); lcd.putString(" Copy Profile "); lcd.setInversion(false);
+   lcd.gotoXY(0,1*lcd.FONT_HEIGHT+5);
+   lcd.setInversion(false);lcd.putString("Copy:");     lcd.setInversion(false);
+   lcd.gotoXY(0,2*lcd.FONT_HEIGHT+5);
+   lcd.printf("%d:%s", sourceProfileIndex, (const char *)profiles[sourceProfileIndex].description);
+   lcd.gotoXY(0,4*lcd.FONT_HEIGHT);
+   lcd.setInversion(false);lcd.putString("To:");         lcd.setInversion(false);
+   lcd.gotoXY(0,5*lcd.FONT_HEIGHT);
+   lcd.printf("%d:%s", destinationProfileIndex, (const char *)profiles[destinationProfileIndex].description);
+
+   lcd.gotoXY(8,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+   lcd.setInversion(true); lcd.putSpace(4); lcd.putUpArrow();        lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true); lcd.putSpace(4); lcd.putDownArrow();      lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.gotoXY(lcd.LCD_WIDTH-6*lcd.FONT_WIDTH-22,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+   if ((destinationProfileIndex != sourceProfileIndex) && (profiles[destinationProfileIndex].flags&P_UNLOCKED)) {
+      lcd.setInversion(true); lcd.putSpace(4); lcd.putString("OK");     lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(3);
+   }
+   lcd.gotoXY(lcd.LCD_WIDTH-4*lcd.FONT_WIDTH-11,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+   lcd.setInversion(true); lcd.putSpace(4); lcd.putString("EXIT"); lcd.putSpace(3); lcd.setInversion(false);
+
+   lcd.refreshImage();
+   lcd.setGraphicMode();
+}
+
+void copyProfile(unsigned sourceIndex, unsigned destinationIndex) {
+   MessageBoxResult rc;
+   char buff[100];
+   snprintf(buff, sizeof(buff), "Overwrite:\n%d:%s", destinationIndex, (const char *)profiles[destinationIndex].description );
+   rc = messageBox("Overwrite Profile", buff, MSG_YES_NO);
+   if (rc == MSG_IS_YES) {
+      // Update profile in NV ram
+      profiles[destinationIndex] = profiles[sourceIndex];
+      profiles[destinationIndex].flags = profiles[destinationIndex].flags | P_UNLOCKED;
+   }
+}
+
+void run(int index) {
+   sourceProfileIndex      = index;
+   destinationProfileIndex = 4; // 1st writable profile
+
+   bool needsUpdate = true;
+
+   do {
+      if (needsUpdate) {
+         draw();
+         needsUpdate = false;
+      }
+      switch(buttons.getButton()) {
+      case SW_F1:
+         if (destinationProfileIndex>0) {
+            destinationProfileIndex--;
+            needsUpdate = true;
+         }
+         break;
+      case SW_F2:
+         if ((destinationProfileIndex+1)<(sizeof(profiles)/sizeof(profiles[0]))) {
+            destinationProfileIndex++;
+            needsUpdate = true;
+         }
+         break;
+      case SW_F4:
+         copyProfile(sourceProfileIndex, destinationProfileIndex);
+         needsUpdate = true;
+         break;
+      case SW_S:
+         return;
+      default:
+         break;
+      }
+   } while(true);
+}
+}
+
 /**
  * Draw a profile to LCD
  *
@@ -298,6 +385,7 @@ void drawProfile(const NvSolderProfile &profile) {
    Draw::plot(profile);
    Draw::calculateScales();
    Draw::drawAxis(profile.description);
+   Draw::putProfileMenu();
    Draw::drawPoints();
    lcd.refreshImage();
    lcd.setGraphicMode();
@@ -333,6 +421,10 @@ void profileMenu() {
          break;
       case SW_F3:
          EditProfile::run(profiles[profileIndex]);
+         needUpdate = true;
+         break;
+      case SW_F4:
+         CopyProfile::run(profileIndex);
          needUpdate = true;
          break;
       case SW_S:
