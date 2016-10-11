@@ -165,19 +165,19 @@ const SolderProfile syntechlfprofile = {
       /* rampDownSlope */ -3.0,
 };
 
-/** SynTECH-LF normal temperature lead-free profile */
+/** Default for editing - Amtech 4300 63Sn/37Pb leaded profile */
 const SolderProfile defaultProfile = {
-      /* Empty profile */
+      /* Soak 140-180C/60-90s, above liquidus(183 C) for 30-60s, peak 200-230 C */
       /* flags         */ P_UNLOCKED,
-      /* description   */ "Unused",
-      /* ramp1Slope    */ 1.0,
+      /* description   */ "Empty",
+      /* ramp1Slope    */ 0.8,
       /* soakTemp1     */ 140,
-      /* soakTemp2     */ 200,
-      /* soakTime      */ 100,
-      /* ramp2Slope    */ 3,
-      /* peakTemp      */ 240,
-      /* peakDwell     */ 20,
-      /* rampDownSlope */ -1.0,
+      /* soakTemp2     */ 183,
+      /* soakTime      */ 90,
+      /* ramp2Slope    */ 1.4,
+      /* peakTemp      */ 220,
+      /* peakDwell     */ 10,
+      /* rampDownSlope */ -3.0,
 };
 
 /** The actual profile in nonvolatile memory */
