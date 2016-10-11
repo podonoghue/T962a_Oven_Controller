@@ -36,21 +36,23 @@ enum SwitchValue {
 template<unsigned timerChannel, typename f1, typename f2, typename f3, typename f4, typename sel>
 class SwitchDebouncer {
 private:
-   // Time to debounce the switch (ms)
-   // Long than about 100 ms is a perceptible delay
-   // This also affects how easy it is to do intentional multi-presses
+   /**
+    * Time to debounce the switch (ms)
+    * Long than about 100 ms is a perceptible delay
+    * This also affects how easy it is to do intentional multi-presses
+    */
    static constexpr int DEBOUNCE_THRESHOLD = 100;
 
-   // Auto-repeat delay (ms)
+   /* Auto-repeat delay (ms) */
    static constexpr int REPEAT_THRESHOLD   = 1000;
 
-   // Auto-repeat period (ms)
+   /* Auto-repeat period (ms) */
    static constexpr int REPEAT_PERIOD      = 200;
 
-   // Last pressed switch
+   /** Last pressed switch */
    static volatile SwitchValue switchNum __attribute__((aligned (4)));
 
-   // Indicates that the key is repeating
+   /** Indicates that the key is repeating */
    static volatile bool repeating;
 
    /**
@@ -136,9 +138,11 @@ public:
    }
 };
 
+/** Last pressed switch */
 template<unsigned timerChannel, typename f1, typename f2, typename f3, typename f4, typename sel>
 volatile SwitchValue SwitchDebouncer<timerChannel, f1, f2, f3, f4, sel>::switchNum;
 
+/** Indicates that the key is repeating */
 template<unsigned timerChannel, typename f1, typename f2, typename f3, typename f4, typename sel>
 volatile bool SwitchDebouncer<timerChannel, f1, f2, f3, f4, sel>::repeating;
 

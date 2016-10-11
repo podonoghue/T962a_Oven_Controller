@@ -58,6 +58,7 @@ public:
     * @param spi     The SPI to use to communicate with MAX31855
     * @param pinNum  Number of PCS to use
     * @param offset  Offset to add to reading from probe
+    * @param enabled Reference to non-volatile variable enabling thermocouple
     */
    Max31855(USBDM::Spi &spi, int pinNum, USBDM::Nonvolatile<int> &offset, USBDM::Nonvolatile<bool> &enabled) :
       spi(spi), pinNum(pinNum), offset(offset), enabled(enabled) {

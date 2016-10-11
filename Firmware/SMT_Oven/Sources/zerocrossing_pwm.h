@@ -15,9 +15,9 @@
  *
  * The switching waveform will be synchronised to the mains zero crossing
  *
- * @tparam OvenFan    USBDM::Gpio controlling the oven fan SSD
- * @tparam Heater     USBDM::Gpio controlling the oven heater SSD
- * @tparam FtmChannel USBDM::Cmp used for mains sensing
+ * @tparam OvenFan USBDM::Gpio controlling the oven fan SSD
+ * @tparam Heater  USBDM::Gpio controlling the oven heater SSD
+ * @tparam Vmains  USBDM::Cmp used for mains sensing
  */
 template<typename Heater, typename HeaterLed, typename Fan, typename FanLed, typename Vmains>
 class ZeroCrossingPwm {
@@ -25,8 +25,10 @@ private:
 
    /** Duty cycle for Heater */
    static int  heaterDutycycle;
+
    /** Duty cycle for Fan */
    static int  fanDutycycle;
+
    /** Count down for fan kick */
    static int  fanKick;
 
@@ -37,8 +39,8 @@ private:
    USBDM::Nonvolatile<int> &fanKickTime;
 
    /*
-    * Function is called on zero-crossings of the mains
-    * Implements a simple PWM with variable period (~20ms - ~1s @50Hz mains)
+    * Function is called on zero-crossings of the mains.
+    * Implements a simple PWM with variable period (~20ms - ~1s @50Hz mains).
     */
    static void callbackFunction(int status) {
       // Keeps track of heater drive
@@ -155,7 +157,7 @@ public:
    /**
     * Get duty cycle of heater
     *
-    * @return dutycycle Percentage duty-cycle to set
+    * @return Duty cycle Percentage duty-cycle to set
     */
    static int getHeaterDutycycle() {
       return heaterDutycycle;

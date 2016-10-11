@@ -16,7 +16,7 @@
  *
  * @tparam CaseFan      PWM controlling the case fan
  * @tparam pit_channel  PIT channel to use
- * @tparam startTemp    Temperature at which to start the fan @10%
+ * @tparam startTemp    Temperature at which to start the fan at MIN_FAN_SPEED %
  * @tparam maxTemp      Temperature at which the fan is to be 100% on
  *
  */

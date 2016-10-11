@@ -24,28 +24,33 @@
 #include "switch_debouncer.h"
 #include "settings.h"
 #include "caseTemperatureMonitor.h"
+#include "runProfile.h"
 
-// Function buttons
+/** Function buttons */
 using F1Button = USBDM::GpioB<3, USBDM::ActiveLow>;
 using F2Button = USBDM::GpioB<2, USBDM::ActiveLow>;
 using F3Button = USBDM::GpioB<1, USBDM::ActiveLow>;
 using F4Button = USBDM::GpioB<0, USBDM::ActiveLow>;
 
-// Select button
+/** Select button */
 using SButton  = USBDM::GpioB<16, USBDM::ActiveLow>;
 
-// PCS # for SPI
+/** PCS # for SPI */
 constexpr int lcd_cs_num = 4;
 constexpr int t1_cs_num  = 2;
 constexpr int t2_cs_num  = 3;
 constexpr int t3_cs_num  = 0;
 constexpr int t4_cs_num  = 1;
 
-// PWM outputs
+/** Case fan PWM output */
 using CaseFan  = USBDM::Ftm0Channel<2>;
+
+/** Spare fan PWM output */
 using Spare    = USBDM::Ftm0Channel<3>;
 
-// Simple GPIO outputs
+/**
+ * Oven fan LED - Wrapper for GPIO
+ */
 class OvenFanLed : public USBDM::GpioC<6> {
 public:
    /**
@@ -68,6 +73,9 @@ public:
      off();
    }
 };
+/**
+ * Oven heater LED - Wrapper for GPIO
+ */
 class HeaterLed : public USBDM::GpioD<7> {
 public:
    /**
@@ -90,30 +98,53 @@ public:
      off();
    }
 };
+
+/**
+ * Oven fan GPIO
+ */
 using OvenFan    = USBDM::GpioC<1>;
+
+/**
+ * Oven Heater GPIO
+ */
 using Heater     = USBDM::GpioC<2>;
 
+/**
+ * Main cycle comparator used for Zero-crossing PWM
+ */
 using Vmains     = USBDM::Cmp0;
 
-// SPI used for LCD and Thermocouples
+/**
+ * SPI used for LCD and Thermocouples
+ */
 extern USBDM::Spi0 spi;
 
-// LCD
+/**
+ * LCD
+ */
 extern LCD_ST7920 lcd;
 
-// Thermocouples
+/**
+ * Thermocouples
+ */
 extern Max31855 temperatureSensors[4];
 
-// PIT timer channels
+/** PIT timer channel for PID */
 constexpr int pid_pit_channel          = 0;
+
+/** PIT timer channel for button debouncer */
 constexpr int button_pit_channel       = 1;
+
+/** PIT timer channel for sequencing a solder profile */
 constexpr int profile_pit_channel      = 2;
+
+/** PIT timer channel for case temperature monitor. Controls case fan */
 constexpr int caseMonitor_pit_channel  = 3;
 
-// PWM for heater & oven fan
+/** PWM for heater & oven fan */
 extern ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl;
 
-// Switch debouncer for front panel buttons
+/** Switch debouncer for front panel buttons */
 extern SwitchDebouncer<button_pit_channel, F1Button, F2Button, F3Button, F4Button, SButton> buttons;
 
 /** PID controller sample interval - seconds */
@@ -124,10 +155,12 @@ constexpr float pidInterval = 1.0f;
  * Averages multiple thermocouple inputs
  */
 extern float getTemperature();
-/*
+
+/**
  * Set heater drive level
  */
 extern void outPutControl(float dutyCycle);
+
 /**
  * PID controller
  */
@@ -156,10 +189,7 @@ public:
    }
 };
 
-#include <runProfile.h>
 
-/** Runs a SMT profile */
-//extern RunProfile<profile_pit_channel> runProfile;
 
 /**
  * Monitor case temperature

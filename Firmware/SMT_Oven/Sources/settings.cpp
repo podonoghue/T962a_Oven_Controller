@@ -53,7 +53,7 @@ __attribute__ ((section(".flexRAM")))
 Nonvolatile<int> fanKickTime;
 
 __attribute__ ((section(".flexRAM")))
-USBDM::Nonvolatile<int> maxHeaterTime;
+Nonvolatile<int> maxHeaterTime;
 
 extern const Setting fanSetting;
 extern const Setting kickSetting;
@@ -78,6 +78,9 @@ Settings::Settings() : Flash() {
    initialiseSettings();
 }
 
+/**
+ * Initialises the non-volatile storage to factory defaults
+ */
 void Settings::initialiseSettings() {
 
    // Write initial value for non-volatile variables
@@ -87,12 +90,8 @@ void Settings::initialiseSettings() {
    profiles[i++] = nc31profile;
    profiles[i++] = syntechlfprofile;
    for (;i<(sizeof(profiles)/sizeof(profiles[0]));i++) {
-      char buff[sizeof(NvSolderProfile::description)];
-      snprintf(buff, sizeof(buff), "Profile #%d", i);
       profiles[i] = defaultProfile;
-      profiles[i].description = buff;
    }
-
    minimumFanSpeed = fanSetting.defaultValue;
    fanKickTime     = kickSetting.defaultValue;
    t1Offset        = thermo1Setting.defaultValue;
@@ -114,9 +113,6 @@ void Settings::initialiseSettings() {
  */
 void Settings::testBeep(const Setting *setting) {
    (void)setting;
-//   char buff[lcd.LCD_WIDTH/lcd.FONT_WIDTH+2];
-//   snprintf(buff, sizeof(buff), "Duration = %ds", (int)beepTime);
-//   testingScreen("Test Beep", buff);
    Buzzer::play();
 }
 
