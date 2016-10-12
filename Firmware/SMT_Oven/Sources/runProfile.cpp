@@ -776,20 +776,25 @@ void runProfile(const NvSolderProfile &profile) {
  */
 static void logger() {
    time ++;
-   printf(" %9s,  %4d,  %5.1f,  %5.1f,   %4d, %4d,", getStateName(state), time, pid.getSetpoint(), pid.getInput(), ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
+   float temperatures[4];
+   int measuredValues = 0;
+   float averageTemperature = 0.0;
    for (int t=0; t<=3; t++) {
       float temperature, coldReference;
       int status = temperatureSensors[t].getReading(temperature, coldReference);
-
       if (status == 0) {
-         printf("    %5.1f,", temperature);
+         // Enabled and valid measurement
+         measuredValues++;
+         averageTemperature += temperature;
       }
-      else if (status != 7) {
-         printf("    %5.1f,", 0.0);
-      }
-      else {
-         printf("    %5.1f,", 0.0);
-      }
+      temperatures[t] = temperature;
+   }
+   if (measuredValues>0) {
+      averageTemperature /= measuredValues;
+   }
+   printf(" %9s,  %4d,  %5.1f,  %5.1f,   %4d, %4d,", getStateName(state), time, pid.getSetpoint(), averageTemperature, ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
+   for (int t=0; t<=3; t++) {
+      printf("    %5.1f,", temperatures[t]);
    }
    puts("");
 }
