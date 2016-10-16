@@ -14,6 +14,7 @@
 
 /*********** $start(VectorsIncludeFiles) *** Do not edit after this comment ****************/
 #include "cmp.h"
+#include "usb.h"
 #include "pit.h"
 /*********** $end(VectorsIncludeFiles)   *** Do not edit above this comment ***************/
 
@@ -347,7 +348,6 @@ void CMT_IRQHandler(void)                     WEAK_DEFAULT_HANDLER;
 void RTC_Alarm_IRQHandler(void)               WEAK_DEFAULT_HANDLER;
 void RTC_Seconds_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
 void PDB0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
-void USB0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void USBDCD_IRQHandler(void)                  WEAK_DEFAULT_HANDLER;
 void DAC0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void MCG_IRQHandler(void)                     WEAK_DEFAULT_HANDLER;
@@ -441,7 +441,7 @@ VectorTable const __vector_table = {
       USBDM::Pit::irq2Handler,       /*   66,   50  Periodic Interrupt Timer                                                         */
       USBDM::Pit::irq3Handler,       /*   67,   51  Periodic Interrupt Timer                                                         */
       PDB0_IRQHandler,               /*   68,   52  Programmable Delay Block                                                         */
-      USB0_IRQHandler,               /*   69,   53  Universal Serial Bus                                                             */
+      USBDM::Usb0::irqHandler,       /*   69,   53  Universal Serial Bus                                                             */
       USBDCD_IRQHandler,             /*   70,   54  USB Device Charger Detection                                                     */
       Default_Handler,               /*   71,   55                                                                                   */
       DAC0_IRQHandler,               /*   72,   56  Digital to Analogue Converter                                                    */

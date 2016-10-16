@@ -2755,7 +2755,7 @@ public:
    // Template:usb0_otg_c
 
    //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   static constexpr bool irqHandlerInstalled = true;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;

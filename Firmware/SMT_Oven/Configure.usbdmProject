@@ -367,7 +367,7 @@
    <item key="/UART2/defaultBaudRate"                      value="115200" />
    <item key="/UART2/irqHandlerInstalled"                  value="false" />
    <item key="/UART2/irqLevel"                             value="0" />
-   <item key="/USB0/irqHandlerInstalled"                   value="false" />
+   <item key="/USB0/irqHandlerInstalled"                   value="true" />
    <item key="/USB0/irqLevel"                              value="0" />
    <item key="/VREF/vref_sc_icompen"                       value="true" />
    <item key="/VREF/vref_sc_mode_lv"                       value="1" />

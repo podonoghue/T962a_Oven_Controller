@@ -26,6 +26,14 @@
 #include "caseTemperatureMonitor.h"
 #include "runProfile.h"
 
+#define ProductDescription    "SMT-Oven"
+#define SERIAL_NO             "OVEN-1234"
+
+#define VendorID        (0x16D0)    // Vendor (actually MCS)
+//#define ProductID       (0x06A6)  // Product ID
+#define ProductID       (0x8888)    // Product ID
+#define VersionID       (1)       // Reported version (via USB)
+
 /** Function buttons */
 using F1Button = USBDM::GpioB<3, USBDM::ActiveLow>;
 using F2Button = USBDM::GpioB<2, USBDM::ActiveLow>;
@@ -188,8 +196,6 @@ public:
       low();
    }
 };
-
-
 
 /**
  * Monitor case temperature

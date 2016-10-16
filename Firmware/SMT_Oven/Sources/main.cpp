@@ -22,6 +22,8 @@
 #include "messageBox.h"
 #include "editProfile.h"
 #include "mainMenu.h"
+#include "usb.h"
+#include "utilities.h"
 
 class profilesMenu {
 
@@ -76,7 +78,7 @@ void initialise() {
 }
 
 int main() {
-   printf("Starting\n");
+   PRINTF("Starting\n");
 
    USBDM::mapAllPins();
 
@@ -85,9 +87,11 @@ int main() {
       lcd.clear();
       lcd.printf("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
       lcd.putString(buff);
-      printf("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
+      PRINTF("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
    }
    initialise();
+
+   USBDM::Usb0::initialise();
 
    lcd.clear();
 
