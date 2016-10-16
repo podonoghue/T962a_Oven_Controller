@@ -155,10 +155,10 @@ constexpr uint8_t BDTEntry_STALL_MASK = (1<<2);   //!< Stall endpoint
 //======================================================================
 // Buffers for endpoint data packets (in USB RAM)
 //
-uint8_t controlDataBuffer[CONTROL_EP_MAXSIZE];
-uint8_t cdcControlDataBuffer[CDC_CONTROL_EP_MAXSIZE];  // #83,IN,interrupt CDC status
-uint8_t cdcOutDataBuffer[CDC_DATA_OUT_EP_MAXSIZE];     // #04,OUT,bulk     CDC Tx
-uint8_t cdcInDataBuffer0[CDC_DATA_IN_EP_MAXSIZE];      // #85,IN,bulk      CDC Rx ping-pong
+uint8_t controlDataBuffer[CONTROL_EP_MAXSIZE];         //!< IN/OUT       Control
+uint8_t cdcControlDataBuffer[CDC_CONTROL_EP_MAXSIZE];  //!< IN,interrupt CDC status
+uint8_t cdcOutDataBuffer[CDC_DATA_OUT_EP_MAXSIZE];     //!< OUT,bulk     CDC Tx
+uint8_t cdcInDataBuffer0[CDC_DATA_IN_EP_MAXSIZE];      //!< IN,bulk      CDC Rx ping-pong
 uint8_t cdcInDataBuffer1[CDC_DATA_IN_EP_MAXSIZE];
 
 /** BDTs organised by endpoint, odd/even, tx/rx */
@@ -170,19 +170,18 @@ constexpr BdtEntry * bdts = (BdtEntry *)endPointBdts;
 /*
  * String descriptors
  */
-static const uint8_t s_language[]        = {4, DT_STRING, 0x09, 0x0C};   // Language IDs
-static const uint8_t s_manufacturer[]    = "pgo";                        // Manufacturer
-static const uint8_t s_product[]         = ProductDescription;           // Product Description
-static const uint8_t s_serial[]          = SERIAL_NO;                    // Serial Number
-static const uint8_t s_cdc_interface[]   = "USBDM CDC Interface";        // Interface Association #2
-static const uint8_t s_cdc_control[]     = "CDC Control Interface";      // Interface
-static const uint8_t s_cdc_data[]        = "CDC Data Interface";         // Interface
+static const uint8_t s_language[]        = {4, DT_STRING, 0x09, 0x0C};   //!< Language IDs
+static const uint8_t s_manufacturer[]    = "pgo";                        //!< Manufacturer
+static const uint8_t s_product[]         = ProductDescription;           //!< Product Description
+static const uint8_t s_serial[]          = SERIAL_NO;                    //!< Serial Number
+static const uint8_t s_cdc_control[]     = "CDC Control Interface";      //!< CDC Control Interface
+static const uint8_t s_cdc_data[]        = "CDC Data Interface";         //!< CDC Data Interface
 
 /**
  * String descriptor table
  */
 static const uint8_t *const stringDescriptors[] = {
-      s_language, s_manufacturer, s_product, s_serial, s_cdc_interface, s_cdc_control, s_cdc_data
+      s_language, s_manufacturer, s_product, s_serial, s_cdc_control, s_cdc_data
 };
 
 /**
@@ -191,13 +190,20 @@ static const uint8_t *const stringDescriptors[] = {
  * Must agree with stringDescriptors[] order
  */
 enum {
+   /** Language information for string descriptors */
    s_language_index=0,    // Must be zero
+   /** Manufacturer */
    s_manufacturer_index,
+   /** Product Description */
    s_product_index,
+   /** Serial Number */
    s_serial_index,
-   s_cdc_interface_index,
+   /** CDC Control Interface */
    s_cdc_control_index,
+   /** CDC Data Interface */
    s_cdc_data_index,
+
+   /** Marks last entry */
    s_last_string_descriptor_index
 };
 
@@ -226,6 +232,7 @@ enum {
    CDC_COMM_INTF_ID,
    /** Interface number for CDC Data channel */
    CDC_DATA_INTF_ID,
+
    /** Total number of interfaces */
    NUMBER_OF_INTERFACES,
 };
@@ -239,6 +246,7 @@ enum {
    CDC_DATA_OUT_ENDPOINT,
    /** CDC Data in endpoint number */
    CDC_DATA_IN_ENDPOINT,
+
    /** Total number of end-points */
    NUMBER_OF_ENDPOINTS,
 };
@@ -647,7 +655,8 @@ static void initEndpointBuffers(void) {
    // CDC Tx (in - ping-pong)
    endPointBdts[CDC_DATA_IN_ENDPOINT].txEven.addr = nativeToLe32((uint32_t)cdcInDataBuffer0);
    endPointBdts[CDC_DATA_IN_ENDPOINT].txOdd.addr  = nativeToLe32((uint32_t)cdcInDataBuffer1);
-   //TODO CDC
+
+   // CDC data setup
    (void)cdc_setRxBuffer((char *)cdcInDataBuffer0);
 }
 
@@ -1805,21 +1814,17 @@ void UsbBase_T<Usb0Info>::handleTokenComplete(void) {
       case CDC_CONTROL_ENDPOINT: // USBDM CDC Control - Accept IN token
          //         PRINTF("EP3\n");
          epHardwareState[CDC_CONTROL_ENDPOINT].data0_1 = !epHardwareState[CDC_CONTROL_ENDPOINT].data0_1; // Toggle data0/1
-         //TODO
          ep3StartTxTransaction();
          return;
       case CDC_DATA_OUT_ENDPOINT: // USBDM CDC Data - Accept OUT token
-         //          usbActivityFlag.flags.serialOutActive = 1;
-         //         PRINTF("EP4\n");
-         //TODO
-//         if (cdc_txBufferIsFree()) {
-//            ep4SaveRxData();
-//            ep4InitialiseBdtRx();
-//         }
-//         else {
-//            //! Throttle endpoint - send NAKs
-//            epHardwareState[CDC_DATA_OUT_ENDPOINT].state = EPThrottle;
-//         }
+         if (cdc_txBufferIsFree()) {
+            ep4SaveRxData();
+            ep4InitialiseBdtRx();
+         }
+         else {
+            //! Throttle endpoint - send NAKs
+            epHardwareState[CDC_DATA_OUT_ENDPOINT].state = EPThrottle;
+         }
          return;
       case CDC_DATA_IN_ENDPOINT:  // USBD CDC Data - Accept IN token
          epHardwareState[CDC_DATA_IN_ENDPOINT].state = EPIdle;
@@ -1903,8 +1908,7 @@ void UsbBase_T<Usb0Info>::handleUSBSuspend( void ) {
       // Ignore if not configured
       return;
    }
-   // Need to disable BDM interface & everything else to reduce power
-   //TODO
+   // Reduce power - not implemented
 
    // Clear the sleep and resume interrupt flags
    usb->ISTAT    = USB_ISTAT_SLEEP_MASK;
@@ -1916,7 +1920,6 @@ void UsbBase_T<Usb0Info>::handleUSBSuspend( void ) {
    // Enable resume detection or reset interrupts from the USB
    usb->INTEN   |= (USB_ISTAT_RESUME_MASK|USB_ISTAT_USBRST_MASK);
    deviceState.state = USBsuspended;
-   //TODO
 
    // A re-check loop is used here to ensure USB bus noise doesn't wake-up the CPU
    do {
