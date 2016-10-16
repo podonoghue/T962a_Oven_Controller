@@ -1,0 +1,79 @@
+;------------------------------------------------------------------------------
+; usbdm_cdc_interface.inf
+; USB - CDC INF file for USBDM
+;------------------------------------------------------------------------------
+[Strings]
+DeviceName        = "Serial Port"
+VendorName        = "pgo"
+Provider          = "pgo"
+DeviceID0         = "VID_16D0&PID_8888"
+
+[Version]
+Signature   =  "$Windows NT$"
+Class       =  Ports
+ClassGuid   =  {4D36E978-E325-11CE-BFC1-08002BE10318}
+Provider    =  %Provider%
+CatalogFile =  cdc_interface.cat
+DriverVer   =  07/26/2014, 2.2.0.0
+
+
+[Manufacturer]
+%VendorName% = DeviceList, NT, NTx86, NTamd64
+
+;------------------------------------------------------------------------------
+;             Windows 32-bit Support
+;------------------------------------------------------------------------------
+[DeviceList.NTx86]
+%DeviceName%=DriverInstall, USB\%DeviceID0%
+
+[DriverInstall.NTx86]
+include=mdmcpq.inf
+CopyFiles=FakeModemCopyFileSection
+AddReg=LowerFilterAddReg,DriverInstall.NTx86.AddReg
+
+; This adds the serial port property tab to the device properties dialog
+[DriverInstall.NTx86.AddReg]
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+
+[DriverInstall.NTx86.Services]
+include=mdmcpq.inf
+AddService = usbser, 0x00000002, LowerFilter_Service_Inst
+
+;------------------------------------------------------------------------------
+;             Windows 32-bit Support
+;------------------------------------------------------------------------------
+[DeviceList.NT]
+%DeviceName%=DriverInstall, USB\%DeviceID0%
+
+[DriverInstall.NT]
+include=mdmcpq.inf
+CopyFiles=FakeModemCopyFileSection
+AddReg=LowerFilterAddReg,DriverInstall.NT.AddReg
+
+; This adds the serial port property tab to the device properties dialog
+[DriverInstall.NT.AddReg]
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+
+[DriverInstall.NT.Services]
+include=mdmcpq.inf
+AddService = usbser, 0x00000002, LowerFilter_Service_Inst
+
+;------------------------------------------------------------------------------
+;             Windows 64-bit Support
+;------------------------------------------------------------------------------
+[DeviceList.NTamd64]
+%DeviceName%=DriverInstall, USB\%DeviceID0%
+
+[DriverInstall.NTamd64]
+include=mdmcpq.inf
+CopyFiles=FakeModemCopyFileSection
+AddReg=LowerFilterAddReg,DriverInstall.NTamd64.AddReg
+
+; This adds the serial port property tab to the device properties dialog
+[DriverInstall.NTamd64.AddReg]
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+
+[DriverInstall.NTamd64.Services]
+include=mdmcpq.inf
+AddService = usbser, 0x00000002, LowerFilter_Service_Inst
+

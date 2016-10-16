@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'
+     xmlns:difx='http://schemas.microsoft.com/wix/DifxAppExtension'>
+
+   <?define Manufacturer="pgo" ?>
+   <?define ProductName="Serial Drivers" ?>
+   <!--?define ProductVersion="1.0.0" ?-->                        <!-- Defined on command line -->
+   <?define ProductCode="*" ?> 
+   <?define UpgradeCode="70b13d5b-b812-4167-b050-f15ddd04286c" ?> <!-- Don't change        -->
+   <?define InfoURL="http://usbdm.sourceforge.net" ?>
+   <!--?define TargetArchCondition="NOT Msix64" ?-->             <!-- Defined on command line -->
+
+   <?define DriverDir="Drivers" ?>
+   
+   <Product
+      Name="$(var.ProductName)"
+      Id="$(var.ProductCode)"
+      UpgradeCode="$(var.UpgradeCode)"
+      Version="$(var.ProductVersion)"
+      Manufacturer="$(var.Manufacturer)"
+      Language='1033'
+      Codepage='1252' >
+
+      <Package
+         Id='*'
+         Keywords='USBDMDriver' 
+         Description="$(var.ProductName) Installer"
+         Comments="$(var.ProductName) Package"
+         Manufacturer="$(var.Manufacturer)"
+         InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+         
+      <Condition Message="You are attempting to run the wrong version of the installer for this version of Windows.">
+        <![CDATA[$(var.TargetArchCondition)]]>
+      </Condition>
+      
+      <Media Id='1' Cabinet="disk1.cab" EmbedCab='yes' DiskPrompt="$(var.ProductCode) Media" />
+
+      <MajorUpgrade
+         AllowSameVersionUpgrades="yes"
+         DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+
+      <Property Id='ARPCOMMENTS'>BDM Drivers for USBDM</Property>
+      <Property Id='ARPURLINFOABOUT'>$(var.InfoURL)</Property>
+      <Property Id='DiskPrompt' Value="$(var.ProductName) $(var.ProductVersion) Installation" />
+      <Property Id="ARPPRODUCTICON" Value="ChipIcon.ico" />
+<!--
+      <Property Id='ARPCONTACT'>contact info</Property>
+      <Property Id='ARPHELPLINK'>URL for technical support</Property>
+      <Property Id='ARPURLUPDATEINFO'>URL for product updates</Property>
+      <Property Id='ARPHELPTELEPHONE'>URL for technical support</Property>
+      <Property Id='ARPREADME'>path</Property>
+      <Property Id='ARPSIZE'>app size in kilobytes</Property>
+-->
+  
+      <!--====================================================== -->
+      <!--           Directory structure                         -->
+      <Directory Id='TARGETDIR' Name='SourceDir'>
+         <Directory Id='ProgramFilesFolder' Name='PFiles'>
+            <Directory Id='MANUFACTURER_FOLDER' Name="$(var.Manufacturer)">
+               <Directory Id='INSTALLDIR' Name="$(var.ProductName) $(var.ProductVersion)" />
+            </Directory>
+         </Directory>
+
+         <!-- Desktop Folder -->
+         <Directory Id="DesktopFolder" Name="Desktop" />
+      </Directory>
+
+      <!-- ========================================================================== -->
+      <!-- Driver Components -->      
+      <DirectoryRef Id='INSTALLDIR'>
+         <Directory Id="D.USBDM_CDC_DRIVER" Name="CDC_driver">
+            <Component Id='C.CDC_Interface' Guid='b9898edd-a0a6-433b-af9c-1a1724f8fc81' >
+               <File Id='F.CDC_InterfaceCAT' Name='cdc_interface.cat' DiskId='1' Source='$(var.DriverDir)/cdc_interface.cat' KeyPath='yes'/>
+               <File Id='F.CDC_InterfaceINF' Name='cdc_interface.inf' DiskId='1' Source='$(var.DriverDir)/cdc_interface.inf'/>
+               <difx:Driver Sequence='2' PlugAndPlayPrompt='no' />
+            </Component>
+         </Directory>
+      </DirectoryRef>
+
+      <!-- License file -->
+      <WixVariable Id="WixUILicenseRtf" Value="Drivers\license.rtf" />
+               
+      <Feature Id='Complete' Level='1'>
+         <ComponentRef      Id='C.CDC_Interface' />
+      </Feature>
+	  
+      <UIRef Id="WixUI_Minimal" />
+      <Icon Id="ChipIcon.ico" SourceFile="Hardware-Chip.ico" />
+   </Product>
+</Wix>
