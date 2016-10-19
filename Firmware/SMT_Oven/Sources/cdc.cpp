@@ -63,8 +63,8 @@ uint8_t cdc_setRxBuffer(char *buffer) {
 /**
  *  RxBufferEmpty() - Check if Rx buffer is empty
  *
- * @return -  1 => buffer is not empty
- *            0 => buffer is empty
+ * @return -  >0 => buffer is not empty
+ *            0  => buffer is empty
  */
 uint8_t cdc_rxBufferItemCount(void) {
    return rxBufferCount;
@@ -82,14 +82,14 @@ uint8_t cdc_rxBufferItemCount(void) {
  *
  *  @return true => OK, false => Buffer is busy (overrun)
  */
-uint8_t cdc_putTxBuffer(char *source, uint8_t size) {
+bool cdc_putTxBuffer(char *source, uint8_t size) {
    if (txBufferCount > 0) {
-      return 1; // Busy
+      return false; // Busy
    }
    (void)memcpy(txBuffer, source, size);
    txHead        = 0;
    txBufferCount = size;
-   return 0;
+   return true;
 }
 
 /** getTx() -  Gets a character from the CDC-Tx queue.

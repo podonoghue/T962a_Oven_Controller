@@ -59,7 +59,7 @@ uint8_t commandBuffer[300];
 //======================================================================
 // Maximum packet sizes for each endpoint
 //
-constexpr uint  CONTROL_EP_MAXSIZE      = 16; //!< USBDM - Control in/out   	           16
+constexpr uint  CONTROL_EP_MAXSIZE      = 16; //!< USBDM - Control in/out   	         16
 constexpr uint  CDC_CONTROL_EP_MAXSIZE  = 16; //!< USBDM - CDC control                   16
 constexpr uint  CDC_DATA_OUT_EP_MAXSIZE = 16; //!< USBDM - CDC data out                  16
 constexpr uint  CDC_DATA_IN_EP_MAXSIZE  = 16; //!< USBDM - CDC data in              x2 = 32
@@ -270,14 +270,14 @@ static const struct {
 } otherDescriptors =
 {
       { // configDescriptor
-            /* bLength             */ sizeof(ConfigurationDescriptor),
-            /* bDescriptorType     */ DT_CONFIGURATION,
-            /* wTotalLength        */ nativeToLe16(sizeof(otherDescriptors)),
-            /* bNumInterfaces      */ NUMBER_OF_INTERFACES,
-            /* bConfigurationValue */ 1,
-            /* iConfiguration      */ 0,
-            /* bmAttributes        */ 0x80,                //  = Bus powered, no wakeup (yet?)
-            /* bMaxPower           */ USBMilliamps(500)
+            /* bLength                 */ sizeof(ConfigurationDescriptor),
+            /* bDescriptorType         */ DT_CONFIGURATION,
+            /* wTotalLength            */ nativeToLe16(sizeof(otherDescriptors)),
+            /* bNumInterfaces          */ NUMBER_OF_INTERFACES,
+            /* bConfigurationValue     */ 1,
+            /* iConfiguration          */ 0,
+            /* bmAttributes            */ 0x80,                //  = Bus powered, no wakeup (yet?)
+            /* bMaxPower               */ USBMilliamps(500)
       },
       /**
        * CDC Control/Communication Interface, 1 end-point
@@ -846,7 +846,7 @@ static void initialiseEndpoints(void) {
 
    //   PUTS("initialiseEndpoints()");
 
-   // Clear USB BDTs
+   // Clear all BDTs
    memset((uint8_t*)endPointBdts, 0, sizeof(endPointBdts));
 
    // Clear hardware state
@@ -1006,6 +1006,7 @@ void checkUsbCdcRxData(void) {
 static void epStall(uint8_t epNum) {
    if (epNum == CONTROL_ENDPOINT) {
       // Stall Tx only
+      // PUTS("epStall.ep0");
       BdtEntry *bdt = epHardwareState[CONTROL_ENDPOINT].txOdd?&endPointBdts[CONTROL_ENDPOINT].txOdd:&endPointBdts[CONTROL_ENDPOINT].txEven;
       bdt->u.bits = BDTEntry_OWN_MASK|BDTEntry_STALL_MASK|BDTEntry_DTS_MASK;
    }
