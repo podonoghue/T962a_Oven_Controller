@@ -5,7 +5,7 @@ These are Altium designer projects.
 
 Refer to the PDFs in the Project Outputs directory of each project  
 <a href="https://github.com/podonoghue/T962a_Oven_Controller/blob/master/Hardware/T962a/Project%20Outputs%20for%20T962a/T962a.PDF">Main Board</img></a>
-<a href="https://github.com/podonoghue/T962a_Oven_Controller/blob/master/PCB/T962a/Project%20Outputs%20for%20T962a/T962a.PDF">Main Board</img></a>
+<a href="T962a/Project%20Outputs%20for%20T962a/T962a.PDF">Main Board</img></a>
 
 <a href="https://github.com/podonoghue/T962a_Oven_Controller/blob/master/Hardware/T962a_Panel/Project%20Outputs%20for%20T962a_Panel/T962a_Panel.PDF">Expansion Board</img></a>
 
