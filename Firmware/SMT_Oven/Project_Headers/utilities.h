@@ -7,10 +7,6 @@
 #ifndef UTILTIES_H_
 #define UTILTIES_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @brief Concatenate two tokens
  *
@@ -95,7 +91,10 @@ extern "C" {
  */
 #define PORT_CLOCK_MASK(port)  CONCAT4_(SIM_SCGC5,_PORT,port,_MASK)
 
-#ifdef __BYTE_ORDER__
+#ifndef __BYTE_ORDER__
+#error "__BYTE_ORDER__ value not defined"
+#endif
+
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define leToNative32(x) __REV(x)
 #define leToNative16(x) __REV16(x)
@@ -117,7 +116,6 @@ extern "C" {
 #else
 #error "Unexpected __BYTE_ORDER__ value"
 #endif
-#endif // __BYTE_ORDER__
 
 #if defined(DEBUG_BUILD)
 #define PUTS(x)     puts(x)
@@ -128,12 +126,12 @@ extern "C" {
 #endif
 
 #ifdef __cplusplus
-   }
-#endif
 
-#ifdef __cplusplus
-
+/**
+ * Class to encapsulate 16-bit little-endian values
+ */
 class uint16_le {
+private:
    uint16_t value;
 
 public:
@@ -157,7 +155,11 @@ public:
    }
 };
 
+/**
+ * Class to encapsulate 32-bit little-endian values
+ */
 class uint32_le {
+private:
    uint32_t value;
 
 public:
@@ -186,19 +188,19 @@ public:
       return leToNative16(value)&0xFF;
    }
    /**
-    * @return Higher-middle byte of value as unsigned value
+    * @return Lower-middle byte of value as unsigned value
     */
    uint16_t b1() {
       return (leToNative16(value)>>8)&0xFF;
    }
    /**
-    * @return Lower-middle byte of value as unsigned value
+    * @return Upper-middle byte of value as unsigned value
     */
    uint16_t b2() {
       return (leToNative16(value)>>16)&0xFF;
    }
    /**
-    * @return Highest byte of value as unsigned value
+    * @return Uppermost byte of value as unsigned value
     */
    uint16_t b3() {
       return (leToNative16(value)>>24)&0xFF;
