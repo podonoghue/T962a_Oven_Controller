@@ -28,7 +28,7 @@ PowerPortNamesTakePriority=0
 PushECOToAnnotationFile=1
 DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
-OutputPath=Project Outputs for T962a
+OutputPath=
 LogFolderPath=
 ManagedProjectGUID=
 
@@ -51,7 +51,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=LBLBPUYR
+DocumentUniqueId=CHCVBSPE
 
 [Document2]
 DocumentPath=T962a.OutJob
@@ -102,7 +102,7 @@ GenerateBOM=1
 OutputJobsCount=0
 
 [Generic_EDE]
-OutputDir=Project Outputs for T962a
+OutputDir=
 
 [OutputGroup1]
 Name=Netlist Outputs
