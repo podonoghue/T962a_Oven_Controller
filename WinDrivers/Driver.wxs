@@ -3,10 +3,10 @@
      xmlns:difx='http://schemas.microsoft.com/wix/DifxAppExtension'>
 
    <?define Manufacturer="pgo" ?>
-   <?define ProductName="Serial Drivers" ?>
+   <?define ProductName="T962a Serial Driver" ?>
    <!--?define ProductVersion="1.0.0" ?-->                        <!-- Defined on command line -->
    <?define ProductCode="*" ?> 
-   <?define UpgradeCode="70b13d5b-b812-4167-b050-f15ddd04286c" ?> <!-- Don't change        -->
+   <?define UpgradeCode="4d85b352-af3a-4171-aa90-43c0a223a15c" ?> <!-- Don't change        -->
    <?define InfoURL="http://usbdm.sourceforge.net" ?>
    <!--?define TargetArchCondition="NOT Msix64" ?-->             <!-- Defined on command line -->
 

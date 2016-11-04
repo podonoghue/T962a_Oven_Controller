@@ -1,7 +1,7 @@
 @echo off
 cls
-set VERSION=1_0_0
-set VERSIONn=1.0.0
+set VERSION=1_3_0
+set VERSIONn=1.3.0
 
 set WIX_DIR="C:\Program Files (x86)\WiX Toolset v3.9\bin"
 if not exist %WIX_DIR% set WIX_DIR="C:\Program Files\WiX Toolset v3.9\bin"
@@ -12,8 +12,8 @@ set LIGHT=%WIX_DIR%\light.exe
 set TORCH=%WIX_DIR%\torch.exe
 set PYRO=%WIX_DIR%\pyro.exe
 
-set WIX_BUILD_DIR=wixBuildDir
 
+set WIX_BUILD_DIR=wixBuildDir
 set CANDLE_OPTIONS=-ext WixUIExtension -ext WixDifxAppExtension.dll
 
 set LIGHT_OPTIONS=-ext WixUIExtension -ext WixUtilExtension -ext WixDifxAppExtension.dll -sw0204 
