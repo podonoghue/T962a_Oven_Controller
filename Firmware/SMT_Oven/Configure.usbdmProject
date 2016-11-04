@@ -24,6 +24,7 @@
    <item key="$signal$PTA1_muxSetting"                     value="mux2" />
    <item key="$signal$PTA1_pcrSetting"                     value="8000" />
    <item key="$signal$PTA2_descriptionSetting"             value="SWD_Tx" />
+   <item key="$signal$PTA2_muxSetting"                     value="mux2" />
    <item key="$signal$PTA2_pcrSetting"                     value="8000" />
    <item key="$signal$PTA3_descriptionSetting"             value="SWD_DIO" />
    <item key="$signal$PTA3_muxSetting"                     value="mux7" />
@@ -37,7 +38,6 @@
    <item key="$signal$PTB16_muxSetting"                    value="mux1" />
    <item key="$signal$PTB16_pcrSetting"                    value="8003" />
    <item key="$signal$PTB17_descriptionSetting"            value="TP1 (Debug UART_Tx)" />
-   <item key="$signal$PTB17_muxSetting"                    value="mux3" />
    <item key="$signal$PTB17_pcrSetting"                    value="8000" />
    <item key="$signal$PTB1_descriptionSetting"             value="SW_F3b" />
    <item key="$signal$PTB1_muxSetting"                     value="mux1" />

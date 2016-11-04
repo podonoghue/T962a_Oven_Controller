@@ -24,7 +24,7 @@ struct MenuItem {
  * The user is prompted to confirm before doing so.
  */
 static void factoryDefaults() {
-   int rc = messageBox("Factory Defaults", "Reset ALL settings\nto Factory defaults?", MSG_YES_NO);
+   int rc = messageBox("Factory Defaults", "Reset ALL settings\nincluding profiles\nto Factory defaults?", MSG_YES_NO);
    if (rc == MSG_IS_YES) {
       // Reset all to factory defaults
       Settings::initialiseSettings();

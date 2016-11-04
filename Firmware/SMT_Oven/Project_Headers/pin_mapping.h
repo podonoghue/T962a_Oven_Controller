@@ -2544,7 +2544,7 @@ public:
    static constexpr PcrInfo  info[] = {
 
          //      Signal                 Pin                                 clockMask          pcrAddress      gpioAddress     bit  PCR value
-         /*   0: UART0_TX             = PTB17 (p32)                    */  { PORTB_CLOCK_MASK, PORTB_BasePtr,  GPIOB_BasePtr,  17,  PORT_PCR_MUX(3)|defaultPcrValue  },
+         /*   0: UART0_TX             = PTA2 (p19)                     */  { PORTA_CLOCK_MASK, PORTA_BasePtr,  GPIOA_BasePtr,  2,   PORT_PCR_MUX(2)|defaultPcrValue  },
          /*   1: UART0_RX             = PTA1 (p18)                     */  { PORTA_CLOCK_MASK, PORTA_BasePtr,  GPIOA_BasePtr,  1,   PORT_PCR_MUX(2)|defaultPcrValue  },
          /*   2: UART0_RTS_b          = --                             */  { 0, 0, 0, UNMAPPED_PCR, 0 },
          /*   3: UART0_CTS_b          = --                             */  { 0, 0, 0, UNMAPPED_PCR, 0 },
@@ -2555,20 +2555,18 @@ public:
     * Initialise pins used by peripheral
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
-      enablePortClocks(PORTA_CLOCK_MASK|PORTB_CLOCK_MASK);
+      enablePortClocks(PORTA_CLOCK_MASK);
 
-      ((PORT_Type *)PORTA_BasePtr)->GPCLR = pcrValue|PORT_PCR_MUX(2)|PORT_GPCLR_GPWE(0x0002UL);
-      ((PORT_Type *)PORTB_BasePtr)->GPCHR = pcrValue|PORT_PCR_MUX(3)|PORT_GPCHR_GPWE(0x0002UL);
+      ((PORT_Type *)PORTA_BasePtr)->GPCLR = pcrValue|PORT_PCR_MUX(2)|PORT_GPCLR_GPWE(0x0006UL);
    }
 
    /**
     * Resets pins used by peripheral
     */
    static void clearPCRs() {
-      enablePortClocks(PORTA_CLOCK_MASK|PORTB_CLOCK_MASK);
+      enablePortClocks(PORTA_CLOCK_MASK);
 
-      ((PORT_Type *)PORTA_BasePtr)->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x2U);
-      ((PORT_Type *)PORTB_BasePtr)->GPCHR = PORT_PCR_MUX(0)|PORT_GPCHR_GPWE(0x2U);
+      ((PORT_Type *)PORTA_BasePtr)->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x6U);
    }
 
 };
@@ -2959,7 +2957,7 @@ extern void mapAllPins();
  *  EXTAL32                  | EXTAL32                                     | p15                       | N/C       
  *  PTA0                     | JTAG_TCLK/SWD_CLK                           | p17                       | SWD_CLK       
  *  PTA1                     | UART0_RX                                    | p18                       | SWD_Rx       
- *  PTA2                     | -                                           | p19                       | SWD_Tx       
+ *  PTA2                     | UART0_TX                                    | p19                       | SWD_Tx       
  *  PTA3                     | JTAG_TMS/SWD_DIO                            | p20                       | SWD_DIO       
  *  PTA4                     | -                                           | p21                       | EZP_CSb       
  *  PTA18                    | EXTAL0                                      | p24                       | EXTAL       
@@ -2969,7 +2967,7 @@ extern void mapAllPins();
  *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2b       
  *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1b       
  *  PTB16                    | GPIOB_16                                    | p31                       | SW_Sb       
- *  PTB17                    | UART0_TX                                    | p32                       | TP1 (Debug UART_Tx)       
+ *  PTB17                    | -                                           | p32                       | TP1 (Debug UART_Tx)       
  *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CSb       
  *  PTC1                     | GPIOC_1/LLWU_P6                             | p34                       | OvenFan       
  *  PTC2                     | GPIOC_2                                     | p35                       | Heater       
@@ -3026,7 +3024,7 @@ extern void mapAllPins();
  *  VBAT                     | VBAT                                        | p16                       | 3.3V       
  *  PTA0                     | JTAG_TCLK/SWD_CLK                           | p17                       | SWD_CLK       
  *  PTA1                     | UART0_RX                                    | p18                       | SWD_Rx       
- *  PTA2                     | -                                           | p19                       | SWD_Tx       
+ *  PTA2                     | UART0_TX                                    | p19                       | SWD_Tx       
  *  PTA3                     | JTAG_TMS/SWD_DIO                            | p20                       | SWD_DIO       
  *  PTA4                     | -                                           | p21                       | EZP_CSb       
  *  VDD2                     | VDD2                                        | p22                       | 3.3V       
@@ -3039,7 +3037,7 @@ extern void mapAllPins();
  *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2b       
  *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1b       
  *  PTB16                    | GPIOB_16                                    | p31                       | SW_Sb       
- *  PTB17                    | UART0_TX                                    | p32                       | TP1 (Debug UART_Tx)       
+ *  PTB17                    | -                                           | p32                       | TP1 (Debug UART_Tx)       
  *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CSb       
  *  PTC1                     | GPIOC_1/LLWU_P6                             | p34                       | OvenFan       
  *  PTC2                     | GPIOC_2                                     | p35                       | Heater       
@@ -3062,7 +3060,7 @@ extern void mapAllPins();
  *
  *    Pin Name               |   Functions                                 |  Location                 |  Description  
  *  ------------------------ | --------------------------------------------|---------------------------| ------------- 
- *  PTA4                     | -                                           | p21                       | EZP_CSb       
+ *  PTB17                    | -                                           | p32                       | TP1 (Debug UART_Tx)       
  *  ADC0_DM0                 | ADC0_DM0                                    | p8                        | N/C       
  *  ADC0_DP0                 | ADC0_DP0                                    | p7                        | N/C       
  *  PTC7                     | CMP0_IN1                                    | p40                       | Vmains       
@@ -3092,7 +3090,7 @@ extern void mapAllPins();
  *  PTD3                     | SPI0_SIN                                    | p44                       | MISO       
  *  PTD2                     | SPI0_SOUT                                   | p43                       | MOSI       
  *  PTA1                     | UART0_RX                                    | p18                       | SWD_Rx       
- *  PTB17                    | UART0_TX                                    | p32                       | TP1 (Debug UART_Tx)       
+ *  PTA2                     | UART0_TX                                    | p19                       | SWD_Tx       
  *  USB0_DM                  | USB0_DM                                     | p4                        | USB_DM       
  *  USB0_DP                  | USB0_DP                                     | p3                        | USB_DP       
  *  VBAT                     | VBAT                                        | p16                       | 3.3V       
