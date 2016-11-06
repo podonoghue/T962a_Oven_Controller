@@ -3,7 +3,7 @@
 ; USB - CDC INF file for USBDM
 ;------------------------------------------------------------------------------
 [Strings]
-DeviceName         = "Serial Port"
+DeviceName         = "USB Serial Port"
 VendorName         = "pgo"
 Provider           = "pgo"
 DeviceID0          = "VID_16D0&PID_8888"
