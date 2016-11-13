@@ -12,8 +12,8 @@ set LIGHT=%WIX_DIR%\light.exe
 set TORCH=%WIX_DIR%\torch.exe
 set PYRO=%WIX_DIR%\pyro.exe
 
-
 set WIX_BUILD_DIR=wixBuildDir
+
 set CANDLE_OPTIONS=-ext WixUIExtension -ext WixDifxAppExtension.dll
 
 set LIGHT_OPTIONS=-ext WixUIExtension -ext WixUtilExtension -ext WixDifxAppExtension.dll -sw0204 

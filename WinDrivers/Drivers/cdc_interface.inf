@@ -36,7 +36,7 @@ DefaultDestDir=12
 %DeviceName%=DriverInstall, USB\%DeviceID0%
 
 ;------------------------------------------------------------------------------
-;             Windows 32-bit Support
+;             Windows Support
 ;------------------------------------------------------------------------------
 [DriverInstall]
 include=mdmcpq.inf,usb.inf

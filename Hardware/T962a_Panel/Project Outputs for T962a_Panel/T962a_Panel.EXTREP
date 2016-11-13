@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------------------
-Gerber File Extension Report For: T962a_Panel.GBR   4/11/2016  12:32:11 PM
+Gerber File Extension Report For: T962a_Panel.GBR   9/11/2016  11:29:52 AM
 ------------------------------------------------------------------------------------------
 
 
@@ -9,6 +9,7 @@ Layer Extension     Layer Description
 .GTL                Top Layer                               
 .GBL                Bottom Layer                            
 .GTO                Top Overlay                             
+.GTP                Top Paste                               
 .GTS                Top Solder                              
 .GBS                Bottom Solder                           
 .GBO                Bottom Overlay                          
