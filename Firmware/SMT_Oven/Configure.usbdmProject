@@ -357,7 +357,7 @@
    <item key="/SPI0/spi_mode"                              value="0" />
    <item key="/UART0/clockSource"                          value="SystemCoreClock" />
    <item key="/UART0/defaultBaudRate"                      value="115200" />
-   <item key="/UART0/irqHandlerInstalled"                  value="false" />
+   <item key="/UART0/irqHandlerInstalled"                  value="true" />
    <item key="/UART0/irqLevel"                             value="0" />
    <item key="/UART1/clockSource"                          value="SystemCoreClock" />
    <item key="/UART1/defaultBaudRate"                      value="115200" />

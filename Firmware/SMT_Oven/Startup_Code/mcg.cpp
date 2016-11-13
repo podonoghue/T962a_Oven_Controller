@@ -205,6 +205,8 @@ constexpr uint8_t clockTransitionTable[8][8] = {
  * Transition from current clock mode to mode given
  *
  * @param to Clock mode to transition to
+ *
+ * @return E_NO_ERROR on success
  */
 int Mcg::clockTransition(const McgInfo::ClockInfo &clockInfo) {
    McgInfo::ClockMode to = clockInfo.clockMode;
@@ -356,6 +358,8 @@ int Mcg::clockTransition(const McgInfo::ClockInfo &clockInfo) {
 
          case McgInfo::ClockMode_BLPE: // from FBE, PBE (registers differ depending on transition)
             externalClockInUse = true;
+            //no break
+
          case McgInfo::ClockMode_BLPI: // from FBI
             // Set LP
             mcg->C2 = clockInfo.c2|MCG_C2_LP_MASK;
@@ -372,9 +376,8 @@ int Mcg::clockTransition(const McgInfo::ClockInfo &clockInfo) {
             return -1;
          }
       } while (currentClockMode != to);
-
-      setSysDividers(SimInfo::clkdiv1);
    }
+   setSysDividers(SimInfo::clkdiv1);
 
    SystemCoreClockUpdate();
    return 0;
@@ -455,12 +458,6 @@ void Mcg::SystemCoreClockUpdate(void) {
 void Mcg::initialise(void) {
 
    currentClockMode = McgInfo::ClockMode::ClockMode_None;
-
-   if (McgInfo::clockInfo[0].clockMode == McgInfo::ClockMode::ClockMode_None) {
-      // No clock setup
-      SimInfo::initRegs();
-      return;
-   }
 
    // Transition to desired clock mode
    clockTransition(McgInfo::clockInfo[0]);

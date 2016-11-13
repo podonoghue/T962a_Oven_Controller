@@ -17,3 +17,6 @@
 /uart.h
 /usb.h
 /vref.h
+/queue.h
+/usb_defs.h
+/usb_endpoint.h
