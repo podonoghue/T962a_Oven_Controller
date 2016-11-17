@@ -130,9 +130,9 @@ static void drawPoints() {
 /**
  * Draw the axis for the plot
  *
- * @param name Name of profile to print
+ * @param profileIndex Index of profile (to get name of profile to print)
  */
-static void drawAxis(const char *name) {
+static void drawAxis(int profileIndex) {
    lcd.setInversion(false);
    lcd.clearFrameBuffer();
 
@@ -174,7 +174,8 @@ static void drawAxis(const char *name) {
    // Name
    lcd.gotoXY(NAME_OFFSET_X, NAME_OFFSET_Y);
    lcd.setInversion(true);
-   lcd.putString(name);
+
+   lcd.printf("%d:%s", profileIndex, (const volatile char *)(profiles[profileIndex].description));
    lcd.putChar('\n');
    lcd.setInversion(false);
 }
@@ -279,9 +280,11 @@ void calculate(const NvSolderProfile &profile) {
 /**
  * Plot the profile to the points buffer
  *
- * @param profile Profile to use
+ * @param profileIndex Index of profile to use
  */
-static void plot(const NvSolderProfile &profile) {
+static void plot(int profileIndex) {
+   const NvSolderProfile &profile = profiles[profileIndex];
+
    state    = s_preheat;
    time     = 0;
    setpoint = 50;
@@ -306,11 +309,11 @@ void draw() {
    lcd.gotoXY(0,1*lcd.FONT_HEIGHT+5);
    lcd.setInversion(false);lcd.putString("Copy:");     lcd.setInversion(false);
    lcd.gotoXY(0,2*lcd.FONT_HEIGHT+5);
-   lcd.printf("%d:%s", sourceProfileIndex, (const char *)profiles[sourceProfileIndex].description);
+   lcd.printf("%d:%s", sourceProfileIndex, (const volatile char *)profiles[sourceProfileIndex].description);
    lcd.gotoXY(0,4*lcd.FONT_HEIGHT);
    lcd.setInversion(false);lcd.putString("To:");         lcd.setInversion(false);
    lcd.gotoXY(0,5*lcd.FONT_HEIGHT);
-   lcd.printf("%d:%s", destinationProfileIndex, (const char *)profiles[destinationProfileIndex].description);
+   lcd.printf("%d:%s", destinationProfileIndex, (const volatile char *)profiles[destinationProfileIndex].description);
 
    lcd.gotoXY(8,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
    lcd.setInversion(true); lcd.putSpace(4); lcd.putUpArrow();        lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
@@ -329,7 +332,12 @@ void draw() {
 void copyProfile(unsigned sourceIndex, unsigned destinationIndex) {
    MessageBoxResult rc;
    char buff[100];
-   snprintf(buff, sizeof(buff), "Overwrite:\n%d:%s", destinationIndex, (const char *)profiles[destinationIndex].description );
+   if ((destinationProfileIndex == sourceProfileIndex) || !(profiles[destinationProfileIndex].flags&P_UNLOCKED)) {
+      // Illegal copy - quietly ignore
+      return;
+   }
+
+   snprintf(buff, sizeof(buff), "Overwrite:\n%d:%s", destinationIndex, (const volatile char *)profiles[destinationIndex].description );
    rc = messageBox("Overwrite Profile", buff, MSG_YES_NO);
    if (rc == MSG_IS_YES) {
       // Update profile in NV ram
@@ -380,11 +388,11 @@ void run(int index) {
  *
  * @param profile The profile to draw
  */
-void drawProfile(const NvSolderProfile &profile) {
+void drawProfile(int index) {
    Draw::reset();
-   Draw::plot(profile);
+   Draw::plot(index);
    Draw::calculateScales();
-   Draw::drawAxis(profile.description);
+   Draw::drawAxis(index);
    Draw::putProfileMenu();
    Draw::drawPoints();
    lcd.refreshImage();
@@ -401,7 +409,7 @@ void profileMenu() {
 
    for(;;) {
       if (needUpdate) {
-         RunProfile::drawProfile(profiles[profileIndex]);
+         RunProfile::drawProfile(profileIndex);
          lcd.refreshImage();
          lcd.setGraphicMode();
          needUpdate = false;
@@ -694,7 +702,7 @@ void runProfile(const NvSolderProfile &profile) {
       return;
    }
    char buff[100];
-   snprintf(buff, sizeof(buff), "%s\n\nRun Profile?", (const char *)profile.description);
+   snprintf(buff, sizeof(buff), "%s\n\nRun Profile?", (const volatile char *)profile.description);
    MessageBoxResult rc = messageBox("Run Profile", buff, MSG_YES_NO);
    if (rc != MSG_IS_YES) {
       return;

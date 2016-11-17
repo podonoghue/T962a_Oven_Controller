@@ -213,9 +213,18 @@ class Nonvolatile {
 
 private:
    /** Data value in FlexRAM */
-   T data;
+   volatile T data;
 
 public:
+   /**
+    * Assign to underlying type
+    *
+    * This adds a wait for the Flash to be updated
+    */
+   void operator=(const Nonvolatile &data ) {
+      this->data = data;
+      Flash::waitForFlashReady();
+   }
    /**
     * Assign to underlying type
     *
@@ -230,8 +239,26 @@ public:
     *
     * This adds a wait for the Flash to be updated
     */
+   void operator+=(const Nonvolatile &incr ) {
+      this->data += incr;
+      Flash::waitForFlashReady();
+   }
+   /**
+    * Assign to underlying type
+    *
+    * This adds a wait for the Flash to be updated
+    */
    void operator+=(const T &incr ) {
       this->data += incr;
+      Flash::waitForFlashReady();
+   }
+   /**
+    * Assign to underlying type
+    *
+    * This adds a wait for the Flash to be updated
+    */
+   void operator-=(const Nonvolatile &incr ) {
+      this->data -= incr;
       Flash::waitForFlashReady();
    }
    /**
@@ -268,7 +295,7 @@ class NonvolatileArray {
    static_assert((sizeof(T) == 1)||(sizeof(T) == 2)||(sizeof(T) == 4), "T must be 1,2 or 4 bytes in size");
 
 private:
-   using TArray = const T[dimension];
+   using TArray = T[dimension];
    using TPtr   = const T(*);
 
    /** Array of elements in FlexRAM */
@@ -281,6 +308,20 @@ public:
     * This adds a wait for the Flash to be updated after each element is assigned
     */
    void operator=(const TArray &other ) {
+      printf("XX\n");
+      for (int index=0; index<dimension; index++) {
+         data[index] = other[index];
+         Flash::waitForFlashReady();
+      }
+   }
+
+   /**
+    * Assign to underlying array
+    *
+    * This adds a wait for the Flash to be updated after each element is assigned
+    */
+   void operator=(const NonvolatileArray &other ) {
+      printf("XX\n");
       for (int index=0; index<dimension; index++) {
          data[index] = other[index];
          Flash::waitForFlashReady();
