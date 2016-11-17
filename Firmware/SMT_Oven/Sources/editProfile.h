@@ -142,7 +142,7 @@ public:
       if (i<sizeof(nameBuffer)) {
          memset(nameBuffer+i, ' ', sizeof(nameBuffer)-i);
       }
-      nameBuffer[sizeof(nameBuffer)] = '\0';
+      nameBuffer[sizeof(nameBuffer)-1] = '\0';
       return true;
    }
    virtual ~ProfileNameSetting() {}
