@@ -18,10 +18,11 @@
  * Any manual changes will be lost.
  */
 #include <stdint.h>
+#include <cstdio>
 #include "derivative.h"
 #include "hardware.h"
 #include "mcg.h"
-#include <cstdio>
+#include "queue.h"
 
 namespace USBDM {
 
@@ -46,7 +47,6 @@ protected:
     * Construct UART interface
     *
     * @param uart             Base address of UART hardware
-    *
     */
    Uart(volatile UART_Type *uart) : uart(uart) {
    }
@@ -317,7 +317,7 @@ typedef void (*UARTCallbackFunction)(uint8_t status);
 /**
  * Template class to provide UART callback
  */
-template<class Info>
+template<class Info, int RX_QUEUE_SIZE=0, int TX_QUEUE_SIZE=0>
 class UartIrq_T : public Uart_T<Info> {
 
 protected:
@@ -326,6 +326,8 @@ protected:
 
    UartIrq_T(unsigned baud) : Uart_T<Info>(baud) {
    }
+   Queue<RX_QUEUE_SIZE> rxQueue;
+   Queue<TX_QUEUE_SIZE> txQueue;
 
 public:
    /**
@@ -348,7 +350,8 @@ public:
    }
 };
 
-template<class Info> UARTCallbackFunction UartIrq_T<Info>::callback = 0;
+template<class Info, int RX_QUEUE_SIZE, int TX_QUEUE_SIZE>
+UARTCallbackFunction UartIrq_T<Info, RX_QUEUE_SIZE, TX_QUEUE_SIZE>::callback = 0;
 
 #ifdef USBDM_UART0_IS_DEFINED
 /**

@@ -386,6 +386,8 @@ void Usb0::initialise() {
    setUnhandledSetupCallback(handleUserEp0SetupRequests);
 
    setSOFCallback(sofCallback);
+
+   CdcUart<Uart0Info>::setInCallback(putCdcChar);
    /*
     * TODO Additional initialisation
     */
