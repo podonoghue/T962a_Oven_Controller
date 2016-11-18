@@ -156,7 +156,7 @@ void cdc_setLineCoding(const LineCodingStructure *lineCodingStructure) {
  *  Get CDC communication characteristics\n
  *  Dummy routine
  *
- *  @param lineCodingStructure - Structure describing current settings
+ *  @return Structure describing current settings
  */
 const LineCodingStructure *cdc_getLineCoding(void) {
    return &lineCoding;

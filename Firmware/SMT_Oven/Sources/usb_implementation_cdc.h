@@ -192,6 +192,14 @@ public:
     */
    static int receiveCdcData(uint8_t *data, unsigned maxSize);
 
+   /**
+    * Add character to CDC OUT buffer.
+    *
+    * @param ch Character to send
+    *
+    * @return true  Character added
+    * @return false Overrun, character not added
+    */
    static bool putCdcChar(uint8_t ch);
 
    /**

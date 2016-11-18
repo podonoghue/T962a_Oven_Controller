@@ -329,12 +329,18 @@ void draw() {
    lcd.setGraphicMode();
 }
 
-void copyProfile(unsigned sourceIndex, unsigned destinationIndex) {
+/**
+ * Copy a profile with confirmation dialogue
+ *
+ * @return true  => Profile copied
+ * @return false => Profile not copied (illegal/cancelled)
+ */
+bool copyProfile(unsigned sourceIndex, unsigned destinationIndex) {
    MessageBoxResult rc;
    char buff[100];
    if ((destinationProfileIndex == sourceProfileIndex) || !(profiles[destinationProfileIndex].flags&P_UNLOCKED)) {
       // Illegal copy - quietly ignore
-      return;
+      return false;
    }
 
    snprintf(buff, sizeof(buff), "Overwrite:\n%d:%s", destinationIndex, (const volatile char *)profiles[destinationIndex].description );
@@ -343,7 +349,9 @@ void copyProfile(unsigned sourceIndex, unsigned destinationIndex) {
       // Update profile in NV ram
       profiles[destinationIndex] = profiles[sourceIndex];
       profiles[destinationIndex].flags = profiles[destinationIndex].flags | P_UNLOCKED;
+      return true;
    }
+   return false;
 }
 
 void run(int index) {
@@ -371,7 +379,9 @@ void run(int index) {
          }
          break;
       case SW_F4:
-         copyProfile(sourceProfileIndex, destinationProfileIndex);
+         if (copyProfile(sourceProfileIndex, destinationProfileIndex)) {
+            return;
+         }
          needsUpdate = true;
          break;
       case SW_S:
@@ -386,7 +396,7 @@ void run(int index) {
 /**
  * Draw a profile to LCD
  *
- * @param profile The profile to draw
+ * @param index Index of profile to draw
  */
 void drawProfile(int index) {
    Draw::reset();
