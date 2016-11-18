@@ -205,6 +205,12 @@ public:
  * Ensures updates are completed before return.
  *
  * @tparam T Scalar type for variable
+ *
+ * @note Instances should be placed in FlexRAM segment e.g.\n
+ * @code
+ * __attribute__ ((section(".flexRAM")))
+ * USBDM::Nonvolatile<char> a_nonvolatile_char;
+ * @endcode
  */
 template <typename T>
 class Nonvolatile {
@@ -212,62 +218,74 @@ class Nonvolatile {
    static_assert((sizeof(T) == 1)||(sizeof(T) == 2)||(sizeof(T) == 4), "T must be 1,2 or 4 bytes in size");
 
 private:
-   /** Data value in FlexRAM */
-   volatile T data;
+   /**
+    * Data value in FlexRAM
+    *
+    * FlexRAM required data to be aligned according to its size.\n
+    * Be careful how you order variables otherwise space will be wasted
+    */
+   __attribute__ ((aligned (sizeof(T))))
+   T data;
 
 public:
    /**
-    * Assign to underlying type
-    *
+    * Assign to underlying type\n
     * This adds a wait for the Flash to be updated
+    *
+    * @param data The data to assign
     */
    void operator=(const Nonvolatile &data ) {
       this->data = data;
       Flash::waitForFlashReady();
    }
    /**
-    * Assign to underlying type
-    *
+    * Assign to underlying type\n
     * This adds a wait for the Flash to be updated
+    *
+    * @param data The data to assign
     */
    void operator=(const T &data ) {
       this->data = data;
       Flash::waitForFlashReady();
    }
    /**
-    * Assign to underlying type
-    *
+    * Increment underlying type\n
     * This adds a wait for the Flash to be updated
+    *
+    * @param change The amount to increment
     */
-   void operator+=(const Nonvolatile &incr ) {
-      this->data += incr;
+   void operator+=(const Nonvolatile &change ) {
+      this->data += change;
       Flash::waitForFlashReady();
    }
    /**
-    * Assign to underlying type
-    *
+    * Increment underlying type\n
     * This adds a wait for the Flash to be updated
+    *
+    * @param change The amount to increment
     */
-   void operator+=(const T &incr ) {
-      this->data += incr;
+   void operator+=(const T &change ) {
+      this->data += change;
       Flash::waitForFlashReady();
    }
    /**
-    * Assign to underlying type
-    *
+    * Decrement underlying type\n
     * This adds a wait for the Flash to be updated
+    *
+    * @param change The amount to increment
     */
-   void operator-=(const Nonvolatile &incr ) {
-      this->data -= incr;
+   void operator-=(const Nonvolatile &change ) {
+      this->data -= change;
       Flash::waitForFlashReady();
    }
    /**
-    * Assign to underlying type
-    *
+    * Decrement underlying type\n
     * This adds a wait for the Flash to be updated
+    *
+    * @param change The amount to increment
     */
-   void operator-=(const T &incr ) {
-      this->data -= incr;
+   void operator-=(const T &change ) {
+      this->data -= change;
       Flash::waitForFlashReady();
    }
    /**
@@ -288,6 +306,12 @@ public:
  *
  * @tparam T         Scalar type for element
  * @tparam dimension Dimension of array
+ *
+ * @note Instances should be placed in FlexRAM segment e.g.\n
+ * @code
+ * __attribute__ ((section(".flexRAM")))
+ * USBDM::NonvolatileArray<20, int> a_nonvolatile_array_of_ints;
+ * @endcode
  */
 template <typename T, int dimension>
 class NonvolatileArray {
@@ -298,7 +322,12 @@ private:
    using TArray = T[dimension];
    using TPtr   = const T(*);
 
-   /** Array of elements in FlexRAM */
+   /** Array of elements in FlexRAM
+    *
+    *  FlexRAM required data to be aligned according to its size.\n
+    *  Be careful how you order variables otherwise space will be wasted
+    */
+   __attribute__ ((aligned (sizeof(T))))
    T data[dimension];
 
 public:
@@ -308,7 +337,6 @@ public:
     * This adds a wait for the Flash to be updated after each element is assigned
     */
    void operator=(const TArray &other ) {
-      printf("XX\n");
       for (int index=0; index<dimension; index++) {
          data[index] = other[index];
          Flash::waitForFlashReady();
@@ -321,7 +349,6 @@ public:
     * This adds a wait for the Flash to be updated after each element is assigned
     */
    void operator=(const NonvolatileArray &other ) {
-      printf("XX\n");
       for (int index=0; index<dimension; index++) {
          data[index] = other[index];
          Flash::waitForFlashReady();
