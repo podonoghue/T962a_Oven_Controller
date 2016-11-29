@@ -108,7 +108,6 @@ protected:
     */
    void initialise() {
       USBDM::waitMS(200);
-
       {
          IrqProtect protect;
          spi.setPcsPolarity(pinNum, false);
