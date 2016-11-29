@@ -22,7 +22,7 @@ extern void drawProfile(const NvSolderProfile &profile);
  *
  * @param profile The profile to run
  */
-extern void runProfile(const NvSolderProfile &profile);
+extern void runProfile();
 
 /**
  * Monitor thermocouple status

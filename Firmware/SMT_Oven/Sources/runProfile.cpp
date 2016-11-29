@@ -208,7 +208,8 @@ static int   time;
 static float setpoint;
 
 /*
- * Calculates one step of the profile
+ * Calculates one step of the profile\n
+ * Used for plotting desired profile
  *
  * @param profile Profile to use
  */
@@ -487,11 +488,17 @@ static const char *getStateName(State state) {
  * Handles the call-back from the PIT to step through the sequence
  */
 static void handler() {
+   /* Records start of soak time */
    static int startOfSoakTime;
+
+   /* Records start of dwell time */
    static int startOfDwellTime;
 
-   /** Used for timeout for profile changes */
-   static volatile int timeout;
+   /* Used for timeout for profile changes */
+   static int timeout;
+
+   /* Tolerance of temperature checks */
+   constexpr int delta = 5;
 
    // Advance time
    time++;
@@ -510,37 +517,57 @@ static void handler() {
    case s_manual:
       return;
    case s_preheat:
-      // Heat from ambient to start of soak temperature
-      // A -> soakTemp1 @ ramp1Slope
+      /*
+       * Heat from ambient to start of soak temperature
+       * Will wait until reached T~soakTemp1 with 50s timeout
+       *
+       * A -> soakTemp1 @ ramp1Slope
+       */
       if (setpoint<currentProfile->soakTemp1) {
+         // Follow profile
          setpoint += currentProfile->ramp1Slope;
+         pid.setSetpoint(setpoint);
          timeout = 0;
       }
       else {
+         // Reached end of profile
+         // Move on if reached soak temperature or been nearly there for a while
+         if ((getTemperature()>=currentProfile->soakTemp1) ||
+             ((timeout>5)&&(getTemperature()>=(currentProfile->soakTemp1-delta)))) {
+            // Reach soak temperature - move on
+            state = s_soak;
+            startOfSoakTime = time;
+         }
+         // Do timeout
          timeout++;
-         if (timeout>20) {
+         if (timeout>50) {
             state = s_fail;
          }
       }
-      pid.setSetpoint(setpoint);
-      if (getTemperature()>=currentProfile->soakTemp1) {
-         state = s_soak;
-         startOfSoakTime = time;
-      }
       break;
    case s_soak:
-      // Heat from soak start temperature to soak end temperature over soak time
-      // soakTemp1 -> soakTemp2 over soakTime time
+      /*
+       * Heat from soak start temperature to soak end temperature over soak time
+       * Will wait until reached T~soakTemp2 and minimum soak duration with timeout
+       *
+       * soakTemp1 -> soakTemp2 over soakTime time
+       */
       if (setpoint<currentProfile->soakTemp2) {
+         // Follow profile
          setpoint = currentProfile->soakTemp1 + (time-startOfSoakTime)*(currentProfile->soakTemp2-currentProfile->soakTemp1)/currentProfile->soakTime;
+         pid.setSetpoint(setpoint);
          timeout = 0;
       }
-      pid.setSetpoint(setpoint);
       if (time >= (startOfSoakTime+currentProfile->soakTime)) {
-         if (getTemperature()>=currentProfile->soakTemp2) {
+         // Reached end of soak time
+         // Move on if reached soak temperature or been nearly there for a while
+         if ((getTemperature()>=currentProfile->soakTemp2) ||
+             ((timeout>5)&&(getTemperature()>=(currentProfile->soakTemp2-delta)))) {
+            // Reach soak temperature 2 - move on
             state = s_ramp_up;
          }
          else {
+            // Reached end soak time - do timeout
             timeout++;
             if (timeout>40) {
                state = s_fail;
@@ -549,14 +576,18 @@ static void handler() {
       }
       break;
    case s_ramp_up:
-      // Heat from soak end temperature to peak at rampUp rate
-      // soakTemp2 -> peakTemp @ ramp2Slope
+      /*
+       * Heat from soak end temperature to peak at rampUp rate
+       * Will wait until reached T~peakTemp with 40s timeout
+       *
+       * soakTemp2 -> peakTemp @ ramp2Slope
+       */
       if (setpoint < currentProfile->peakTemp) {
          setpoint += currentProfile->ramp2Slope;
+         pid.setSetpoint(setpoint);
          timeout = 0;
       }
-      pid.setSetpoint(setpoint);
-      if (getTemperature() >= currentProfile->peakTemp) {
+      if (getTemperature() >= (currentProfile->peakTemp-delta)) {
          state = s_dwell;
          startOfDwellTime = time;
       }
@@ -568,15 +599,20 @@ static void handler() {
       }
       break;
    case s_dwell:
-      // Remain at peak temperature for dwell time
-      // peakTemp for peakDwell
+      /*
+       * Remain at peak temperature for dwell time
+       *
+       * peakTemp for peakDwell
+       */
       if (time>(startOfDwellTime+currentProfile->peakDwell)) {
          state = s_ramp_down;
       }
       break;
    case s_ramp_down:
-      // Ramp down at rampDown rate
-      // (Tp-5)-> 50 @ rampDown
+      /* Ramp down at rampDown rate
+       *
+       * peakTemp -> 50 @ rampDown
+       */
       if (setpoint > ambient) {
          setpoint += currentProfile->rampDownSlope;
       }
@@ -589,7 +625,7 @@ static void handler() {
 };
 
 //static const char *title = "     State,  Time, Target, Actual, Heater,  Fan, T1-probe, T1-cold, T2-probe, T2-cold, T3-probe, T3-cold, T4-probe, T4-cold,\n";
-static const char *title = "\n     State,  Time, Target, Actual, Heater,  Fan, T1-probe, T2-probe, T3-probe, T4-probe,\n";
+static const char *title = "\nState       Time Target Actual Heater  Fan T1-probe T2-probe T3-probe T4-probe\n";
 
 /**
  * Writes thermocouple status to LCD buffer and log
@@ -602,7 +638,7 @@ static void thermocoupleStatus() {
    lcd.drawHorizontalLine(9);
    lcd.gotoXY(0, 12+4*lcd.FONT_HEIGHT);
    lcd.printf("%4ds S=%3d T=%0.1f\x7F", time, (int)round(setpoint), pid.getInput());
-   printf(" %9s,  %4d,  %5.1f,  %5.1f,   %4d, %4d,", getStateName(state), time, setpoint, pid.getInput(), ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
+   printf("%-11s  %4d  %5.1f  %5.1f   %4d %4d", getStateName(state), time, setpoint, pid.getInput(), ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
    lcd.gotoXY(0, 12);
    for (int t=0; t<=3; t++) {
       float temperature, coldReference;
@@ -612,17 +648,17 @@ static void thermocoupleStatus() {
       if ((status&0x7) == 0) {
          lcd.printf("%-4s %5.1f\x7F %5.1f\x7F\n", Max31855::getStatusName(status), temperature, coldReference);
          //         printf("    %5.1f,   %5.1f,", temperature, coldReference);
-         printf("    %5.1f,", temperature);
+         printf("    %5.1f", temperature);
       }
       else if ((status&0x7) != 7) {
          lcd.printf("%-4s  ----  %5.1f\x7F\n", Max31855::getStatusName(status), coldReference);
          //         printf("    %5.1f,   %5.1f,", 0.0, coldReference);
-         printf("    %5.1f,", 0.0);
+         printf("    %5.1f", 0.0);
       }
       else {
          lcd.printf("%-4s\n", Max31855::getStatusName(status));
          //         printf("    %5.1f,   %5.1f,", 0.0, 0.0);
-         printf("    %5.1f,", 0.0);
+         printf("    %5.1f", 0.0);
       }
    }
    puts("");
@@ -706,13 +742,15 @@ void monitor() {
  *
  * @param profile The profile to run
  */
-void runProfile(const NvSolderProfile &profile) {
+void runProfile() {
+
+   const NvSolderProfile &profile = profiles[profileIndex];
 
    if (!checkThermocouples()) {
       return;
    }
    char buff[100];
-   snprintf(buff, sizeof(buff), "%s\n\nRun Profile?", (const volatile char *)profile.description);
+   snprintf(buff, sizeof(buff), "%d:%s\n\nRun Profile?", (int)profileIndex, (const volatile char *)profile.description);
    MessageBoxResult rc = messageBox("Run Profile", buff, MSG_YES_NO);
    if (rc != MSG_IS_YES) {
       return;
