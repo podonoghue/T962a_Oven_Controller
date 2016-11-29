@@ -33,7 +33,7 @@ static void factoryDefaults() {
 
 static MenuItem menu[] = {
       {"Manual Mode",          RunProfile::manualMode,                                 },
-      {"Run Profile",          [](){RunProfile::runProfile(profiles[profileIndex]);},  },
+      {"Run Profile",          RunProfile::runProfile,                                 },
       {"Manage Profiles",      RunProfile::profileMenu,                                },
       {"Thermocouples",        RunProfile::monitor,                                    },
       {"Settings",             [](){settings.runMenu();},                              },
