@@ -32,7 +32,7 @@
 #define VendorID        (0x16D0)    // Vendor (actually MCS)
 //#define ProductID       (0x06A6)  // Product ID
 #define ProductID       (0x8888)    // Product ID
-#define VersionID       (1)       // Reported version (via USB)
+#define VersionID       (1)         // Reported version (via USB)
 
 /** Function buttons */
 using F1Button = USBDM::GpioB<3, USBDM::ActiveLow>;
@@ -47,8 +47,8 @@ using SButton  = USBDM::GpioB<16, USBDM::ActiveLow>;
 constexpr int lcd_cs_num = 4;
 constexpr int t1_cs_num  = 2;
 constexpr int t2_cs_num  = 3;
-constexpr int t3_cs_num  = 0;
-constexpr int t4_cs_num  = 1;
+constexpr int t3_cs_num  = 1;
+constexpr int t4_cs_num  = 0;
 
 /** Case fan PWM output */
 using CaseFan  = USBDM::Ftm0Channel<2>;
