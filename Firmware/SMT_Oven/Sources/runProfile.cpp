@@ -638,7 +638,7 @@ static void thermocoupleStatus() {
    lcd.drawHorizontalLine(9);
    lcd.gotoXY(0, 12+4*lcd.FONT_HEIGHT);
    lcd.printf("%4ds S=%3d T=%0.1f\x7F", time, (int)round(setpoint), pid.getInput());
-   printf("%-11s  %4d  %5.1f  %5.1f   %4d %4d", getStateName(state), time, setpoint, pid.getInput(), ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
+   printf("%-11s %4d  %5.1f  %5.1f   %4d %4d", getStateName(state), time, setpoint, pid.getInput(), ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
    lcd.gotoXY(0, 12);
    for (int t=0; t<=3; t++) {
       float temperature, coldReference;
@@ -738,9 +738,7 @@ void monitor() {
    } while (true);
 }
 /**
- * Run profile
- *
- * @param profile The profile to run
+ * Run the current profile
  */
 void runProfile() {
 
@@ -831,7 +829,7 @@ void runProfile() {
  * Logs oven status to stdout
  */
 static void logger() {
-   time ++;
+   time++;
    float temperatures[4];
    int measuredValues = 0;
    float averageTemperature = 0.0;
@@ -848,9 +846,9 @@ static void logger() {
    if (measuredValues>0) {
       averageTemperature /= measuredValues;
    }
-   printf(" %9s,  %4d,  %5.1f,  %5.1f,   %4d, %4d,", getStateName(state), time, pid.getSetpoint(), averageTemperature, ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
+   printf("%-10s  %4d  %5.1f  %5.1f   %4d %4d", getStateName(state), time, pid.getSetpoint(), averageTemperature, ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
    for (int t=0; t<=3; t++) {
-      printf("    %5.1f,", temperatures[t]);
+      printf("    %5.1f", temperatures[t]);
    }
    puts("");
 }
