@@ -8,6 +8,8 @@ Refer to the PDFs in the Project Outputs directory of each project
 
 <a href="T962a_Panel/Project%20Outputs%20for%20T962a_Panel/T962a_Panel.PDF">Expansion Board</img></a>
 
+![An image](https://raw.githubusercontent.com/podonoghue/T962a_Oven_Controller/master/Hardware/T962a/T962a.png "Top Board Image")  
+
 ====
 PCBs may be ordered from OSH park
 
