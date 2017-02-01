@@ -7,8 +7,8 @@ It consists of a complete replacement for the hardware in a compatible form with
 * Support the two internal thermocouples  
 * Support two external thermocouples  
 * Supports up to 10 profiles stored in non-voltile memory  
-* Configuartion is also stored in non-voltile memory  
-* Requires additional SSD to completely separate the low-voltage and high-voltage components  
+* The current configuration is also stored in non-voltile memory
+* Uses additional SSD to completely separate the low-voltage and high-voltage components  
 
 **Requirements**  
 * It uses a Kinetis microcontroller so requires a compatible programmer e.g. USBDM  
