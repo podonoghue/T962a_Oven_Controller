@@ -28,7 +28,8 @@ This is a Kinetis Design Studio workspace.
 PCB designs for T962a replacement oven controller.  
 These are Altium designer projects.  
 
-[Hardwre designs are available here] (https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Hardware)
+[Hardware designs are available here](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Hardware)
+
 Main board
 ====
 
