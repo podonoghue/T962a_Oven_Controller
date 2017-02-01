@@ -1,8 +1,8 @@
 [ProjectGroup]
 Version=1.0
 [Project1]
-ProjectPath=PCB\T962a\T962a.PrjPCB
-[Project2]
-ProjectPath=PCB\T962a_Panel\T962a_Panel.PrjPCB
-[Project3]
 ProjectPath=..\PCB\MyLibrary\MyLibrary.LibPkg
+[Project2]
+ProjectPath=Hardware\T962a\T962a.PrjPCB
+[Project3]
+ProjectPath=Hardware\T962a_Panel\T962a_Panel.PrjPCB
