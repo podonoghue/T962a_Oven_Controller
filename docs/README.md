@@ -19,9 +19,9 @@ It consists of a complete replacement for the hardware in a compatible form with
 Firmware for T962a replacement oven controller.  
 This is a Kinetis Design Studio workspace.   
 The project should be imported into KDS.  
-It requires the USBDM plugin to be installed.
-[firmware](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Firmware)
-
+It requires the USBDM plugin to be installed.  
+[Firmware is avaailable here](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Firmware)  
+[Driver for USB interface](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/WinDrivers)  
 # T962a Hardware (PCB Designs)
 
 PCB designs for T962a replacement oven controller.  
