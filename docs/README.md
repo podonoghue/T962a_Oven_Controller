@@ -8,7 +8,7 @@ It consists of a complete replacement for the hardware in a compatible form with
 * Support up to two external thermocouples (with expansion board)  
 * Supports up to 10 profiles stored in non-voltile memory  
 * The current configuration is also stored in non-voltile memory  
-* Uses additional SSD to completely separate the low-voltage and high-voltage components  
+* Uses an additional SSD to completely separate the low-voltage and high-voltage components  
 
 **Requirements**  
 * It uses a Kinetis microcontroller so requires a compatible programmer e.g. USBDM  
@@ -20,6 +20,7 @@ Firmware for T962a replacement oven controller.
 This is a Kinetis Design Studio workspace.   
 The project should be imported into KDS.  
 It requires the USBDM plugin to be installed.
+[firmware](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Firmware)
 
 # T962a Hardware (PCB Designs)
 
@@ -28,7 +29,7 @@ These are Altium designer projects.
 
 Main board
 ====
-Refer to the PDFs in the Project Outputs directory of each project  <a href="T962a/Project%20Outputs%20for%20T962a/T962a.PDF">Main Board</a>  
+Refer to the PDFs in the Project Outputs directory of each project  <a href="https://github.com/podonoghue/T962a_Oven_Controller/blob/master/Hardware/T962a/Project%20Outputs%20for%20T962a/T962a.PDF">Main Board</a>  
 
 ![An image](https://raw.githubusercontent.com/podonoghue/T962a_Oven_Controller/master/Hardware/T962a/T962a.png "Top Board Image")  
 
@@ -36,7 +37,7 @@ PCBs may be ordered from OSH park  <a href="https://oshpark.com/shared_projects/
 
 Expansion board
 ====
-Refer to the PDFs in the Project Outputs directory of each project  <a href="T962a_Panel/Project%20Outputs%20for%20T962a_Panel/T962a_Panel.PDF">Expansion Board</a>  
+Refer to the PDFs in the Project Outputs directory of each project  <a href="https://github.com/podonoghue/T962a_Oven_Controller/blob/master/Hardware/T962a_Panel/Project%20Outputs%20for%20T962a_Panel/T962a_Panel.PDF">Expansion Board</a>  
 
 ![An image](https://raw.githubusercontent.com/podonoghue/T962a_Oven_Controller/master/Hardware/T962a_Panel/T962a_Panel.png "Top Board Image")  
 
