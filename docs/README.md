@@ -4,10 +4,10 @@ This is a replacement controller for a T962a Oven.
 It consists of a complete replacement for the hardware in a compatible form with software providing extended features.
 
 **Features**  
-* Support the two internal thermocouples  
-* Support two external thermocouples  
+* Supports the two internal thermocouples  
+* Support up to two external thermocouples (with expansion board)  
 * Supports up to 10 profiles stored in non-voltile memory  
-* The current configuration is also stored in non-voltile memory
+* The current configuration is also stored in non-voltile memory  
 * Uses additional SSD to completely separate the low-voltage and high-voltage components  
 
 **Requirements**  
