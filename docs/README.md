@@ -1,7 +1,18 @@
 # T962a Oven Controller Upgrade
 
-This is a replacement controller for a T962a Oven.
+This is a replacement controller for a T962a Oven.  
 It consists of a complete replacement for the hardware in a compatible form with software providing extended features.
+
+**Features**
+* Support the two internal thermocouples
+* Support two external thermocouples
+* Supports up to 10 profiles stored in non-voltile memory
+* Configuartion is also stored in non-voltile memory
+* Requires additional SSD to completely separate the low-voltage and high-voltage components
+
+**Requirements**
+* It uses a Kinetis microcontroller so requires a compatible programmer e.g. USBDM
+* Firmware development requires Eclipse/KDS and USBDM plugin
 
 # T962a Firmware
 
