@@ -90,6 +90,11 @@ void SystemInitLowLevel(void) {
    /* Set the interrupt vector table position */
    SCB_VTOR = (uint32_t)__vector_table;
 
+#ifdef RCM_MR_BOOTROM
+   // Set boot from Flash
+   RCM->MR = RCM_MR_BOOTROM(3);
+#endif
+
    // Disable watch-dog
    WDOG_UNLOCK  = KINETIS_WDOG_UNLOCK_SEQ_1;
    WDOG_UNLOCK  = KINETIS_WDOG_UNLOCK_SEQ_2;
@@ -139,6 +144,15 @@ void SystemInit(void) {
 static int disableInterruptCount = 0;
 
 /**
+ * Check interrupt status
+ *
+ * @return true if interrupts are enabled
+ */
+int areInterruptsEnabled() {
+   return disableInterruptCount == 0;
+}
+
+/**
  * Disable interrupts
  *
  * This function keeps a count of the number of times interrupts is enabled/disabled so may be called in recursive routines
@@ -161,7 +175,8 @@ int enableInterrupts() {
    }
    if (disableInterruptCount == 0) {
       __enable_irq();
+      return 1;
    }
-   return disableInterruptCount>0;
+   return 0;
 }
 

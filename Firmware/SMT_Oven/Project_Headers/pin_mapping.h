@@ -558,7 +558,7 @@ public:
    static constexpr PcrInfo  info[] = {
 
          //      Signal                 Pin                                 clockMask          pcrAddress      gpioAddress     bit  PCR value
-         /*   0: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
+         /*   0: ADC0_SE0             = ADC0_DP0 (p7)                  */  { 0, 0, 0, FIXED_NO_PCR, 0 },
          /*   1: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
          /*   2: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
          /*   3: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
@@ -577,7 +577,7 @@ public:
          /*  16: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
          /*  17: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
          /*  18: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
-         /*  19: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
+         /*  19: ADC0_SE19            = ADC0_DM0 (p8)                  */  { 0, 0, 0, FIXED_NO_PCR, 0 },
          /*  20: --                   = --                             */  { 0, 0, 0, INVALID_PCR,  0 },
          /*  21: ADC0_SE21            = --                             */  { 0, 0, 0, UNMAPPED_PCR, 0 },
          /*  22: ADC0_SE22            = --                             */  { 0, 0, 0, UNMAPPED_PCR, 0 },
@@ -705,6 +705,7 @@ public:
       CMP_CR1_INV(0)   | // Comparator Invert
       CMP_CR1_COS(0)   | // Comparator Output Select
       CMP_CR1_OPE(0);    // Comparator Output Pin Enable
+
    //! CMP Filter Period Register
    static constexpr uint32_t fpr =
       CMP_FPR_FILT_PER(255); // Filter Sample Period
@@ -715,7 +716,7 @@ public:
       CMP_SCR_IER(0) | // Comparator Interrupt Enable Rising
       CMP_SCR_IEF(0);  // Comparator Interrupt Enable Falling
 
-   //! CMP Status and Control Register
+   //! DAC Control Register
    static constexpr uint32_t daccr =
       CMP_DACCR_VRSEL(1); // Supply Voltage Reference Source Select
 
@@ -812,6 +813,7 @@ public:
       CMP_CR1_INV(0)   | // Comparator Invert
       CMP_CR1_COS(0)   | // Comparator Output Select
       CMP_CR1_OPE(0);    // Comparator Output Pin Enable
+
    //! CMP Filter Period Register
    static constexpr uint32_t fpr =
       CMP_FPR_FILT_PER(0); // Filter Sample Period
@@ -822,7 +824,7 @@ public:
       CMP_SCR_IER(0) | // Comparator Interrupt Enable Rising
       CMP_SCR_IEF(0);  // Comparator Interrupt Enable Falling
 
-   //! CMP Status and Control Register
+   //! DAC Control Register
    static constexpr uint32_t daccr =
       CMP_DACCR_VRSEL(0); // Supply Voltage Reference Source Select
 
@@ -2902,7 +2904,9 @@ namespace USBDM {
  * @{
  */
 using adc_p8               = const USBDM::Adc0Channel<0>;
+//using adc_p8               = const USBDM::Adc0Channel<19>;
 using adc_p7               = const USBDM::Adc0Channel<0>;
+//using adc_p7               = const USBDM::Adc0Channel<0>;
 /** 
  * End ADC_Group
  * @}
@@ -2952,8 +2956,8 @@ extern void mapAllPins();
  *
  *    Pin Name               |   Functions                                 |  Location                 |  Description  
  *  ------------------------ | --------------------------------------------|---------------------------| ------------- 
- *  ADC0_DM0                 | ADC0_DM0                                    | p8                        | N/C       
- *  ADC0_DP0                 | ADC0_DP0                                    | p7                        | N/C       
+ *  ADC0_DM0                 | ADC0_DM0/ADC0_SE19                          | p8                        | N/C       
+ *  ADC0_DP0                 | ADC0_DP0/ADC0_SE0                           | p7                        | N/C       
  *  EXTAL32                  | EXTAL32                                     | p15                       | N/C       
  *  PTA0                     | JTAG_TCLK/SWD_CLK                           | p17                       | SWD_CLK       
  *  PTA1                     | UART0_RX                                    | p18                       | SWD_Rx       
@@ -3012,8 +3016,8 @@ extern void mapAllPins();
  *  USB0_DM                  | USB0_DM                                     | p4                        | USB_DM       
  *  VOUT33                   | VOUT33                                      | p5                        | 3.3V       
  *  VREGIN                   | VREGIN                                      | p6                        | 5V       
- *  ADC0_DP0                 | ADC0_DP0                                    | p7                        | N/C       
- *  ADC0_DM0                 | ADC0_DM0                                    | p8                        | N/C       
+ *  ADC0_DP0                 | ADC0_DP0/ADC0_SE0                           | p7                        | N/C       
+ *  ADC0_DM0                 | ADC0_DM0/ADC0_SE19                          | p8                        | N/C       
  *  VDDA                     | VDDA                                        | p9                        | 3.3V       
  *  VREFH                    | VREFH                                       | p10                       | 3.3V       
  *  VREFL                    | VREFL                                       | p11                       | Gnd       
@@ -3061,8 +3065,8 @@ extern void mapAllPins();
  *    Pin Name               |   Functions                                 |  Location                 |  Description  
  *  ------------------------ | --------------------------------------------|---------------------------| ------------- 
  *  PTB17                    | -                                           | p32                       | TP1 (Debug UART_Tx)       
- *  ADC0_DM0                 | ADC0_DM0                                    | p8                        | N/C       
- *  ADC0_DP0                 | ADC0_DP0                                    | p7                        | N/C       
+ *  ADC0_DM0                 | ADC0_DM0/ADC0_SE19                          | p8                        | N/C       
+ *  ADC0_DP0                 | ADC0_DP0/ADC0_SE0                           | p7                        | N/C       
  *  PTC7                     | CMP0_IN1                                    | p40                       | Vmains       
  *  PTA18                    | EXTAL0                                      | p24                       | EXTAL       
  *  EXTAL32                  | EXTAL32                                     | p15                       | N/C       

@@ -1,3 +1,5 @@
+/system.h
+/pin_mapping.h
 /adc.h
 /cmp.h
 /console.h
@@ -15,8 +17,8 @@
 /smc.h
 /spi.h
 /uart.h
-/usb.h
-/vref.h
 /queue.h
+/usb.h
 /usb_defs.h
 /usb_endpoint.h
+/vref.h

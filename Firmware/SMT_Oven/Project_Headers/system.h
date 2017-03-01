@@ -30,12 +30,13 @@ void SystemInitLowLevel(void);
  * Setup the microcontroller system.
  */
 void SystemInit(void);
+
 /**
- * @brief Update SystemCoreClock variable
+ * Check interrupt status
  *
- * Updates the SystemCoreClock & SystemBusClock variables with current core Clock retrieved from CPU registers.
+ * @return true if interrupts are enabled
  */
-//void SystemCoreClockUpdate(void);
+int areInterruptsEnabled();
 
 /**
  * Disable interrupts
