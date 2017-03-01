@@ -1,9 +1,11 @@
 ;------------------------------------------------------------------------------
 ; usbdm_cdc_interface.inf
 ; USB - CDC INF file for USBDM
+;
+; Copyright pgo
 ;------------------------------------------------------------------------------
 [Strings]
-DeviceName         = "USB Serial Port"
+DeviceName         = "T962a Serial Port"
 VendorName         = "pgo"
 Provider           = "pgo"
 DeviceID0          = "VID_16D0&PID_8888"
@@ -16,7 +18,7 @@ Class       =  Ports
 ClassGuid   =  {4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider    =  %Provider%
 CatalogFile =  cdc_interface.cat
-DriverVer   =  11/04/2016,2.3.0.0
+DriverVer   =  11/04/2016,2.4.0.0
 
 
 [Manufacturer]
@@ -39,31 +41,30 @@ DefaultDestDir=12
 ;             Windows Support
 ;------------------------------------------------------------------------------
 [DriverInstall]
-include=mdmcpq.inf,usb.inf
-CopyFiles=FakeModemCopyFileSection
-AddReg=DriverAddReg
-
-[DriverInstall.HW]
-AddReg=DriverAddReg.HW
+include     = mdmcpq.inf
+CopyFiles   = FakeModemCopyFileSection
+AddReg      = SerialPropertyPage_AddReg,DriverInstall_AddReg
 
 ; This adds the serial port property tab to the device properties dialog
-[DriverAddReg]
+[SerialPropertyPage_AddReg]
 HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
 
-[DriverAddReg.HW]
+[DriverInstall_AddReg]
 HKR,,DevLoader,,*ntkern 
 HKR,,NTMPDriver,,usbser.sys 
 HKR,,"UpperFilters",0x00010000,"serenum"
 
 [DriverInstall.Services]
-include    = mdmcpq.inf
-AddService = usbser, 0x00000002, DriverService
+AddService = usbser,0x00000002,DriverService
 AddService = serenum,,SerEnumDriverService
 
 [DriverService]
 DisplayName=%ServiceName%
+; SERVICE_KERNEL_DRIVER
 ServiceType=1
+; SERVICE_DEMAND_START
 StartType=3
+; SERVICE_ERROR_NORMAL
 ErrorControl=1
 ServiceBinary=%12%\usbser.sys
 LoadOrderGroup=Base
