@@ -1,5 +1,6 @@
-/*
- * configure.cpp
+/**
+ * @file    configure.cpp
+ * @brief   Configuration
  *
  *  Created on: 18 Sep 2016
  *      Author: podonoghue
@@ -40,6 +41,8 @@ static constexpr float kd = 62.5;   //0.0f; // 62.5
 /**
  * Get current temperature\n
  * This is an average of the active thermocouples
+ *
+ * @return Averaged oven temperature
  */
 float getTemperature() {
    int foundSensorCount = 0;

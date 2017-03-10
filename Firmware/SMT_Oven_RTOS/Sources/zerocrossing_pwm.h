@@ -1,5 +1,6 @@
-/*
- * zerocrossing_pwm.h
+/**
+ * @file    zerocrossing_pwm.h
+ * @brief   Zero-crossing switch controller
  *
  *  Created on: 24 Sep 2016
  *      Author: podonoghue

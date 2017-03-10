@@ -1,5 +1,6 @@
-/*
- * runProfile.h
+/**
+ * @file    runProfile.h
+ * @brief   Runs Solder profiles
  *
  *  Created on: 28 Sep 2016
  *      Author: podonoghue
@@ -19,8 +20,6 @@ extern void drawProfile(const NvSolderProfile &profile);
 
 /**
  * Run profile
- *
- * @param profile The profile to run
  */
 extern void runProfile();
 

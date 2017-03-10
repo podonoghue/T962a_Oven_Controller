@@ -310,7 +310,7 @@ void Usb0::handleTokenComplete() {
 
 /**
  * Call-back handling CDC-OUT transaction complete\n
- * Data received is passed to the UART
+ * Data received is passed to the cdcInterface
  *
  * @param state Current end-point state
  */
@@ -353,6 +353,8 @@ void Usb0::cdcInTransactionCallback(EndpointState state) {
 
 /**
  * Notify IN (device->host) endpoint that data is available
+ *
+ * @return Not used
  */
 bool Usb0::notify() {
    if (epCdcDataIn.getState() == EPIdle) {

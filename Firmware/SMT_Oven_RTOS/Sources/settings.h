@@ -1,5 +1,6 @@
-/*
- * Settings.h
+/**
+ * @file    Settings.h
+ * @brief   Non-volatile Settings for Oven
  *
  *  Created on: 25 Sep 2016
  *      Author: podonoghue
@@ -92,6 +93,8 @@ public:
     *
     * @param value Value to set
     *
+    * @return Value forced to valid range
+    *
     * @note limits are applied
     */
    int set(int value) const {
@@ -111,6 +114,8 @@ public:
    /**
     * Increment variable
     *
+    * @return Modified value
+    *
     * @note limits are applied
     */
    int increment() const {
@@ -120,6 +125,8 @@ public:
    /**
     * Increment variable
     *
+    * @return Modified value
+    *
     * @note limits are applied
     */
    int decrement() const {
@@ -128,6 +135,8 @@ public:
 
    /**
     * Reset variable to default value
+    *
+    * @return Modified value
     */
    int reset() const {
       return set(defaultValue);
@@ -186,11 +195,15 @@ public:
 
    /**
     * Test Fan operation
+    *
+    * @param setting The current setting
     */
    static void testFan(const Setting *setting);
 
    /**
     * Test Beeper
+    *
+    * @param setting The current setting
     */
    static void testBeep(const Setting *setting);
 

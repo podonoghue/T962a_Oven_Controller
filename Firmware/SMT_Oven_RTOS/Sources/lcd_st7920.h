@@ -1,5 +1,5 @@
-/*
- * lcd_st7920.h
+/**
+ * @file lcd_st7920.h
  *
  *  Created on: 18 Sep 2016
  *      Author: podonoghue
@@ -430,7 +430,10 @@ public:
    }
 
    /**
-    * Get the current X,Y location for graphics mode
+    * Set the current X,Y location for graphics mode
+    *
+    * @param x
+    * @param y
     */
    void gotoXY(int x, int y) {
       this->x = x;
@@ -439,7 +442,10 @@ public:
    }
 
    /**
-    * Change the current X,Y location for graphics mode
+    * Get the current X,Y location for graphics mode
+    *
+    * @param x
+    * @param y
     */
    void getXY(int &x, int &y) {
       x = this->x;
@@ -537,7 +543,9 @@ public:
     * The string is printed to the screen at the current x,y location
     *
     * @param format Format control string (as for printf())
-    * @param ...    Arguments toprint
+    * @param ...    Arguments to print
+    *
+    * @return numbers of chars printed?
     *
     * @note Limited to 21 characters ~ 1 line
     */

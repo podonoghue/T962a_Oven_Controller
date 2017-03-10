@@ -1,5 +1,6 @@
-/*
- * SCI.h
+/**
+ * @file    cdc.h
+ * @brief   CDC interface for USB
  *
  *  Created on: 29/09/2010
  *      Author: PODonoghue

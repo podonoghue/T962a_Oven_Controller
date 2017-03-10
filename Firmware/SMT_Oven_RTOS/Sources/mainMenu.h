@@ -1,5 +1,6 @@
-/*
- * mainMenu.h
+/**
+ * @file    mainMenu.h
+ * @brief   Main menu for Oven
  *
  *  Created on: 9Oct.,2016
  *      Author: podonoghue

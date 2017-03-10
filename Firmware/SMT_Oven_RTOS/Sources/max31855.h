@@ -1,5 +1,6 @@
-/*
- * max31855.h
+/**
+ * @file    max31855.h
+ * @brief   MAX31855 Thermocouple interface
  *
  *  Created on: 18 Sep 2016
  *      Author: podonoghue
@@ -139,6 +140,7 @@ public:
       // Cold junction = sign-extended 12-bit value
       coldReference = (((int16_t)((data[2]<<8)|data[3]))>>4)/16.0;
 
+      // Error flag
       status = data[3]&0x07;
 
       if (status == 7) {

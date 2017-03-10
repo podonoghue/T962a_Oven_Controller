@@ -1,5 +1,5 @@
-/*
- * cmsis.h
+/**
+ * @file cmsis.h
  *
  *  Created on: 20Feb.,2017
  *      Author: podonoghue
@@ -123,6 +123,8 @@ private:
 public:
    /**
     * Create semaphore
+    *
+    * @param count Number of available resources.
     */
    Semaphore(int32_t count) {
       osSemaphoreId semaphore_id = osSemaphoreCreate(&os_semaphore_def, count);
@@ -138,6 +140,8 @@ public:
     * Obtain semaphore
     *
     * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait
+    *
+    * @return Number of available tokens, or -1 in case of incorrect parameters.
     */
    int32_t wait(uint32_t millisec=osWaitForever) {
       int32_t rc = osSemaphoreWait((osSemaphoreId)os_semaphore_cb, millisec);
@@ -221,6 +225,12 @@ public:
    }
    /**
     * Return a memory block to a memory pool.
+    *
+    * @param buffer Address of buffer to return to pool
+    *
+    * @return osOK:             The memory block is released.
+    * @return osErrorValue:     Block does not belong to the memory pool.
+    * @return osErrorParameter: A parameter is invalid or outside of a permitted range.
     */
    void free(T *buffer) {
       osStatus status = osPoolFree((osPoolId)pool, buffer);
@@ -243,10 +253,11 @@ public:
    /**
     * Create thread
     *
-    * @param argument   Argument passed to thread function
-    * @param priority   Priority of thread e.g. osPriorityNormal
-    * @param instances  Number of times this thread will be instantiated
-    * @param stackSize  Stack size for thread or 0 to indicate default
+    * @param threadFunction   Function to execute as the thread
+    * @param argument         Argument passed to thread function
+    * @param priority         Priority of thread e.g. osPriorityNormal
+    * @param instances        Number of times this thread will be instantiated
+    * @param stackSize        Stack size for thread or 0 to indicate default
     */
    Thread(
          void (*threadFunction)(const void *),
@@ -284,7 +295,7 @@ public:
    /**
     * Get thread Priority
     *
-    * @return priority of thread
+    * @return Priority of thread
     */
    osPriority getPriority() {
       return osThreadGetPriority(thread_id);
@@ -293,14 +304,23 @@ public:
     * Set thread Priority
     *
     * @param priority Priority to set for thread
+    *
+    * @return osOK:              The priority of the thread has been successfully changed.
+    * @return osErrorValue:      Incorrect priority value.
+    * @return osErrorResource:   Thread that is not an active thread.
+    * @return osErrorISR:        Cannot be called from interrupt service routines.
     */
    osStatus setPriority(osPriority priority) {
       return osThreadSetPriority(thread_id, priority);
    }
    /**
-    * Set thread Priority
+    * Pass control to the next thread that is in state READY.
+    * If there is no other thread in the state READY, the current
+    * thread continues execution and no thread switching occurs.
     *
-    * @param priority Priority to set for thread
+    * @return osOK:       The function has been correctly executed.
+    * @return osErrorISR: Cannot be called from interrupt service routines.
+    *
     */
    osStatus yield() {
       return osThreadYield();
@@ -308,29 +328,34 @@ public:
    /**
     * Set the specified Signal Flags
     *
-    * @param flags    Flags to set
+    * @param signals Specifies the signal flags of the thread that should be set.
+    *
+    * @return Previous signal flags of the specified thread or 0x80000000 in case of incorrect parameters or call from ISR.
+    *
     */
-   int32_t signalSet(int32_t flags) {
-      return osSignalSet(thread_id, flags);
+   int32_t signalSet(int32_t signals) {
+      return osSignalSet(thread_id, signals);
    }
    /**
     * Clear the specified Signal Flags
     *
-    * @param flags    Flags to clear
+    * @param signals Specifies the signal flags of the thread that shall be cleared.
+    *
+    * @return Previous signal flags of the specified thread or 0x80000000 in case of incorrect parameters or call from ISR.
     */
-   int32_t signalClear(int32_t flags) {
-      return osSignalClear(thread_id, flags);
+   int32_t signalClear(int32_t signals) {
+      return osSignalClear(thread_id, signals);
    }
    /**
     * Wait for one or more Signal Flags to become signaled for the current thread.
     *
-    * @param flags    Flags to wait on
+    * @param signals  Wait until all specified signal flags set or 0 for any single signal flag.
     * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait
     *
     * @return Structure describing event occurring
     */
-   static osEvent signalWait(int32_t flags, uint32_t millisec=osWaitForever) {
-      return osSignalWait(flags, millisec);
+   static osEvent signalWait(int32_t signals, uint32_t millisec=osWaitForever) {
+      return osSignalWait(signals, millisec);
    }
 
 };
@@ -382,7 +407,9 @@ private:
 
 public:
    /**
-    * Create message
+    * Create Message Queue
+    *
+    * @param thread Thread ID or 0.
     */
    Message(Thread *thread=nullptr) {
       osThreadId threadId = 0;
@@ -403,9 +430,8 @@ public:
     *
     * @param info     Message to send
     *
-    * @return
-    * osOK: the message is put into the queue.
-    * osErrorParameter: a parameter is invalid or outside of a permitted range.
+    * @return osOK: the message is put into the queue.
+    * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
    void put(T *info) {
       osStatus status = osMessagePut((osMessageQId)queue, (uint32_t)info, osWaitForever);
@@ -417,10 +443,9 @@ public:
     *
     * @param info     Message to send
     *
-    * @return
-    * osOK: the message is put into the queue.
-    * osErrorResource: no memory in the queue was available.
-    * osErrorParameter: a parameter is invalid or outside of a permitted range.
+    * @return osOK: the message is put into the queue.
+    * @return osErrorResource: no memory in the queue was available.
+    * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
    osStatus putISR(uint32_t info) {
       return osMessagePut((osMessageQId)queue, info, 0);
@@ -428,13 +453,13 @@ public:
    /**
     * Put message to queue with timeout
     *
+    * @param info     Message to enter
     * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait
     *
-    * @return
-    * osOK: the message is put into the queue.
-    * osErrorResource: no memory in the queue was available.
-    * osErrorTimeoutResource: no memory in the queue was available during the given time limit.
-    * osErrorParameter: a parameter is invalid or outside of a permitted range.
+    * @return osOK: the message is put into the queue.
+    * @return osErrorResource: no memory in the queue was available.
+    * @return osErrorTimeoutResource: no memory in the queue was available during the given time limit.
+    * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
    osStatus put(uint32_t info, uint32_t millisec) {
       return osMessagePut((osMessageQId)queue, info, millisec);
@@ -444,12 +469,11 @@ public:
     *
     * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait
     *
-    * @return
-    * Status and Error Codes
-    * - osOK: no message is available in the queue and no timeout was specified.
-    * - osEventTimeout: no message has arrived during the given timeout period.
-    * - osEventMessage: message received, value.p contains the pointer to message.
-    * - osErrorParameter: a parameter is invalid or outside of a permitted range.
+    * @return Status and Error Codes
+    * @return osOK: no message is available in the queue and no timeout was specified.
+    * @return osEventTimeout: no message has arrived during the given timeout period.
+    * @return osEventMessage: message received, value.p contains the pointer to message.
+    * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
    osEvent get(uint32_t millisec=osWaitForever) {
       return osMessageGet((osMessageQId)queue, millisec);
@@ -458,11 +482,10 @@ public:
     * Get message from queue.
     * Returns immediately (for use in ISRs)
     *
-    * @return
-    * Status and Error Codes
-    * - osOK: no message is available in the queue.
-    * - osEventMessage: message received, value.p contains the pointer to message.
-    * - osErrorParameter: a parameter is invalid or outside of a permitted range.
+    * @return Status and Error Codes
+    * @return osOK: no message is available in the queue.
+    * @return osEventMessage: message received, value.p contains the pointer to message.
+    * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
    osEvent getISR() {
       osEvent event = osMessageGet((osMessageQId)queue, 0);

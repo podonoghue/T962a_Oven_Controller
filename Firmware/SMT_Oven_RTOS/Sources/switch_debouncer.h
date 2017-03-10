@@ -1,5 +1,6 @@
-/*
- * switchDebouncer.h
+/**
+ * @file    switch_debouncer.h
+ * @brief   Switch Debouncer
  *
  *  Created on: 24 Sep 2016
  *      Author: podonoghue
@@ -22,6 +23,7 @@ enum SwitchValue {
    SW_F4   = 1<<3,
    SW_S    = 1<<4,
    SW_F3F4 = SW_F3|SW_F4, // used for +/- keys together
+   dummy = -1,
 };
 
 /**
@@ -58,7 +60,7 @@ private:
    static constexpr int REPEAT_PERIOD      = 200/TICK_INTERVAL;
 
    /** Last pressed switch */
-   static volatile SwitchValue switchNum __attribute__((aligned (4)));
+   static volatile SwitchValue switchNum;// __attribute__((aligned (4)));
 
    /** Indicates that the key is repeating */
    static volatile bool repeating;

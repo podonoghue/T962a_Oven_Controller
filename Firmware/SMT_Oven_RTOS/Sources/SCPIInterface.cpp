@@ -1,5 +1,6 @@
-/*
- * SCPIInterface.cpp
+/**
+ * @file    SCPIInterface.cpp
+ * @brief   SCPI (Very incomplete)
  *
  *  Created on: 26Feb.,2017
  *      Author: podonoghue

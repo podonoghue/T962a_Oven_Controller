@@ -1,5 +1,5 @@
-/*
- * Settings.cpp
+/**
+ * @file Settings.cpp
  *
  * Looks after the non-volatile settings
  *

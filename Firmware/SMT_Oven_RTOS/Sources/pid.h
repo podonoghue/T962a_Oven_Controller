@@ -1,5 +1,6 @@
-/*
- * pid.h
+/**
+ * @file    pid.h
+ * @brief   PID Controller
  *
  *  Created on: 10 Jul 2016
  *      Author: podonoghue
@@ -125,6 +126,8 @@ public:
 
    /**
     * Get number of ticks since last enabled
+    *
+    * @return Number of ticks
     */
    unsigned getTicks() {
       return tickCount;
@@ -132,6 +135,8 @@ public:
 
    /**
     * Get number of seconds since last enabled
+    *
+    * @return Elapsed time
     */
    double getElapsedTime() {
       return (tickCount*interval);

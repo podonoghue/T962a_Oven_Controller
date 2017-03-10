@@ -1,5 +1,6 @@
-/*
- * runProfile.cpp
+/**
+ * @file    runProfile.cpp
+ * @brief   Runs Solder profiles
  *
  *  Created on: 28 Sep 2016
  *      Author: podonoghue
@@ -335,6 +336,9 @@ void draw() {
 
 /**
  * Copy a profile with confirmation dialogue
+ *
+ * @param sourceIndex      Index of source profile
+ * @param destinationIndex Index of destination profile
  *
  * @return true  => Profile copied
  * @return false => Profile not copied (illegal/cancelled)

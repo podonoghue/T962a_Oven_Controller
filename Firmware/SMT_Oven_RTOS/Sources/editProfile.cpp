@@ -1,5 +1,6 @@
-/*
- * editProfile.cpp
+/**
+ * @file    editProfile.cpp
+ * @brief   Profile editor
  *
  *  Created on: 8Oct.,2016
  *      Author: podonoghue
@@ -27,9 +28,9 @@ void ProfileNameSetting::draw() {
    }
    lcd.putString(nameBuffer+offset);
 
+   // Draw letter selection list
    lcd.gotoXY((editPosition-offset)*lcd.FONT_WIDTH, 1*lcd.FONT_HEIGHT+3);
    lcd.setInversion(true); lcd.putChar(nameBuffer[editPosition]); lcd.setInversion(false);
-
    lcd.gotoXY(0,2*lcd.FONT_HEIGHT+6);
    lcd.setInversion(false);
    for (uint8_t ch='A'; ch<='Z'; ch++) {
@@ -38,18 +39,19 @@ void ProfileNameSetting::draw() {
          lcd.putChar('\n');
       }
    }
-   if (!inName) {
-      lcd.gotoXY((letterPosition%16)*lcd.FONT_WIDTH,(2+(letterPosition/16))*lcd.FONT_HEIGHT+6);
-      lcd.setInversion(true);
-      lcd.putChar('A'+letterPosition);
-      lcd.setInversion(false);
-   }
-   lcd.gotoXY(8,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-   lcd.setInversion(true); lcd.putSpace(4); lcd.putUpArrow();      lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(4); lcd.putDownArrow();    lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(4); lcd.putLeftArrow();    lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(4); lcd.putRightArrow();   lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(4); lcd.putString("EXIT"); lcd.putSpace(3); lcd.setInversion(false);
+   // Highlight selected entry letter
+   lcd.gotoXY((letterPosition%16)*lcd.FONT_WIDTH,(2+(letterPosition/16))*lcd.FONT_HEIGHT+6);
+   lcd.setInversion(true);
+   lcd.putChar('A'+letterPosition);
+   lcd.setInversion(false);
+
+   // Draw menu
+   lcd.gotoXY(2,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+   lcd.setInversion(true); lcd.putSpace(2); lcd.putLeftArrow();    lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true); lcd.putSpace(2); lcd.putRightArrow();   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Sel");  lcd.putSpace(2); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Del");  lcd.putSpace(2); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("EXIT"); lcd.putSpace(2); lcd.setInversion(false);
 
    lcd.refreshImage();
    lcd.setGraphicMode();
@@ -61,7 +63,6 @@ bool ProfileNameSetting::edit() {
 
    letterPosition = 0;
    editPosition   = 0;
-   inName         = true;
 
    do {
       if (needsUpdate) {
@@ -69,41 +70,25 @@ bool ProfileNameSetting::edit() {
          needsUpdate = false;
       }
       switch(buttons.getButton()) {
-      case SW_F1:
-         inName = true;
-         needsUpdate = true;
-         break;
-      case SW_F2:
-         inName = false;
-         needsUpdate = true;
-         break;
-      case SW_F3:
-         if (inName) {
-            if (editPosition>0) {
-               editPosition--;
-            }
-         }
-         else {
-            if (letterPosition>0) {
-               letterPosition--;
-            }
+      case SW_F1: // Left
+         if (letterPosition>0) {
+            letterPosition--;
          }
          needsUpdate = true;
          break;
-      case SW_F4:
-         if (inName) {
-            if ((editPosition+1)<(sizeof(SolderProfile::description))) {
-               editPosition++;
-            }
-         }
-         else {
-            if (letterPosition<26) {
-               letterPosition++;
-            }
+      case SW_F2: // Right
+         if (letterPosition<26) {
+            letterPosition++;
          }
          needsUpdate = true;
          break;
-      case SW_S:
+      case SW_F3: // Sel
+         needsUpdate = true;
+         break;
+      case SW_F4: // Del
+         needsUpdate = true;
+         break;
+      case SW_S: // Exit
          return changed;
       default:
          break;

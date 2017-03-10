@@ -1,5 +1,6 @@
-/*
- * editProfile.h
+/**
+ * @file    editProfile.h
+ * @brief   Profile Editor
  *
  *  Created on: 8Oct.,2016
  *      Author: podonoghue
@@ -115,8 +116,6 @@ private:
 
    unsigned editPosition;
    unsigned letterPosition;
-
-   bool inName;
 
 public:
    ProfileNameSetting(char *name) : name(name) {

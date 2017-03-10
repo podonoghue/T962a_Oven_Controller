@@ -1,11 +1,9 @@
-/*
- ============================================================================
- * @file    main.cpp (180.ARM_Peripherals)
- * @brief   Basic C++ demo using GPIO class
+/**
+ * @file    flash.cpp
+ * @brief   Flash support code
  *
  *  Created on: 10/1/2016
  *      Author: podonoghue
- ============================================================================
  */
 #include <stdio.h>
 #include <string.h>

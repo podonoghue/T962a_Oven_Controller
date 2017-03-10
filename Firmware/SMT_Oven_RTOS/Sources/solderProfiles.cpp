@@ -1,5 +1,6 @@
 /*
- * profiles.cpp
+ * @file    solderProfiles.cpp
+ * @brief   Solder profiles
  *
  * The following profiles are from:
  *

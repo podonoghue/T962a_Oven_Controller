@@ -1,5 +1,6 @@
-/*
- * profile.h
+/**
+ * @file    solderProfiles.h
+ * @brief   Solder profiles
  *
  *  Created on: 18 Sep 2016
  *      Author: podonoghue

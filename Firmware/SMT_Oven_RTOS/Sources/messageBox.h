@@ -1,5 +1,6 @@
-/*
- * messageBox.h
+/**
+ * @file    messageBox.h
+ * @brief   Message box for LCD
  *
  *  Created on: 8Oct.,2016
  *      Author: podonoghue

@@ -1,5 +1,6 @@
-/*
- * flexRam.h
+/**
+ * @file    flash.h
+ * @brief   Flash support
  *
  *  Created on: 21 Sep 2016
  *      Author: podonoghue
@@ -334,6 +335,8 @@ public:
    /**
     * Assign to underlying array
     *
+    * @param other TArray to assign from
+    *
     * This adds a wait for the Flash to be updated after each element is assigned
     */
    void operator=(const TArray &other ) {
@@ -345,6 +348,8 @@ public:
 
    /**
     * Assign to underlying array
+    *
+    * @param other NonvolatileArray to assign from
     *
     * This adds a wait for the Flash to be updated after each element is assigned
     */
@@ -358,6 +363,8 @@ public:
    /**
     * Assign to underlying array
     *
+    * @param other NonvolatileArray to assign to
+    *
     * This adds a wait for the Flash to be updated after each element is assigned
     */
    void copyTo(T *other) const {
@@ -367,10 +374,14 @@ public:
    }
 
    /**
-    * Return a reference to the underlying array element - read-only!
+    * Return a reference to the underlying array element - read-only!\
+    *
+    * @param index Index of element to return
+    *
+    * @return Reference to underlying array
     */
-   const T operator [](int i) {
-      return data[i];
+   const T operator [](int index) {
+      return data[index];
    }
 
    /**

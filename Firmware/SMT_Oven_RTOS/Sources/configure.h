@@ -1,5 +1,6 @@
-/*
- * Configure.h
+/**
+ * @file    Configure.h
+ * @brief   Shared configuration
  *
  *  Created on: 18 Sep 2016
  *      Author: podonoghue
@@ -153,6 +154,8 @@ constexpr float pidInterval = 1.0f;
 /**
  * Get oven temperature
  * Averages multiple thermocouple inputs
+ *
+ * @return Averaged oven temperature
  */
 extern float getTemperature();
 

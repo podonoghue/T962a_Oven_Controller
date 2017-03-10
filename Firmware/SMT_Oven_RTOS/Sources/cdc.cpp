@@ -1,5 +1,6 @@
-/*
- * uart.c
+/**
+ * @file    cdc.cpp
+ * @brief   CDC interface for USB
  *
  *  Created on: Nov 6, 2012
  *      Author: podonoghue

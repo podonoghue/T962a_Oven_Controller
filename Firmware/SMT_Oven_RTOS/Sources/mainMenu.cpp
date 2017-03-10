@@ -1,5 +1,6 @@
-/*
- * mainMenu.cpp
+/**
+ * @file mainMenu.cpp
+ * @brief   Main menu for Oven
  *
  *  Created on: 9Oct.,2016
  *      Author: podonoghue

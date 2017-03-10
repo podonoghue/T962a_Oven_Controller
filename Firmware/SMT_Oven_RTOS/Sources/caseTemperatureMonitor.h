@@ -1,5 +1,6 @@
-/*
- * caseTemperatureMonitor.h
+/**
+ * @file    caseTemperatureMonitor.h
+ * @brief   Case Temperature Monitor
  *
  *  Created on: 1Oct.,2016
  *      Author: podonoghue
