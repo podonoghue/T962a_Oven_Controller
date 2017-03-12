@@ -333,18 +333,17 @@ void Usb0::cdcOutTransactionCallback(EndpointState state) {
 void Usb0::cdcInTransactionCallback(EndpointState state) {
    if ((state == EPDataIn)||(state == EPIdle)) {
       if (response != nullptr) {
-         // Discard last buffer as transfer is now complete
-         SCPI_Interface::responsePool->free(response);
+         // Free last buffer as transfer is now complete
+         SCPI_Interface::responseQueue->free(response);
          response = nullptr;
       }
       osEvent status = SCPI_Interface::responseQueue->getISR();
-      if (status.status != osEventMessage) {
+      if (status.status != osEventMail) {
          // No messages waiting
          return;
       }
       // Set up new message
       response = (SCPI_Interface::Response*)status.value.p;
-      //         PRINTF("Sending %d\n", charCount);
       // Schedules transfer
       epCdcDataIn.setNeedZLP();
       epCdcDataIn.startTxTransaction(EPDataIn, response->size, response->data);

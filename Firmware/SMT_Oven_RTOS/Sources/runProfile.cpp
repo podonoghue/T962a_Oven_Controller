@@ -11,7 +11,6 @@
 #include "configure.h"
 #include "messageBox.h"
 #include "editProfile.h"
-#include "pit.h"
 
 #include "SCPIInterface.h"
 
@@ -19,6 +18,236 @@ using namespace USBDM;
 using namespace std;
 
 namespace RunProfile {
+
+static constexpr int MAX_PROFILE_TIME   = 9*60; // Maximum time for profile
+
+struct DataPoint {
+public:
+   static constexpr unsigned NUM_THERMOCOUPLES = sizeof(temperatureSensors)/sizeof(temperatureSensors[0]);
+   using TemperatureArray = float[NUM_THERMOCOUPLES];
+
+private:
+   static constexpr float    FIXED_POINT_SCALE = 100;
+
+   State    state:8;                            // State for this point
+   uint8_t  heater;                             // Heater duty cycle
+   uint8_t  fan;                                // Fan duty cycle
+   uint8_t  activeThermocouples;                // Mask indicating active thermocouples
+   uint16_t target;                             // Oven target temperature
+   uint16_t thermocouples[NUM_THERMOCOUPLES];   // Thermocouple values
+
+public:
+   /**
+    * Calculates the average oven temperature from active thermocouples
+    *
+    * @return Average value as float or NAN if no thermocouples active
+    */
+   float averageTemperature() const {
+      float average   = 0;
+      int   numTemps = 0;
+      for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
+         if ((activeThermocouples&(1<<index)) != 0) {
+            average += thermocouples[index];
+            numTemps++;
+         }
+      }
+      if (numTemps == 0) {
+         return NAN;
+      }
+      return (average/FIXED_POINT_SCALE)/numTemps;
+   }
+
+   /**
+    * Determine the maximum of thermocouples and target temperature.\n
+    * Used for scaling
+    *
+    * @return Maximum value as float
+    */
+   float maximum() const {
+      float max = target;
+      for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
+         if (thermocouples[index]>max) {
+            max = thermocouples[index];
+         }
+      }
+      return max/FIXED_POINT_SCALE;
+   }
+   /**
+    * Adds a set of thermocouple values
+    *
+    * @param temp   Thermocouple values to add
+    * @param active Mask indicating active thermocouples.
+    */
+   void addThermocouplePoint(float temp[], uint8_t active = 0x0F) {
+      activeThermocouples = active;
+      for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
+         thermocouples[index] = round(temp[index]*FIXED_POINT_SCALE);
+      }
+   }
+   /**
+    * Adds a set of thermocouple values
+    *
+    * @param[out] temp   Thermocouple values
+    * @param[out] active Mask indicating active thermocouples.
+    */
+   void getThermocouplePoint(TemperatureArray &temp, uint8_t &active) const {
+      active = activeThermocouples;
+      for (unsigned index=0; index<(sizeof(thermocouples)/sizeof(thermocouples[0])); index++) {
+         temp[index] = temp[index]/FIXED_POINT_SCALE;
+      }
+   }
+   /**
+    * Set target temperature
+    *
+    * @param temp Temperature to set
+    */
+   void setTarget(float temp) {
+      target = round(temp * FIXED_POINT_SCALE);
+   }
+   /**
+    * Get target temperature
+    *
+    * @param temp Temperature to set
+    */
+   float getTarget() const {
+      return (target/FIXED_POINT_SCALE);
+   }
+
+   /**
+    * Get state
+    *
+    * @return state e.g. s_soak
+    */
+   State getState() const {
+      return state;
+   }
+
+   /**
+    * Set state
+    *
+    * @param state State e.g. s_soak
+    */
+   void setState(State state) {
+      this->state = state;
+   }
+};
+
+struct Plot {
+
+private:
+   DataPoint data[MAX_PROFILE_TIME];   // Oven results
+   int       lastValid;                // Index of last valid point
+   int       marker;                   // Marker
+   bool      liveDataPresent;          // Indicates if measure thermocouple data is present
+
+public:
+   /**
+    * Add target temperature point to plot
+    *
+    * @param time Time index for data point
+    * @param temp Target temperature for above time index
+    */
+   void addTargetPoint(int time, float temp) {
+      if (time>=MAX_PROFILE_TIME) {
+         return;
+      }
+      if (time>lastValid) {
+         lastValid = time;
+      }
+      data[time].setTarget(temp);
+   }
+
+   /**
+    * Add thermocouple temperature points to plot
+    *
+    * @param time    Time index for data point
+    * @param temp    Target thermocouple temperatures for above time index
+    * @param active  Mask indicating active thermocouples for above time index
+    */
+   void addThermocouplePoint(int time, float temps[], uint8_t active) {
+      if (time>=MAX_PROFILE_TIME) {
+         return;
+      }
+      liveDataPresent = true;
+      if (time>lastValid) {
+         lastValid = time;
+      }
+      data[time].addThermocouplePoint(temps, active);
+   }
+
+   /**
+    * Clear plot points
+    */
+   void reset() {
+      memset(data, 0, sizeof(data));
+      lastValid       = 0;
+      marker          = 0;
+      liveDataPresent = false;
+   }
+
+   /**
+    * Return last data value added
+    */
+   const DataPoint &getLastPoint() const {
+      return data[lastValid];
+   }
+
+   /**
+    * Indicates if the plot contains oven data
+    *
+    * @return true  Oven data present
+    * @return false No oven data
+    */
+   bool isLiveDataPresent() const {
+      return liveDataPresent;
+   }
+
+   /**
+    * Get marker
+    *
+    * @return marker value
+    */
+   int getMarker() const {
+      return marker;
+   }
+
+   /**
+    * Set marker
+    *
+    * @param marker Marker value to set
+    */
+   void setMarker(int marker) {
+      this->marker = marker;
+   }
+
+   /**
+    * Get index of last value
+    */
+   int getLastValid() const {
+      return lastValid;
+   }
+
+   /**
+    * Get data points
+    *
+    * @return Data points
+    */
+   const DataPoint *getData() const {
+      return data;
+   }
+   /**
+    * Get data points
+    *
+    * @return Data points
+    */
+   const DataPoint &getDataPoint(unsigned index) const {
+      return data[index];
+   }
+};
+
+/** Current Oven temperature profile/plot */
+Plot plot;
+
 /**
  * Functions associated with drawing profiles and related
  */
@@ -34,19 +263,12 @@ static constexpr int NAME_OFFSET_Y = 0;  // Pixels from top
 
 static constexpr int MIN_TEMP   = 50;   // Minimum temperature to plot (C)
 static constexpr int MAX_TEMP   = 305;  // Maximum temperature to plot  (C)
-static constexpr int MAX_TIME   = 9*60; // Maximum time to plot (s)
 static constexpr int GRID_TIME  = 60;   // Time grid spacing (s) must be 60*N
 static constexpr int GRID_TEMP  = 50;   // Temperature grid spacing (C)
 
 // These stop the plot resizing when too small
 static constexpr int MIN_SCALE_TEMP  = 150;   // Minimum temperature for scaling (C)
 static constexpr int MIN_SCALE_TIME  = 200;   // Minimum time for scaling (s)
-
-/** Points to plot */
-static uint16_t points[MAX_TIME];
-
-/** Maximum time to plot (# of points in points) */
-int maxTime     = 0;
 
 /** Maximum temperature to plot */
 int maxTemperature    = 0;
@@ -66,47 +288,26 @@ float temperatureScale = 4;
 static void calculateScales() {
    // Don't scale below this
    maxTemperature = MIN_SCALE_TEMP;
-   for (int time=0; time<maxTime; time++) {
-      //      printf("points[%d]=%d, maxTemperature=%d\n",
-      //            time, points[time], maxTemperature);
-      if (points[time]>maxTemperature) {
-         maxTemperature = points[time];
+   for (int time=0; time<=RunProfile::plot.getLastValid(); time++) {
+      float pointTemp = RunProfile::plot.getDataPoint(time).maximum();
+      if (pointTemp>maxTemperature) {
+         maxTemperature = pointTemp;
       }
    }
    temperatureScale = (maxTemperature-MIN_TEMP)/(float)(lcd.LCD_HEIGHT-lcd.FONT_HEIGHT-10);
-   timeScale        = ((maxTime<MIN_SCALE_TIME)?MIN_SCALE_TIME:maxTime)/(float)(lcd.LCD_WIDTH-12-24);
-   //   printf("temperatureScale=%f, timeScale=%f\n",
-   //         temperatureScale, timeScale);
+   timeScale        = ((RunProfile::plot.getLastValid()<MIN_SCALE_TIME)?MIN_SCALE_TIME:RunProfile::plot.getLastValid())/(float)(lcd.LCD_WIDTH-12-24);
 }
 /**
  * Clears the plot
  */
 static void reset() {
-   maxTime = 0;
-   memset(points, 0, sizeof(points));
+   RunProfile::plot.reset();
    calculateScales();
-}
-/**
- * Adds a point to the plot array
- *
- * @param time        Time in seconds [0..MAX_TIME]
- * @param temperature Temperature in Celsius
- */
-static void addPoint(int time, int temperature) {
-   //   printf("time=%d, temperature=%d, maxTime=%d\n",
-   //         time, temperature, maxTime);
-   if (time>MAX_TIME) {
-      return;
-   }
-   if (time>maxTime) {
-      maxTime = time;
-   }
-   points[time] = temperature;
 }
 /**
  * Plot temperature point on screen.\n
  * Temperatures [MIN_TEMP..MAX_TEMP] C\n
- * Time [0s..MAX_TIME] s
+ * Time [0s..MAX_PROFILE_TIME] s
  *
  * @param time        Time for horizontal axis
  * @param temperature Temperature to plot
@@ -116,7 +317,7 @@ static void plotPoint(int time, int temperature) {
    if ((temperature<MIN_TEMP)||(temperature>MAX_TEMP)) {
       return;
    }
-   if ((time<0)||(time>MAX_TIME)) {
+   if ((time<0)||(time>MAX_PROFILE_TIME)) {
       return;
    }
    int x = (int)(X_ORIGIN+round(time/timeScale));
@@ -127,8 +328,11 @@ static void plotPoint(int time, int temperature) {
  * Plot points array on screen
  */
 static void drawPoints() {
-   for (int time=0; time<maxTime; time++) {
-      plotPoint(time, points[time]);
+   for (int time=0; time<RunProfile::plot.getLastValid(); time++) {
+      plotPoint(time, RunProfile::plot.getDataPoint(time).getTarget());
+      if(RunProfile::plot.isLiveDataPresent()) {
+         plotPoint(time, RunProfile::plot.getDataPoint(time).averageTemperature());
+      }
    }
 }
 /**
@@ -142,7 +346,7 @@ static void drawAxis(int profileIndex) {
 
    // Horizontal axis minute axis ticks
    lcd.drawHorizontalLine(lcd.LCD_HEIGHT-Y_ORIGIN);
-   for (int time=60; time<=MAX_TIME; time+=GRID_TIME) {
+   for (int time=60; time<=MAX_PROFILE_TIME; time+=GRID_TIME) {
       lcd.gotoXY((X_ORIGIN+round(time/timeScale)-3), lcd.LCD_HEIGHT-5);
       lcd.putSmallDigit(time/60);
    }
@@ -170,7 +374,7 @@ static void drawAxis(int profileIndex) {
    }
    lcd.drawVerticalLine(X_ORIGIN);
    // Grid
-   for (int time=0; time<=MAX_TIME; time += GRID_TIME) {
+   for (int time=0; time<=MAX_PROFILE_TIME; time += GRID_TIME) {
       for (int temperature=MIN_TEMP; temperature<=MAX_TEMP; temperature+=GRID_TEMP) {
          plotPoint(time, temperature);
       }
@@ -283,7 +487,7 @@ void calculate(const NvSolderProfile &profile) {
    }
 };
 /**
- * Plot the profile to the points buffer
+ * Plot the profile to the current plot
  *
  * @param profileIndex Index of profile to use
  */
@@ -292,10 +496,10 @@ static void plot(int profileIndex) {
 
    state    = s_preheat;
    time     = 0;
-   setpoint = 50;
+   setpoint = 50.0;
    while (state != s_off) {
       calculate(profile);
-      addPoint(time, setpoint);
+      RunProfile::plot.addTargetPoint(time, setpoint);
    }
 }
 
@@ -494,7 +698,7 @@ static const char *getStateName(State state) {
 /*
  * Handles the call-back from the PIT to step through the sequence
  */
-static void handler() {
+static void handler(const void *) {
    /* Records start of soak time */
    static int startOfSoakTime;
 
@@ -635,10 +839,9 @@ static void handler() {
 static const char *title = "\nState       Time Target Actual Heater  Fan T1-probe T2-probe T3-probe T4-probe\n";
 
 /**
- * Writes thermocouple status to LCD buffer and log
+ * Writes thermocouple status to LCD buffer
  */
 static void thermocoupleStatus() {
-   char buff[120];
    lcd.setInversion(false);
    lcd.clearFrameBuffer();
    lcd.gotoXY(0,0);
@@ -646,29 +849,46 @@ static void thermocoupleStatus() {
    lcd.drawHorizontalLine(9);
    lcd.gotoXY(0, 12+4*lcd.FONT_HEIGHT);
    lcd.printf("%4ds S=%3d T=%0.1f\x7F", time, (int)round(setpoint), pid.getInput());
-   sprintf(buff, "%-11s %4d  %5.1f  %5.1f   %4d %4d", getStateName(state), time, setpoint, pid.getInput(), ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
    lcd.gotoXY(0, 12);
-   for (int t=0; t<=3; t++) {
+   float temperatures[(sizeof(temperatureSensors)/sizeof(temperatureSensors[0]))];
+   uint8_t activeThermocouples = 0x00;
+   for (unsigned t=0; t<((sizeof(temperatureSensors)/sizeof(temperatureSensors[0]))); t++) {
       float temperature, coldReference;
       int status = temperatureSensors[t].getReading(temperature, coldReference);
-
+      temperatures[t] = temperature;
       lcd.printf("T%d:", t+1); lcd.putSpace(2);
       if ((status&0x7) == 0) {
          lcd.printf("%-4s %5.1f\x7F %5.1f\x7F\n", Max31855::getStatusName(status), temperature, coldReference);
-         //         printf("    %5.1f,   %5.1f,", temperature, coldReference);
+         activeThermocouples |= (1<<t);
       }
       else if ((status&0x7) != 7) {
          temperature = 0;
          lcd.printf("%-4s  ----  %5.1f\x7F\n", Max31855::getStatusName(status), coldReference);
-         //         sprintf(buff, "    %5.1f,   %5.1f,", 0.0, coldReference);
       }
       else {
          temperature = 0;
          lcd.printf("%-4s\n", Max31855::getStatusName(status));
-         //         sprintf(buff, "    %5.1f,   %5.1f,", 0.0, 0.0);
       }
       char buff2[20];
       sprintf(buff2, "    %5.1f", temperature);
+   }
+   RunProfile::plot.addThermocouplePoint(time, temperatures, activeThermocouples);
+}
+
+/**
+ * Writes thermocouple status to log
+ */
+static void logThermocoupleStatus(const DataPoint &point) {
+   char buff[120];
+   sprintf(buff, "%-11s %4d  %5.1f  %5.1f   %4d %4d",
+         getStateName(state), time, setpoint, pid.getInput(),
+         ovenControl.getHeaterDutycycle(), ovenControl.getFanDutycycle());
+   DataPoint::TemperatureArray temperatures;
+   uint8_t active;
+   point.getThermocouplePoint(temperatures, active);
+   for (unsigned t=0; t<DataPoint::NUM_THERMOCOUPLES; t++) {
+      char buff2[20];
+      sprintf(buff2, "    %5.1f", temperatures[t]);
       strcat(buff, buff2);
    }
    strcat(buff, "  \n\r");
@@ -680,8 +900,10 @@ static void thermocoupleStatus() {
  *
  * @param prompt Method to print the menu prompt
  */
-static void thermocoupleStatus(void (*prompt)()) {
+static void displayThermocoupleStatus(void (*prompt)()) {
    thermocoupleStatus();
+   logThermocoupleStatus(plot.getLastPoint());
+
    if (state != s_off) {
       lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
       lcd.putString(getStateName(state));
@@ -704,7 +926,7 @@ static void (*prompt)();
  */
 static bool report() {
    if (doReport) {
-      thermocoupleStatus(prompt);
+      displayThermocoupleStatus(prompt);
       doReport = false;
       time++;
    }
@@ -753,6 +975,8 @@ void monitor() {
  */
 void runProfile() {
 
+   CMSIS::Timer<osTimerPeriodic> timer{handler};
+
    const NvSolderProfile &profile = profiles[profileIndex];
 
    if (!checkThermocouples()) {
@@ -781,12 +1005,16 @@ void runProfile() {
    pid.setSetpoint(ambient);
    pid.enable();
 
-   // Using PIT
-   USBDM::Pit::enable();
-   USBDM::Pit::setCallback(profile_pit_channel, handler);
-   USBDM::Pit::setPeriod(profile_pit_channel, 1.0f);
-   USBDM::Pit::enableChannel(profile_pit_channel);
-   USBDM::Pit::enableInterrupts(profile_pit_channel);
+   // Start Timer callback
+   timer.create();
+   timer.start(1.0f);
+
+//   // Using PIT
+//   USBDM::Pit::enable();
+//   USBDM::Pit::setCallback(profile_pit_channel, handler);
+//   USBDM::Pit::setPeriod(profile_pit_channel, 1.0f);
+//   USBDM::Pit::enableChannel(profile_pit_channel);
+//   USBDM::Pit::enableInterrupts(profile_pit_channel);
 
    prompt = []() {
       lcd.gotoXY(lcd.LCD_WIDTH-4-lcd.FONT_WIDTH*9-5*3, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
@@ -798,7 +1026,7 @@ void runProfile() {
    do {
       if (time>lastTime)  {
          // Report every second
-         thermocoupleStatus(prompt);
+         displayThermocoupleStatus(prompt);
          lastTime = time;
       }
       if ((state == s_complete) || (state == s_fail)) {
@@ -809,9 +1037,12 @@ void runProfile() {
    pid.setSetpoint(0);
    pid.enable(false);
    ovenControl.setHeaterDutycycle(0);
-   USBDM::Pit::enableInterrupts(profile_pit_channel, false);
-   USBDM::Pit::enableChannel(profile_pit_channel, false);
-   USBDM::Pit::setCallback(profile_pit_channel, nullptr);
+
+   timer.stop();
+   timer.destroy();
+//   USBDM::Pit::enableInterrupts(profile_pit_channel, false);
+//   USBDM::Pit::enableChannel(profile_pit_channel, false);
+//   USBDM::Pit::setCallback(profile_pit_channel, nullptr);
 
    ovenControl.setFanDutycycle(100);
 
@@ -839,7 +1070,7 @@ void runProfile() {
 /**
  * Logs oven status to stdout
  */
-static void logger() {
+static void logger(const void *) {
    time++;
    float temperatures[4];
    int measuredValues = 0;
@@ -880,12 +1111,15 @@ void manualMode() {
 
    time = 0;
 
+   CMSIS::Timer<osTimerPeriodic> timer{logger};
+   timer.create();
+   timer.start(1.0f);
    // Using PIT
-   USBDM::Pit::enable();
-   USBDM::Pit::setCallback(profile_pit_channel, logger);
-   USBDM::Pit::setPeriod(profile_pit_channel, 1.0f);
-   USBDM::Pit::enableChannel(profile_pit_channel);
-   USBDM::Pit::enableInterrupts(profile_pit_channel);
+//   USBDM::Pit::enable();
+//   USBDM::Pit::setCallback(profile_pit_channel, logger);
+//   USBDM::Pit::setPeriod(profile_pit_channel, 1.0f);
+//   USBDM::Pit::enableChannel(profile_pit_channel);
+//   USBDM::Pit::enableInterrupts(profile_pit_channel);
 
    pid.setSetpoint(100);
    pid.enable(false);
@@ -1010,9 +1244,11 @@ void manualMode() {
          break;
       case SW_S:
          // Exit
-         USBDM::Pit::enableInterrupts(profile_pit_channel, false);
-         USBDM::Pit::enableChannel(profile_pit_channel, false);
-         USBDM::Pit::setCallback(profile_pit_channel, nullptr);
+         timer.stop();
+         timer.destroy();
+//         USBDM::Pit::enableInterrupts(profile_pit_channel, false);
+//         USBDM::Pit::enableChannel(profile_pit_channel, false);
+//         USBDM::Pit::setCallback(profile_pit_channel, nullptr);
 
          pid.setSetpoint(0);
          pid.enable(false);

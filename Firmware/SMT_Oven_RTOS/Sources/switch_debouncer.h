@@ -40,8 +40,6 @@ template<typename f1, typename f2, typename f3, typename f4, typename sel>
 class SwitchDebouncer {
 private:
 
-   CMSIS::Timer *timer = nullptr;
-
    /*
     * Interval for switch scanning
     */
@@ -97,6 +95,8 @@ private:
       lastSnapshot  = snapshot;
    }
 
+   CMSIS::Timer<osTimerPeriodic> timer{switchHandler};
+
 public:
    /**
     * Initialise the switch monitoring
@@ -117,8 +117,8 @@ public:
    }
 
    void initialise() {
-      timer = new CMSIS::Timer(switchHandler, osTimerPeriodic);
-      timer->start(TICK_INTERVAL);
+      timer.create();
+      timer.start(TICK_INTERVAL);
 
    }
    /**

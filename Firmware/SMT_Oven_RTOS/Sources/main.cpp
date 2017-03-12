@@ -91,7 +91,6 @@ int main() {
 
    USBDM::mapAllPins();
 
-   initialise();
    if (USBDM::getError() != USBDM::E_NO_ERROR) {
       char buff[100];
       lcd.clear();

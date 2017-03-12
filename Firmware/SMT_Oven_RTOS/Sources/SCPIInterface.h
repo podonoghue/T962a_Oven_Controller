@@ -23,21 +23,23 @@ protected:
    virtual ~SCPI_Interface() {};
 
 public:
+   /** Received command */
    static Command  *command;
+   /** Sent response */
    static Response *response;
 
-   static CMSIS::Pool<Command, 4>     *commandPool;
-   static CMSIS::Pool<Response, 4>    *responsePool;
-   static CMSIS::Message<Command, 4>  *commandQueue;
-   static CMSIS::Message<Response, 4> *responseQueue;
+   /** Queue of commands received */
+   static CMSIS::MailQueue<Command, 4>  *commandQueue;
+   /** Queue of responses sent */
+   static CMSIS::MailQueue<Response, 4> *responseQueue;
 
-   static CMSIS::Thread *handlerThread;
+   static CMSIS::Thread  *handlerThread;
    static const char     *IDN;
 
 public:
 
    static bool send(const char *text) {
-      Response *response = responsePool->alloc();
+      Response *response = responseQueue->alloc();
       if (response == nullptr) {
          return false;
       }
@@ -51,31 +53,31 @@ public:
    static void handler(const void *) {
       for(;;) {
          osEvent event = commandQueue->get();
-         if (event.status == osEventMessage) {
+         if (event.status == osEventMail) {
             Command *cmd = (Command *)event.value.p;
             if (strncasecmp((const char *)(cmd->data), "IDN?", cmd->size) == 0) {
                send(IDN);
             }
-            commandPool->free(cmd);
+            commandQueue->free(cmd);
          }
       }
    }
 
    static void initialise() {
-     commandPool   = new CMSIS::Pool<Command, 4>();
-     responsePool  = new CMSIS::Pool<Response, 4>();
-     command = commandPool->alloc();
+     commandQueue   = new CMSIS::MailQueue<Command, 4>();
+     responseQueue  = new CMSIS::MailQueue<Response, 4>();
+     command = commandQueue->alloc();
+     assert(command != NULL);
      command->size = 0;
      response = nullptr;
-     commandQueue  = new CMSIS::Message<Command, 4>();
-     responseQueue = new CMSIS::Message<Response, 4>();
 
      handlerThread = new CMSIS::Thread(handler);
+     handlerThread->run();
    }
 
    static void processCommand() {
-      commandQueue->putISR((uint32_t)command);
-      command       = commandPool->alloc();
+      commandQueue->put(command);
+      command       = commandQueue->allocISR();
       command->size = 0;
    }
 

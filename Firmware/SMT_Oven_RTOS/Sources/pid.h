@@ -52,22 +52,16 @@ private:
    unsigned tickCount = 0;    //! Time in ticks since last enabled
 
 private:
-   class FunctionWrapper {
-      static Pid_T *This;
+   /** Used by static callback to locate class */
+   static Pid_T *This;
 
-   public:
-      FunctionWrapper(Pid_T *This) {
-         this->This = This;
-      };
-      static void f(const void *) {
-         This->update();
-      }
-   };
+   /** Used to wrap the class method for passing to Timer callback */
+   static void callBack(const void *) {
+      This->update();
+   }
 
    /** Used to wrap the class function for passing to Timer callback */
-   FunctionWrapper *functionWrapper = new FunctionWrapper(this);
-
-   CMSIS::Timer *timer;
+   CMSIS::Timer<osTimerPeriodic> timer{callBack};
 
 public:
    /**
@@ -81,16 +75,16 @@ public:
     * @param outMax      Maximum value of output variable
     */
    Pid_T(double Kp, double Ki, double Kd, double interval, double outMin, double outMax) :
-      interval(interval), outMin(outMin), outMax(outMax), enabled(false)  {
+      interval(interval), outMin(outMin), outMax(outMax), enabled(false) {
       setTunings(Kp, Ki, Kd);
+      This = this;
    }
 
    ~Pid_T() {
-      delete functionWrapper;
    }
 
    void initialise() {
-      timer = new CMSIS::Timer(functionWrapper->f, osTimerPeriodic);
+//      timer.create();
    }
 
    /**
@@ -106,11 +100,11 @@ public:
             currentInput = inputFn();
             integral     = 0; //currentOutput;
             tickCount    = 0;
-            timer->start(interval);
+            timer.start(interval);
          }
       }
       else {
-         timer->stop();
+         timer.stop();
       }
       enabled = enable;
    }
@@ -268,6 +262,6 @@ private:
 
 };
 template<Pid::InFunction inputFn, Pid::OutFunction outputFn>
-Pid_T<inputFn, outputFn>* Pid_T<inputFn, outputFn>::FunctionWrapper::This = nullptr;
+Pid_T<inputFn, outputFn>* Pid_T<inputFn, outputFn>::This = nullptr;
 
 #endif // PROJECT_HEADERS_PID_H_

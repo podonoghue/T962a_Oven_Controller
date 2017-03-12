@@ -42,8 +42,7 @@ class CaseTemperatureMonitor {
          CaseFan::setDutyCycle(dutyCycle);
       }
    }
-
-   CMSIS::Timer *timer;
+   CMSIS::Timer<osTimerPeriodic> timer{checkCaseTemp};
 
 public:
    /*
@@ -53,15 +52,15 @@ public:
     */
    CaseTemperatureMonitor(Max31855 *sensor) {
       tempSensor = sensor;
-      timer = nullptr;
    }
 
    void initialise() {
       CaseFan::enable();
       CaseFan::setPeriod(20*USBDM::ms);
       CaseFan::setDutyCycle(0);
-      timer = new CMSIS::Timer(checkCaseTemp, osTimerPeriodic);
-      timer->start(1000 /* ms */);
+//      timer = new CMSIS::Timer(osTimerPeriodic);
+      timer.create();
+      timer.start(1000 /* ms */);
    }
 };
 
