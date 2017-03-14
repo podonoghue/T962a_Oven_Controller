@@ -42,23 +42,23 @@ public:
             needUpdate = false;
          }
          switch(buttons.getButton()) {
-         case SW_F1:
+         case SwitchValue::SW_F1:
             if (profileIndex>0) {
                profileIndex--;
                needUpdate = true;
             }
             break;
-         case SW_F2:
+         case SwitchValue::SW_F2:
             if ((profileIndex+1)<(sizeof(profiles)/sizeof(profiles[0]))) {
                profileIndex++;
                needUpdate = true;
             }
             break;
-         case SW_F3:
+         case SwitchValue::SW_F3:
             EditProfile::run(profiles[profileIndex]);
             needUpdate = true;
             break;
-         case SW_S:
+         case SwitchValue::SW_S:
             ::profileIndex.operator =(profileIndex);
             return;
          default:

@@ -176,7 +176,7 @@ public:
             testFanScreen(kickMode);
          }
          switch(buttons.getButton()) {
-         case SW_F1:
+         case SwitchValue::SW_F1:
             if (motorOn) {
                ovenControl.setFanDutycycle(0);
             }
@@ -185,11 +185,11 @@ public:
             }
             changed = true;
             break;
-         case SW_F2:
+         case SwitchValue::SW_F2:
             kickMode = !kickMode;
             changed = true;
             break;
-         case SW_F3F4:
+         case SwitchValue::SW_F3F4:
             if (kickMode) {
                kickSetting.reset();
             }
@@ -201,7 +201,7 @@ public:
             }
             changed = true;
             break;
-         case SW_F3:
+         case SwitchValue::SW_F3:
             if (kickMode) {
                kickSetting.increment();
             }
@@ -213,7 +213,7 @@ public:
             }
             changed = true;
             break;
-         case SW_F4:
+         case SwitchValue::SW_F4:
             if (kickMode) {
                kickSetting.decrement();
             }
@@ -225,7 +225,7 @@ public:
             }
             changed = true;
             break;
-         case SW_S:
+         case SwitchValue::SW_S:
             return;
          default:
             break;
@@ -314,38 +314,39 @@ void Settings::runMenu() {
          drawScreen();
          changed = false;
       }
-      switch(buttons.getButton()) {
-      case SW_F1:
+      SwitchValue button = buttons.getButton();
+      switch(button) {
+      case SwitchValue::SW_F1:
          if (selection>0) {
             selection--;
             changed = true;
          }
          break;
-      case SW_F2:
+      case SwitchValue::SW_F2:
          if (selection<(NUM_ITEMS-1)) {
             selection++;
             changed = true;
          }
          break;
-      case SW_F3F4:
+      case SwitchValue::SW_F3F4:
          menu[selection]->reset();
          changed = true;
          break;
-      case SW_F3:
+      case SwitchValue::SW_F3:
          menu[selection]->increment();
-         if (!buttons.isRepeating()) {
+         if (!button.isRepeating()) {
             menu[selection]->action();
          }
          changed = true;
          break;
-      case SW_F4:
+      case SwitchValue::SW_F4:
          menu[selection]->decrement();
-         if (!buttons.isRepeating()) {
+         if (!button.isRepeating()) {
             menu[selection]->action();
          }
          changed = true;
          break;
-      case SW_S:
+      case SwitchValue::SW_S:
          return;
       default:
          break;

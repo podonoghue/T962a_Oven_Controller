@@ -44,7 +44,7 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
       lcd.setInversion(true); lcd.putString(" OK "); lcd.setInversion(false);
       lcd.refreshImage();
       lcd.setGraphicMode();
-      waitForPress(SW_S);
+      waitForPress(SwitchValue::SW_S);
       return MSG_IS_OK;
    }
    else if (selection==MSG_OK_CANCEL) {
@@ -54,8 +54,8 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
       lcd.setInversion(true); lcd.putString(" CANCEL "); lcd.setInversion(false);
       lcd.refreshImage();
       lcd.setGraphicMode();
-      SwitchValue sw = waitForPress(SW_F4|SW_S);
-      return (sw==SW_S)?MSG_IS_CANCEL:MSG_IS_OK;
+      SwitchValue sw = waitForPress(SwitchValue::SW_F4|SwitchValue::SW_S);
+      return (sw==SwitchValue::SW_S)?MSG_IS_CANCEL:MSG_IS_OK;
    }
    else if (selection==MSG_YES_NO) {
       lcd.gotoXY(lcd.LCD_WIDTH-(9*lcd.FONT_WIDTH+2*4),lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
@@ -64,8 +64,8 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
       lcd.setInversion(true); lcd.putString(" NO "); lcd.setInversion(false);
       lcd.refreshImage();
       lcd.setGraphicMode();
-      SwitchValue sw = waitForPress(SW_F4|SW_S);
-      return (sw==SW_S)?MSG_IS_NO:MSG_IS_YES;
+      SwitchValue sw = waitForPress(SwitchValue::SW_F4|SwitchValue::SW_S);
+      return (sw==SwitchValue::SW_S)?MSG_IS_NO:MSG_IS_YES;
    }
    else // MSG_YES_NO_CANCEL
       lcd.gotoXY(lcd.LCD_WIDTH-(11*lcd.FONT_WIDTH+9*4),lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
@@ -76,8 +76,8 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
    lcd.setInversion(true); lcd.putSpace(4); lcd.putString("CANCEL"); lcd.putSpace(4); lcd.setInversion(false);
    lcd.refreshImage();
    lcd.setGraphicMode();
-   SwitchValue sw = waitForPress(SW_F3|SW_F4|SW_S);
-   return (sw==SW_S)?MSG_IS_CANCEL:((sw==SW_F4)?MSG_IS_NO:MSG_IS_YES);
+   SwitchValue sw = waitForPress(SwitchValue::SW_F3|SwitchValue::SW_F4|SwitchValue::SW_S);
+   return (sw==SwitchValue::SW_S)?MSG_IS_CANCEL:((sw==SwitchValue::SW_F4)?MSG_IS_NO:MSG_IS_YES);
 }
 
 //static void test1(MessageBoxResult selection) {

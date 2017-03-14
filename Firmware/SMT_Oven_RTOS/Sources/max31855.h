@@ -11,6 +11,7 @@
 
 #include "cmsis.h"
 #include "settings.h"
+#include "spi.h"
 
 /**
  * Class representing an MAX31855 connected over SPI
@@ -18,6 +19,15 @@
  * @tparam pinNum Pin number for PCSn signal
  */
 class Max31855 {
+public:
+   enum ThermocoupleStatus {
+      TH_ENABLED,          // Enabled and OK
+      TH_OPEN,             // No probe or open circuit
+      TH_SHORT_VCC,        // Probe short to Vcc
+      TH_SHORT_GND,        // Probe short to Gnd
+      TH_MISSING,          // No response - Max31855 not present at that address
+      TH_DISABLED=0b111,   // Available but disabled (Temperature reading will still be valid)
+   };
 
 protected:
 
@@ -76,17 +86,15 @@ public:
     *
     * @return Short string representing status
     */
-   static const char *getStatusName(int status) {
-      if (status & 0x08) {
-         return "Dis.";
-      }
+   static const char *getStatusName(ThermocoupleStatus status) {
       switch (status) {
-      case   0  : return "OK";     // OK!
-      case   1  : return "Open";   // No probe or open circuit
-      case   2  : return "Gnd";    // Probe short to Gnd
-      case   4  : return "Vcc";    // Probe short to Vcc
-      case   7  : return "----";   // No response - Max31855 not present at that address
-      default   : return "????";   // Unknown
+      case TH_ENABLED   : return "OK";    // OK!
+      case TH_OPEN      : return "Open";  // No probe or open circuit
+      case TH_SHORT_VCC : return "Vcc";   // Probe short to Vcc
+      case TH_SHORT_GND : return "Gnd";   // Probe short to Gnd
+      case TH_MISSING   : return "----";  // No response - Max31855 not present at that address
+      case TH_DISABLED  : return "Dis";   // OK but disabled
+      default           : return "????";  // Unknown
       }
    }
    /**
@@ -95,7 +103,14 @@ public:
     * @param enable True to enable sensor
     */
    void enable(bool enable=true) {
-      enabled =enable;
+      enabled = enable;
+   }
+
+   /**
+    * Toggles the enables state of the sensor
+    */
+   void toggleEnable() {
+      enabled = !enabled;
    }
 
    /**
@@ -103,7 +118,7 @@ public:
     *
     * @return true => enabled
     */
-   bool isEnabled() {
+   bool isEnabled() const {
       return enabled;
    }
    /**
@@ -112,19 +127,13 @@ public:
     * @param temperature   Temperature reading of external probe (.25 degree resolution)
     * @param coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
     *
-    * @return error flag from sensor @ref getStatusName() \n
-    *    0     => OK, \n
-    *    0bxxx1 => Open circuit, \n
-    *    0bxx1x => Short to Gnd, \n
-    *    0bx1xx => Short to Vcc
-    *    0bx111 => No response - Max31855 not present at that address
-    *    0b1xxx => Max31855 is disabled (values MAY be valid)
+    * @return status flag
+    * @note Temperature and cold-junction may be valid even if the thermocouple is disabled.
     */
-   int getReading(float &temperature, float &coldReference) {
+   ThermocoupleStatus getReading(float &temperature, float &coldReference) {
       uint8_t data[] = {
             0xFF, 0xFF, 0xFF, 0xFF,
       };
-      int status;
       mutex.wait(osWaitForever);
       spi.setCTAR0Value(spiCtarValue);
       spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
@@ -140,43 +149,59 @@ public:
       // Cold junction = sign-extended 12-bit value
       coldReference = (((int16_t)((data[2]<<8)|data[3]))>>4)/16.0;
 
-      // Error flag
-      status = data[3]&0x07;
-
-      if (status == 7) {
-         temperature   = NAN;
-         coldReference = NAN;
-      }
-      else if (status != 0) {
-         // Temperature = sign-extended 14-bit value
+      /*  Raw status
+       *    0x000 => OK
+       *    0bxx1 => Open circuit
+       *    0bx1x => Short to Gnd
+       *    0b1xx => Short to Vcc
+       *    0b111 => No response - Max31855 not present at that address
+       */
+      int rawStatus = data[3]&0x07;
+      ThermocoupleStatus status = TH_ENABLED;
+      if (rawStatus != 0) {
+         // Invalid temperature measurement
          temperature = NAN;
       }
-      if (!enabled) {
-         status |= 8;
+      if (rawStatus == 0x111) {
+         // No device so no Cold reference
+         coldReference = NAN;
+         status = TH_MISSING;
+      }
+      else if (rawStatus & 0b001) {
+         //Open
+         status = TH_OPEN;
+      }
+      else if (rawStatus & 0b010) {
+         // Ground short
+         status = TH_SHORT_GND;
+      }
+      else if (rawStatus & 0b100) {
+         // Vcc short
+         status = TH_SHORT_VCC;
+      }
+      else if (!enabled) {
+         // Available but not enabled
+         status = TH_DISABLED;
       }
       // Return error flag
       return status;
    }
    /**
-    * Read thermocouple
+    * Read enabled thermocouple
     *
     * @param temperature   Temperature reading of external probe (.25 degree resolution)
     * @param coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
     *
-    * @return error flag from sensor @ref getStatusName() \n
-    *    0     => OK, \n
-    *    0b0xx1 => Open circuit, \n
-    *    0b0x1x => Short to Gnd, \n
-    *    0b01xx => Short to Vcc
-    *    0b0111 => No response - Max31855 not present or disabled
+    * @return Status of sensor
+    * @note Temperature will be zero if the thermocouple is disabled.
+    * @note Cold-junction may be valid even if the thermocouple is disabled.
     */
-   int getEnabledReading(float &temperature, float &coldReference) {
-      if (!enabled) {
-         temperature   = 0;
-         coldReference = 0;
-         return 7;
+   ThermocoupleStatus getEnabledReading(float &temperature, float &coldReference) {
+      ThermocoupleStatus status = getReading(temperature, coldReference);
+      if (status == TH_DISABLED) {
+         temperature = 0;
       }
-      return getReading(temperature, coldReference);
+      return status;
    }
 };
 

@@ -30,7 +30,7 @@ public:
          heater            = ovenControl.getHeaterDutycycle();
          printf("%4d, %4d, %4d, %5.1f\n", time, fan, heater, temperature);
       }
-      return (buttons.getButton() == SW_S);
+      return (buttons.getButton() == SwitchValue::SW_S);
    }
 
    void report() {

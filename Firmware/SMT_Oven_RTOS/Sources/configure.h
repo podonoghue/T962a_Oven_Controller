@@ -24,7 +24,6 @@
 #include "zerocrossing_pwm.h"
 #include "switch_debouncer.h"
 #include "settings.h"
-#include "caseTemperatureMonitor.h"
 #include "runProfile.h"
 
 /** Function buttons */
@@ -125,10 +124,12 @@ extern USBDM::Spi0 spi;
  */
 extern LCD_ST7920 lcd;
 
-/**
- * Thermocouples
- */
-extern Max31855 temperatureSensors[4];
+///**
+// * Thermocouples
+// */
+//#include "temperatureSensors.h"
+//extern TemperatureSensors temperatureSensors;
+////extern Max31855 temperatureSensors[4];
 
 /** PIT timer channel for PID */
 constexpr int pid_pit_channel          = 0;
@@ -152,24 +153,6 @@ extern SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons;
 constexpr float pidInterval = 1.0f;
 
 /**
- * Get oven temperature
- * Averages multiple thermocouple inputs
- *
- * @return Averaged oven temperature
- */
-extern float getTemperature();
-
-/**
- * Set heater drive level
- */
-extern void outPutControl(float dutyCycle);
-
-/**
- * PID controller
- */
-extern Pid_T<getTemperature, outPutControl> pid;
-
-/**
  * Buzzer
  */
 class Buzzer : private USBDM::GpioC<5> {
@@ -187,15 +170,39 @@ public:
     */
    static void play() {
       high();
-      USBDM::wait(beepTime, [](){ return buttons.getButton() != SW_NONE; });
+      USBDM::wait(beepTime, [](){ return buttons.getButton() != SwitchValue::SW_NONE; });
       low();
    }
 };
 
 /**
+ * Set heater drive level
+ */
+extern void outPutControl(float dutyCycle);
+
+/**
+ * Thermocouples
+ */
+#include "temperatureSensors.h"
+extern TemperatureSensors temperatureSensors;
+
+/**
  * Monitor case temperature
  */
+#include "caseTemperatureMonitor.h"
 extern CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor;
 
-#endif /* SOURCES_CONFIGURE_H_ */
+/**
+ * Get oven temperature
+ * Averages multiple thermocouple inputs
+ *
+ * @return Averaged oven temperature
+ */
+extern float getTemperature();
 
+/**
+ * PID controller
+ */
+extern Pid_T<getTemperature, outPutControl> pid;
+
+#endif /* SOURCES_CONFIGURE_H_ */

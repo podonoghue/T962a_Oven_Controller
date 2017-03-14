@@ -92,19 +92,19 @@ void run() {
          changed = false;
       }
       switch(buttons.getButton()) {
-      case SW_F1:
+      case SwitchValue::SW_F1:
          if (selection>0) {
             selection--;
             changed = true;
          }
          break;
-      case SW_F2:
+      case SwitchValue::SW_F2:
          if (selection<(NUM_ITEMS-1)) {
             selection++;
             changed = true;
          }
          break;
-      case SW_S:
+      case SwitchValue::SW_S:
          menu[selection].action();
          changed = true;
          break;
@@ -115,6 +115,3 @@ void run() {
    }
 }
 };
-
-
-

@@ -14,18 +14,6 @@
 #include <flash.h>
 #include <string.h>
 
-enum State {
-   s_off,
-   s_fail,
-   s_preheat,
-   s_soak,
-   s_ramp_up,
-   s_dwell,
-   s_ramp_down,
-   s_complete,
-   s_manual,
-};
-
 enum {
    P_UNLOCKED = (1<<0),
 };

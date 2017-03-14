@@ -70,25 +70,25 @@ bool ProfileNameSetting::edit() {
          needsUpdate = false;
       }
       switch(buttons.getButton()) {
-      case SW_F1: // Left
+      case SwitchValue::SW_F1: // Left
          if (letterPosition>0) {
             letterPosition--;
          }
          needsUpdate = true;
          break;
-      case SW_F2: // Right
+      case SwitchValue::SW_F2: // Right
          if (letterPosition<26) {
             letterPosition++;
          }
          needsUpdate = true;
          break;
-      case SW_F3: // Sel
+      case SwitchValue::SW_F3: // Sel
          needsUpdate = true;
          break;
-      case SW_F4: // Del
+      case SwitchValue::SW_F4: // Del
          needsUpdate = true;
          break;
-      case SW_S: // Exit
+      case SwitchValue::SW_S: // Exit
          return changed;
       default:
          break;
@@ -158,31 +158,31 @@ bool EditProfile::doit() {
          changed = false;
       }
       switch(buttons.getButton()) {
-      case SW_F1:
+      case SwitchValue::SW_F1:
          if (selection>0) {
             selection--;
             changed = true;
          }
          break;
-      case SW_F2:
+      case SwitchValue::SW_F2:
          if (selection<(NUM_ITEMS-1)) {
             selection++;
             changed = true;
          }
          break;
-      case SW_F3F4:
+      case SwitchValue::SW_F3F4:
          needsUpdate = items[selection]->reset() || needsUpdate;
          changed = true;
          break;
-      case SW_F3:
+      case SwitchValue::SW_F3:
          needsUpdate = items[selection]->increment() || needsUpdate;
          changed = true;
          break;
-      case SW_F4:
+      case SwitchValue::SW_F4:
          needsUpdate = items[selection]->decrement() || needsUpdate;
          changed = true;
          break;
-      case SW_S:
+      case SwitchValue::SW_S:
          return needsUpdate;
       default:
          break;
