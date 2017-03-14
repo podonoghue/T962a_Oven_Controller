@@ -519,7 +519,7 @@ public:
  *
  * static bool messageQueueTestComplete = false;
  *
- * static CMSIS::MessageQueue<MessageData, 10> messageQueue;
+ * static CMSIS::MessageQueue<MessageData*, 10> messageQueue;
  *
  * void messageQueueSender(const void *) {
  *    MessageData ar[30];
@@ -571,6 +571,8 @@ public:
 template <typename T, size_t size, Thread *thread=nullptr>
 class MessageQueue {
 
+   static_assert(sizeof(T)<=sizeof(int), "Object is too large to pass as message");
+
 private:
          uint32_t        queue[4+size] = {0};
    const osMessageQDef_t os_pool_def   = { size, queue };
@@ -609,7 +611,7 @@ public:
     * @return osOK: the message is put into the queue.
     * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
-   void put(T *info) {
+   void put(T info) {
       if ((queue[0]==0) && (queue[1]==0)) {
          create();
       }
@@ -626,7 +628,7 @@ public:
     * @return osErrorResource: no memory in the queue was available.
     * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
-   osStatus putISR(T *info) {
+   osStatus putISR(T info) {
       return osMessagePut((osMessageQId)queue, (uint32_t)info, 0);
    }
    /**
@@ -640,7 +642,7 @@ public:
     * @return osErrorTimeoutResource: no memory in the queue was available during the given time limit.
     * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
-   osStatus put(T *info, uint32_t millisec) {
+   osStatus put(T info, uint32_t millisec) {
       if ((queue[0]==0) && (queue[1]==0)) {
          create();
       }
