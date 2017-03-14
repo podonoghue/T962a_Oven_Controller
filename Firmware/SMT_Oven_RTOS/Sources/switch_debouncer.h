@@ -10,36 +10,85 @@
 #define SOURCES_SWITCH_DEBOUNCER_H_
 
 #include "cmsis.h"
-//#include "pit.h"
 
 /**
- * Return values from switch debouncer
+ * Return values from switch
  */
-enum SwitchValue {
-   SW_NONE = 0,
-   SW_F1   = 1<<0,
-   SW_F2   = 1<<1,
-   SW_F3   = 1<<2,
-   SW_F4   = 1<<3,
-   SW_S    = 1<<4,
-   SW_F3F4 = SW_F3|SW_F4, // used for +/- keys together
-   dummy = -1,
+class SwitchValue {
+
+public:
+   enum Values {
+      SW_NONE  = 0,
+      SW_F1    = 1<<0,
+      SW_F2    = 1<<1,
+      SW_F3    = 1<<2,
+      SW_F4    = 1<<3,
+      SW_S     = 1<<4,
+      SW_F3F4  = SW_F3|SW_F4, // used for F3 & F4 keys together (chording)
+   };
+private:
+   Values fValue;
+   static constexpr uint8_t SW_REPEATING = 1<<7;
+
+public:
+   /**
+    * Cast to int\n
+    * @note Removes SW_REPEATING flag
+    */
+   operator int() const {
+      return (int)fValue&~SW_REPEATING;
+   }
+   /**
+    * Indicates if key is repeating
+    */
+   bool isRepeating() const {
+      return (int)fValue&SW_REPEATING;
+   }
+   /**
+    * Makes key repeating
+    */
+   SwitchValue &setRepeating() {
+      fValue = (Values)((int)fValue|(int)SW_REPEATING);
+      return *this;
+   }
+   /**
+    * Constructor
+    */
+   SwitchValue(int value) {
+      fValue = (Values)value;
+   }
+   /**
+    * Default constructor
+    */
+   SwitchValue() {
+      fValue = SW_NONE;
+   }
+   /**
+    * Indivisible get value and clear operation
+    */
+   SwitchValue clear() {
+      SwitchValue t;
+      // Bit messy but avoids masking interrupts or clobbering a key press
+      do {
+         t = (SwitchValue)__LDREXW((volatile long unsigned *)&fValue);
+      } while(__STREXW(SW_NONE, (volatile long unsigned *)&fValue) != 0);
+      return t;
+   }
 };
 
 /**
- * @tparam timerChannel The PIT channel number to use for callback
  * @tparam f1           F1 switch GPIO
  * @tparam f2           F2 switch GPIO
  * @tparam f3           F3 switch GPIO
  * @tparam f4           F4 switch GPIO
- * @tparam sel          S  switch GPIO
+ * @tparam sel          Select switch GPIO
  *
  * F1..F4 have auto-repeat function
  */
 template<typename f1, typename f2, typename f3, typename f4, typename sel>
 class SwitchDebouncer {
-private:
 
+private:
    /*
     * Interval for switch scanning
     */
@@ -47,7 +96,7 @@ private:
    /**
     * Time to debounce the switch (in TICK_INTERVAL)
     * Longer than about 100 ms is a perceptible delay
-    * This also affects how easy it is to do intentional multi-presses
+    * This also affects how easy it is to do intentional chording (multi-press)
     */
    static constexpr int DEBOUNCE_THRESHOLD = 100/TICK_INTERVAL;
 
@@ -58,10 +107,10 @@ private:
    static constexpr int REPEAT_PERIOD      = 200/TICK_INTERVAL;
 
    /** Last pressed switch */
-   static volatile SwitchValue switchNum;// __attribute__((aligned (4)));
+   static volatile SwitchValue switchNum;
 
-   /** Indicates that the key is repeating */
-   static volatile bool repeating;
+   /** Queue used to transfer key presses to consumers */
+   static CMSIS::MessageQueue<SwitchValue, 3> keyQueue;
 
    /**
     * Called at a regular rate to poll the switches
@@ -70,36 +119,53 @@ private:
       static uint debounceCount = 0;
       static uint lastSnapshot  = 0;
 
-      uint snapshot =
-            (f1::read()?SW_F1:0)|
-            (f2::read()?SW_F2:0)|
-            (f3::read()?SW_F3:0)|
-            (f4::read()?SW_F4:0)|
-            (sel::read()?SW_S:0);
+      uint8_t snapshot =
+            (f1::read()? SwitchValue::SW_F1:0)|
+            (f2::read()? SwitchValue::SW_F2:0)|
+            (f3::read()? SwitchValue::SW_F3:0)|
+            (f4::read()? SwitchValue::SW_F4:0)|
+            (sel::read()?SwitchValue::SW_S:0);
 
       if ((snapshot != 0) && (snapshot == lastSnapshot)) {
          debounceCount++;
          if (debounceCount == DEBOUNCE_THRESHOLD) {
-            switchNum = (SwitchValue)snapshot;
-            repeating = false;
+            // Consider de-bounced
+            keyQueue.put(SwitchValue(snapshot), 0);
          }
          if ((debounceCount >= REPEAT_THRESHOLD) && ((debounceCount % REPEAT_PERIOD) == 0)) {
-            switchNum = (SwitchValue)snapshot;
-            repeating = true;
+            // Pressed and held - auto-repeat
+            keyQueue.put(SwitchValue(snapshot).setRepeating(), 0);
          }
       }
       else {
          debounceCount = 0;
-         repeating = false;
       }
       lastSnapshot  = snapshot;
    }
 
-   CMSIS::Timer<osTimerPeriodic> timer{switchHandler};
+   /** Timer used for polling callback */
+   static CMSIS::Timer<osTimerPeriodic> timer;
 
+   /** Buffer to implement peek() */
+   static SwitchValue lookaheadKey;
+
+   /**
+    * Get Key from queue
+    *
+    * @param waitInMilliseconds How long to wait for key
+    *
+    * @return Key value or SW_NONE is none available before timeout
+    */
+   static SwitchValue deQueue(int waitInMilliseconds) {
+      osEvent event = keyQueue.get(waitInMilliseconds);
+      if (event.status == osEventMessage) {
+         return (SwitchValue)(event.value.v);
+      }
+      return SwitchValue::SW_NONE;
+   }
 public:
    /**
-    * Initialise the switch monitoring
+    * Create the switch monitor
     */
    SwitchDebouncer() {
       f1::setInput();
@@ -107,19 +173,15 @@ public:
       f3::setInput();
       f4::setInput();
       sel::setInput();
-
-//      USBDM::Pit::enable();
-//      USBDM::Pit::configureChannel(timerChannel, 1*USBDM::ms);
-//      USBDM::Pit::setCallback(timerChannel, switchHandler);
-//      USBDM::Pit::enableInterrupts(timerChannel);
-      switchNum = SW_NONE;
-      repeating = false;
    }
 
-   void initialise() {
+   /**
+    * Initialise the switch monitoring
+    */
+   static void initialise() {
+      keyQueue.create();
       timer.create();
       timer.start(TICK_INTERVAL);
-
    }
    /**
     * Check if a button is pressed without removing it from the buffer
@@ -127,39 +189,46 @@ public:
     * @return button value or SW_NONE if none pressed
     */
    static SwitchValue peekButton() {
-      return switchNum;
-   }
-
-   /**
-    * Check if a button is repeating (i.e. button is held)
-    *
-    * @return True if repeating
-    */
-   static bool isRepeating() {
-      return repeating;
+      if (lookaheadKey == SwitchValue::SW_NONE) {
+         // No lookahead, try to get a new key without waiting
+         lookaheadKey = deQueue(0);
+      }
+      return lookaheadKey;
    }
 
    /**
     * Get button press
     *
-    * @return button value or SW_NONE if none pressed since last queried
+    * @param millisecondsToWait How long to wait for button
+    *
+    * @return Button value or SW_NONE if none pressed before timeout
     */
-   static SwitchValue getButton() {
-      SwitchValue t;
-      // Bit messy but avoids masking interrupts or clobbering a key press
-      do {
-         t = (SwitchValue)__LDREXW((volatile long unsigned *)&switchNum);
-      } while(__STREXW(SW_NONE, (volatile long unsigned *)&switchNum) != 0);
-      return t;
+   static SwitchValue getButton(unsigned millisecondsToWait=osWaitForever) {
+      // Get and clear lookahead
+      SwitchValue tempKey = lookaheadKey.clear();
+      if (tempKey != SwitchValue::SW_NONE) {
+         // Return lookahead
+         return tempKey;
+      }
+      // Try to get a new key with wait
+      return deQueue(millisecondsToWait);
    }
 };
+
+/** Key queue*/
+template<typename f1, typename f2, typename f3, typename f4, typename sel>
+CMSIS::MessageQueue<SwitchValue, 5> SwitchDebouncer<f1, f2, f3, f4, sel>::keyQueue;
+
+/** Timer for callback */
+template<typename f1, typename f2, typename f3, typename f4, typename sel>
+CMSIS::Timer<osTimerPeriodic> SwitchDebouncer<f1, f2, f3, f4, sel>::timer{switchHandler};
 
 /** Last pressed switch */
 template<typename f1, typename f2, typename f3, typename f4, typename sel>
 volatile SwitchValue SwitchDebouncer<f1, f2, f3, f4, sel>::switchNum;
 
-/** Indicates that the key is repeating */
+/** Lookahead key */
 template<typename f1, typename f2, typename f3, typename f4, typename sel>
-volatile bool SwitchDebouncer<f1, f2, f3, f4, sel>::repeating;
+SwitchValue SwitchDebouncer<f1, f2, f3, f4, sel>::lookaheadKey;
 
 #endif /* SOURCES_SWITCH_DEBOUNCER_H_ */
