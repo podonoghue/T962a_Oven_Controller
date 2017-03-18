@@ -9,6 +9,15 @@
 #ifndef SOURCES_RUNPROFILE_CPP_
 #define SOURCES_RUNPROFILE_CPP_
 
+namespace Monitor {
+/**
+ * Monitor thermocouple status
+ * Also allows thermocouples to be disabled
+ */
+extern void monitor();
+
+}; // namespace Monitor
+
 namespace RunProfile {
 
 /**
@@ -22,12 +31,6 @@ extern void drawProfile(const NvSolderProfile &profile);
  * Run profile
  */
 extern void runProfile();
-
-/**
- * Monitor thermocouple status
- * Also allows thermocouples to be disabled
- */
-extern void monitor();
 
 /**
  * Manually control oven

@@ -1,5 +1,5 @@
-/*
- * TemperatureSensors.h
+/**
+ * @file TemperatureSensors.h
  *
  *  Created on: 12Mar.,2017
  *      Author: podonoghue
@@ -8,8 +8,9 @@
 #ifndef SOURCES_TEMPERATURESENSORS_H_
 #define SOURCES_TEMPERATURESENSORS_H_
 
+#include <dataPoint.h>
+#include "cmsis.h"
 #include "max31855.h"
-#include "dataPoint.h"
 
 class TemperatureSensors {
 
@@ -28,31 +29,85 @@ public:
    static constexpr unsigned NUM_THERMOCOUPLES = sizeof(temperatureSensors)/sizeof(temperatureSensors[0]);
    static constexpr int      OVERSAMPLES       = 4;
 
+   /** Last measurement */
+   DataPoint currentMeasurements;
+
+   /** Cold junction references from last measurement */
+   float coldReferences[4];
+
    TemperatureSensors() {}
    virtual ~TemperatureSensors() {}
 
-   float coldReferences[4];
+   CMSIS::Mutex mutex;
+   float fAverageTemperature = 0;
 
    /**
-    * Get current thermocouple readings
+    * Update current thermocouple readings
     */
-   DataPoint getCurrentDataPoint() {
-      DataPoint dataPoint;
-
-      dataPoint.setState(s_off);
-      dataPoint.setTarget(0);
+   void updateMeasurements() {
+      // Lock while changes made
+      mutex.wait();
       float temperatures[NUM_THERMOCOUPLES];
       ThermocoupleStatus status[NUM_THERMOCOUPLES];
+      int   foundSensorCount   = 0;
+      float averageTemperature = 0;
       for (unsigned t=0; t<NUM_THERMOCOUPLES; t++) {
-         float temperature;
-         status[t]       = temperatureSensors[t].getReading(temperature, coldReferences[t]);
-         temperatures[t] = temperature;
+         temperatures[t]   = 0;
+         coldReferences[t] = 0;
+         for (int overSample=0; overSample<OVERSAMPLES; overSample++) {
+            float temperature;
+            float coldReference;
+            status[t] = temperatureSensors[t].getReading(temperature, coldReference);
+            temperatures[t]   += temperature;
+            coldReferences[t] += coldReference;
+            if (status[t] == Max31855::TH_ENABLED) {
+               foundSensorCount++;
+               averageTemperature +=temperature;
+            }
+         }
+         // Scale for average
+         temperatures[t]    /= OVERSAMPLES;
+         coldReferences[t]  /= OVERSAMPLES;
       }
-      dataPoint.setThermocouplePoint(temperatures, status);
-      return dataPoint;
+      if (foundSensorCount==0) {
+         // Safe value to return!
+         averageTemperature = NAN;
+      }
+      else {
+         averageTemperature /= foundSensorCount;
+      }
+      fAverageTemperature = averageTemperature;
+      currentMeasurements.setState(s_off);
+      currentMeasurements.setTargetTemperature(0);
+      currentMeasurements.setFan(0);
+      currentMeasurements.setHeater(0);
+      currentMeasurements.setThermocouplePoint(temperatures, status);
+      mutex.release();
    }
    /**
-    * Return the cold reference temperature from the last measurement on that thermocouple
+    * Get current temperature\n
+    * This is an average of the active thermocouples\n
+    * This does a new set of measurements
+    *
+    * @return Averaged oven temperature
+    */
+   float getTemperature() {
+      updateMeasurements();
+      return fAverageTemperature;
+   }
+   /**
+    * Get last measured themocouple values
+    *
+    * @return Reference to set of measurements (DataPoint)
+    * @return This will be incomplete as only the thermocouple information is present e.g.
+    *         state etc is not valid.
+    */
+   const DataPoint &getLastMeasurement() {
+      return currentMeasurements;
+   }
+   /**
+    * Return the cold reference temperature from the last call
+    * to measureNewDataPoint for given thermocouple
     *
     * @param index Index of thermocouple
     *
@@ -60,31 +115,6 @@ public:
     */
    float getColdReferences(int index) {
       return coldReferences[index];
-   }
-   /**
-    * Get current temperature\n
-    * This is an average of the active thermocouples
-    *
-    * @return Averaged oven temperature
-    */
-   float getTemperature() {
-      int foundSensorCount = 0;
-      float value = 0;
-      for (int overSample=0; overSample<OVERSAMPLES; overSample++) {
-         for (unsigned t=0; t<NUM_THERMOCOUPLES; t++) {
-            float temperature, coldReference;
-            int status = temperatureSensors[t].getEnabledReading(temperature, coldReference);
-            if (status == 0) {
-               foundSensorCount++;
-               value += temperature;
-            }
-         }
-      }
-      if (foundSensorCount==0) {
-         // Safe value to return!
-         return NAN;
-      }
-      return value/foundSensorCount;
    }
    /**
     * Get the thermocouple sensor
@@ -102,9 +132,10 @@ public:
     */
    float getCaseTemperature() {
       float temperature, coldReference;
-      int status = temperatureSensors[0].getEnabledReading(temperature, coldReference);
-      if ((status&7)==7) {
-         return 0.0;
+      ThermocoupleStatus status = temperatureSensors[0].getReading(temperature, coldReference);
+      if (status == Max31855::TH_MISSING) {
+         // No MAX31855!
+         return 50.0;
       }
       return coldReference;
    }

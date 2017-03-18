@@ -128,7 +128,7 @@ public:
     * @param coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
     *
     * @return status flag
-    * @note Temperature and cold-junction may be valid even if the thermocouple is disabled.
+    * @note Temperature and cold-junction may be valid even if the thermocouple is disabled (TH_DISABLED).
     */
    ThermocoupleStatus getReading(float &temperature, float &coldReference) {
       uint8_t data[] = {
@@ -193,8 +193,8 @@ public:
     * @param coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
     *
     * @return Status of sensor
-    * @note Temperature will be zero if the thermocouple is disabled.
-    * @note Cold-junction may be valid even if the thermocouple is disabled.
+    * @note Temperature will be zero if the thermocouple is disabled or unusable.
+    * @note Cold-junction will be valid even if the thermocouple is disabled (TH_DISABLED).
     */
    ThermocoupleStatus getEnabledReading(float &temperature, float &coldReference) {
       ThermocoupleStatus status = getReading(temperature, coldReference);

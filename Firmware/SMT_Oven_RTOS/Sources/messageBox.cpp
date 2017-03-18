@@ -40,7 +40,7 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
    lcd.putString(message);
 
    if (selection==MSG_OK) {
-      lcd.gotoXY(lcd.LCD_WIDTH-(4*lcd.FONT_WIDTH+4),lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+      lcd.gotoXY(lcd.LCD_WIDTH-(4*lcd.FONT_WIDTH+4)+4,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
       lcd.setInversion(true); lcd.putString(" OK "); lcd.setInversion(false);
       lcd.refreshImage();
       lcd.setGraphicMode();
@@ -48,7 +48,7 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
       return MSG_IS_OK;
    }
    else if (selection==MSG_OK_CANCEL) {
-      lcd.gotoXY(lcd.LCD_WIDTH-(12*lcd.FONT_WIDTH+2*4),lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+      lcd.gotoXY(lcd.LCD_WIDTH-(12*lcd.FONT_WIDTH+2*4)+4,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
       lcd.setInversion(true); lcd.putString(" OK "); lcd.setInversion(false);
       lcd.putSpace(4);
       lcd.setInversion(true); lcd.putString(" CANCEL "); lcd.setInversion(false);
@@ -58,7 +58,7 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
       return (sw==SwitchValue::SW_S)?MSG_IS_CANCEL:MSG_IS_OK;
    }
    else if (selection==MSG_YES_NO) {
-      lcd.gotoXY(lcd.LCD_WIDTH-(9*lcd.FONT_WIDTH+2*4),lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+      lcd.gotoXY(lcd.LCD_WIDTH-(9*lcd.FONT_WIDTH+2*4)+4,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
       lcd.setInversion(true); lcd.putString(" YES "); lcd.setInversion(false);
       lcd.putSpace(4);
       lcd.setInversion(true); lcd.putString(" NO "); lcd.setInversion(false);
@@ -68,7 +68,7 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
       return (sw==SwitchValue::SW_S)?MSG_IS_NO:MSG_IS_YES;
    }
    else // MSG_YES_NO_CANCEL
-      lcd.gotoXY(lcd.LCD_WIDTH-(11*lcd.FONT_WIDTH+9*4),lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+      lcd.gotoXY(lcd.LCD_WIDTH-(11*lcd.FONT_WIDTH+9*4)+4,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
    lcd.setInversion(true); lcd.putSpace(4); lcd.putString("YES"); lcd.putSpace(4); lcd.setInversion(false);
    lcd.putSpace(4);
    lcd.setInversion(true); lcd.putSpace(4); lcd.putString("NO"); lcd.putSpace(4); lcd.setInversion(false);
@@ -110,7 +110,7 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
  */
 bool checkThermocouples() {
    if (std::isnan(getTemperature())) {
-      messageBox("Error", "No thermocouples\npresent and enabled");
+      messageBox("Error", "No enabled\nthermocouples present");
       return false;
    }
    return true;

@@ -6,6 +6,7 @@
  *      Author: podonoghue
  */
 
+#include <manageProfiles.h>
 #include <solderProfiles.h>
 #include "configure.h"
 #include "mainMenu.h"
@@ -38,8 +39,8 @@ static void factoryDefaults() {
 static MenuItem menu[] = {
       {"Manual Mode",          RunProfile::manualMode,        },
       {"Run Profile",          RunProfile::runProfile,        },
-      {"Manage Profiles",      RunProfile::profileMenu,       },
-      {"Thermocouples",        RunProfile::monitor,           },
+      {"Manage Profiles",      ManageProfiles::profileMenu,   },
+      {"Thermocouples",        Monitor::monitor,              },
       {"Settings",             [](){settings.runMenu();},     },
       {"Factory defaults",     factoryDefaults,               },
 };
@@ -74,11 +75,10 @@ static void drawScreen() {
    }
    lcd.setInversion(false);
    lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-   lcd.setInversion(false); lcd.putSpace(4);
-   lcd.setInversion(true);  lcd.putString(" ");     lcd.putUpArrow();   lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(3);
-   lcd.setInversion(true);  lcd.putString(" ");     lcd.putDownArrow(); lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(3);
-   lcd.setInversion(false); lcd.putSpace(48);
-   lcd.setInversion(true);  lcd.putString(" SEL "); lcd.setInversion(false);            lcd.putSpace(3);
+   lcd.setInversion(true);  lcd.putSpace(8);     lcd.putUpArrow();   lcd.putSpace(9); lcd.setInversion(false); lcd.putSpace(5);
+   lcd.setInversion(true);  lcd.putSpace(8);     lcd.putDownArrow(); lcd.putSpace(9); lcd.setInversion(false); lcd.putSpace(5);
+   lcd.setInversion(false); lcd.putSpace(42);
+   lcd.setInversion(true);  lcd.putString(" SEL "); lcd.setInversion(false);
 
    lcd.refreshImage();
    lcd.setGraphicMode();
@@ -111,7 +111,6 @@ void run() {
       default:
          break;
       }
-      __WFI();
    }
 }
 };

@@ -12,33 +12,28 @@
 
 template<typename T> char ProfileSetting_T<T>::buff[];
 
-//static const char characters[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ_@#-";
-
 void ProfileNameSetting::draw() {
    lcd.setInversion(false);
    lcd.clearFrameBuffer();
 
-   lcd.gotoXY(10,0);
+   lcd.gotoXY(10, 0);
    lcd.setInversion(true); lcd.putString(" Edit Name "); lcd.setInversion(false);
 
-   lcd.gotoXY(0,1*lcd.FONT_HEIGHT+3);
-   unsigned offset = 0;
-   if (editPosition>=(lcd.LCD_WIDTH/lcd.FONT_WIDTH)) {
-      offset = 1 + editPosition - (lcd.LCD_WIDTH/lcd.FONT_WIDTH);
-   }
-   lcd.putString(nameBuffer+offset);
+   lcd.gotoXY(0, 1*lcd.FONT_HEIGHT+3);
+   lcd.putString(nameBuffer);
+
+   // Highlight selected edit letter
+   lcd.gotoXY(editPosition*lcd.FONT_WIDTH, 1*lcd.FONT_HEIGHT+3);
+   lcd.setInversion(true);
+   lcd.putChar(nameBuffer[editPosition]);
+   lcd.setInversion(false);
 
    // Draw letter selection list
-   lcd.gotoXY((editPosition-offset)*lcd.FONT_WIDTH, 1*lcd.FONT_HEIGHT+3);
-   lcd.setInversion(true); lcd.putChar(nameBuffer[editPosition]); lcd.setInversion(false);
-   lcd.gotoXY(0,2*lcd.FONT_HEIGHT+6);
-   lcd.setInversion(false);
-   for (uint8_t ch='A'; ch<='Z'; ch++) {
-      lcd.putChar(ch);
-      if (((ch-'A')%16) == 15) {
-         lcd.putChar('\n');
-      }
-   }
+   lcd.gotoXY(0, 2*lcd.FONT_HEIGHT+6);
+   lcd.putString("ABCDEFGHIJKLMNOP");
+   lcd.gotoXY(0, 3*lcd.FONT_HEIGHT+6);
+   lcd.putString("QRSTUVWXYZ");
+
    // Highlight selected entry letter
    lcd.gotoXY((letterPosition%16)*lcd.FONT_WIDTH,(2+(letterPosition/16))*lcd.FONT_HEIGHT+6);
    lcd.setInversion(true);
@@ -46,9 +41,9 @@ void ProfileNameSetting::draw() {
    lcd.setInversion(false);
 
    // Draw menu
-   lcd.gotoXY(2,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-   lcd.setInversion(true); lcd.putSpace(2); lcd.putLeftArrow();    lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(2); lcd.putRightArrow();   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.gotoXY(0,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.putLeftArrow();    lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.putRightArrow();   lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
    lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Sel");  lcd.putSpace(2); lcd.setInversion(false); lcd.putSpace(6);
    lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Del");  lcd.putSpace(2); lcd.setInversion(false); lcd.putSpace(6);
    lcd.setInversion(true); lcd.putSpace(3); lcd.putString("EXIT"); lcd.putSpace(2); lcd.setInversion(false);
@@ -62,7 +57,6 @@ bool ProfileNameSetting::edit() {
    bool changed     = false;
 
    letterPosition = 0;
-   editPosition   = 0;
 
    do {
       if (needsUpdate) {
@@ -73,19 +67,29 @@ bool ProfileNameSetting::edit() {
       case SwitchValue::SW_F1: // Left
          if (letterPosition>0) {
             letterPosition--;
+            needsUpdate = true;
          }
-         needsUpdate = true;
          break;
       case SwitchValue::SW_F2: // Right
          if (letterPosition<26) {
             letterPosition++;
+            needsUpdate = true;
          }
-         needsUpdate = true;
          break;
       case SwitchValue::SW_F3: // Sel
          needsUpdate = true;
+         nameBuffer[editPosition] = 'A'+letterPosition;
+         changed = true;
+         if (editPosition<STRING_LENGTH) {
+            editPosition++;
+         }
          break;
       case SwitchValue::SW_F4: // Del
+         if (editPosition>0) {
+            editPosition--;
+         }
+         nameBuffer[editPosition] = ' ';
+         changed = true;
          needsUpdate = true;
          break;
       case SwitchValue::SW_S: // Exit

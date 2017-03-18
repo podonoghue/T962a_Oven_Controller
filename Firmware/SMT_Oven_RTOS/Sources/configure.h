@@ -124,13 +124,6 @@ extern USBDM::Spi0 spi;
  */
 extern LCD_ST7920 lcd;
 
-///**
-// * Thermocouples
-// */
-//#include "temperatureSensors.h"
-//extern TemperatureSensors temperatureSensors;
-////extern Max31855 temperatureSensors[4];
-
 /** PIT timer channel for PID */
 constexpr int pid_pit_channel          = 0;
 
@@ -150,7 +143,7 @@ extern ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenCont
 extern SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons;
 
 /** PID controller sample interval - seconds */
-constexpr float pidInterval = 1.0f;
+constexpr float pidInterval = 0.25f;
 
 /**
  * Buzzer

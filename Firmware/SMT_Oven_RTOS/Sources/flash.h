@@ -317,7 +317,7 @@ public:
 template <typename T, int dimension>
 class NonvolatileArray {
 
-   static_assert((sizeof(T) == 1)||(sizeof(T) == 2)||(sizeof(T) == 4), "T must be 1,2 or 4 bytes in size");
+   static_assert((sizeof(T) == 1)||(sizeof(T) == 2)||(sizeof(T) == 4), "T must be 1, 2 or 4 bytes in size");
 
 private:
    using TArray = T[dimension];

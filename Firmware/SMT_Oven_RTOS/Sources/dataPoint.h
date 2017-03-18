@@ -1,5 +1,5 @@
-/*
- * DataPoint.h
+/**
+ * @file DataPoint.h
  *
  *  Created on: 12Mar.,2017
  *      Author: podonoghue
@@ -43,44 +43,42 @@ private:
    static constexpr int   THERMO_STATUS_MASK   = (1<<3)-1;
    static constexpr int   STATE_MASK           = 0xF;
 
-   uint16_t state_status;                       // Controller state and thermocouple status (encoded)
+   uint16_t fState_status;                       // Controller state and thermocouple status (encoded)
    // |15..13|12..10|9..7|6..4|3..0|
    //   Th3    Th2   Th1   Th0 State
 
-//   State    state:8;                            // State for this point
-//   uint8_t  activeThermocouples;                // Mask indicating active thermocouples
-   uint8_t  heater;                             // Heater duty cycle
-   uint8_t  fan;                                // Fan duty cycle
-   uint16_t target;                             // Oven target temperature
-   uint16_t thermocouples[NUM_THERMOCOUPLES];   // Thermocouple values
+   uint8_t  fHeater;                             // Heater duty cycle
+   uint8_t  fFan;                                // Fan duty cycle
+   uint16_t fTargetTemp;                         // Oven target temperature
+   uint16_t fThermocouples[NUM_THERMOCOUPLES];   // Thermocouple values
 
 public:
    /**
-    * Get status of a thermocouple
+    * Get recorded status of a thermocouple
     *
     * @param index Index of thermocouple
     *
     * @return Status
     */
    ThermocoupleStatus getStatus(unsigned index) const {
-      return (ThermocoupleStatus)((state_status>>(THERMO_STATUS_WIDTH*index+THERMO_STATUS_OFFSET))&THERMO_STATUS_MASK);
+      return (ThermocoupleStatus)((fState_status>>(THERMO_STATUS_WIDTH*index+THERMO_STATUS_OFFSET))&THERMO_STATUS_MASK);
    }
 
    /**
-    * Set status of a thermocouple
+    * Set recorded status of a thermocouple
     *
     * @param index Index of thermocouple
     *
     * @param status Status to set
     */
    void setStatus(unsigned index, ThermocoupleStatus status) {
-      state_status =
-            (state_status & ~(THERMO_STATUS_MASK<<(THERMO_STATUS_WIDTH*index+THERMO_STATUS_OFFSET))) |
+      fState_status =
+            (fState_status & ~(THERMO_STATUS_MASK<<(THERMO_STATUS_WIDTH*index+THERMO_STATUS_OFFSET))) |
             ((status&THERMO_STATUS_MASK)<<(THERMO_STATUS_WIDTH*index+THERMO_STATUS_OFFSET));
    }
 
    /**
-    * Get thermocouple temperature
+    * Get recorded thermocouple temperature
     *
     * @param index         Index of thermocouple
     * @param temperature   Temperature value
@@ -88,22 +86,22 @@ public:
     * @return Status of thermocouple
     */
    ThermocoupleStatus getTemperature(unsigned index, float &temperature) const {
-      temperature = thermocouples[index]/FIXED_POINT_SCALE;
+      temperature = fThermocouples[index]/FIXED_POINT_SCALE;
       return getStatus(index);
    }
 
    /**
-    * Set thermocouple temperature
+    * Set recorded thermocouple temperature
     *
     * @param index       Index of thermocouple
     * @param temperature Temperature to set
     */
    void setTemperature(unsigned index, float temperature) {
-      thermocouples[index] = round(temperature*FIXED_POINT_SCALE);
+      fThermocouples[index] = round(temperature*FIXED_POINT_SCALE);
    }
 
    /**
-    * Calculates the average oven temperature from active thermocouples
+    * Calculates the average oven temperature from active recorded thermocouples
     *
     * @return Average value as float or NAN if no thermocouples active
     */
@@ -112,7 +110,7 @@ public:
       int   numTemps = 0;
       for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
          if (getStatus(index) == Max31855::TH_ENABLED) {
-            average += thermocouples[index];
+            average += fThermocouples[index];
             numTemps++;
          }
       }
@@ -123,93 +121,107 @@ public:
    }
 
    /**
-    * Determine the maximum of thermocouples and target temperature.\n
+    * Determine the maximum of recorded thermocouples and recorded target temperature.\n
     * Used for scaling
     *
     * @return Maximum value as float
     */
    float maximum() const {
-      float max = target;
+      float max = fTargetTemp;
       for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
-         if (thermocouples[index]>max) {
-            max = thermocouples[index];
+         if (fThermocouples[index]>max) {
+            max = fThermocouples[index];
          }
       }
       return max/FIXED_POINT_SCALE;
    }
    /**
-    * Adds a set of thermocouple values
+    * Records a set of thermocouple values
     *
-    * @param temp   Thermocouple values to add
-    * @param active Bit fields indicating active thermocouples.
+    * @param thermoCouple  Thermocouple temperature values to record
+    * @param status        Status of thermocouple.
     */
-   void setThermocouplePoint(TemperatureArray temp, StatusArray status) {
+   void setThermocouplePoint(TemperatureArray thermoCouple, StatusArray status) {
       for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
-         setTemperature(index, temp[index]);
+         setTemperature(index, thermoCouple[index]);
          setStatus(index, status[index]);
       }
    }
    /**
-    * Get a set of thermocouple values
+    * Get a set of recorded thermocouple values
     *
-    * @param[out] temp   Thermocouple values
-    * @param[out] active Mask indicating active thermocouples.
+    * @param[out] thermoCouples   Thermocouple values
+    * @param[out] statuses        Statuses of thermocouples.
     */
-   void getThermocouplePoint(TemperatureArray &temp, StatusArray &status) const {
+   void getThermocouplePoint(TemperatureArray &thermoCouples, StatusArray &statuses) const {
       for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
-         temp[index]   = thermocouples[index]/FIXED_POINT_SCALE;
-         status[index] = getStatus(index);
+         thermoCouples[index]   = fThermocouples[index]/FIXED_POINT_SCALE;
+         statuses[index] = getStatus(index);
       }
    }
    /**
-    * Set target temperature
+    * Get recorded target temperature
     *
-    * @param temp Temperature to set
-    */
-   void setTarget(float temp) {
-      target = round(temp * FIXED_POINT_SCALE);
-   }
-   /**
-    * Get target temperature
-    *
-    * @param temp Temperature to set
+    * @return Target temperature in Celsius
     */
    float getTargetTemperature() const {
-      return (target/FIXED_POINT_SCALE);
+      return (fTargetTemp/FIXED_POINT_SCALE);
    }
-
    /**
-    * Get state
+    * Record target temperature
+    *
+    * @param temp Temperature to set
+    */
+   void setTargetTemperature(float temp) {
+      fTargetTemp = round(temp * FIXED_POINT_SCALE);
+   }
+   /**
+    * Get recorded state
     *
     * @return state e.g. s_soak
     */
    State getState() const {
-      return (State)(state_status&STATE_MASK);
+      return (State)(fState_status&STATE_MASK);
    }
-
    /**
-    * Set state
+    * Recorded state
     *
     * @param state State e.g. s_soak
     */
    void setState(State state) {
-      state_status = (state_status&~STATE_MASK)|(state&STATE_MASK);
+      fState_status = (fState_status&~STATE_MASK)|(state&STATE_MASK);
    }
    /**
-    * Set heater value
+    * Get recorded heater value
     *
-    * @param value Value for heater in percentage
+    * @return Heater value in percent
+    */
+   uint8_t getHeater() const {
+      return fHeater;
+   }
+   /**
+    * Record heater value
+    *
+    * @param percent Value for heater in percentage
     */
    void setHeater(uint8_t percent) {
-      heater = percent;
+      fHeater = percent;
    }
    /**
-    * Set fan value
+    * Get recorded fan value
     *
-    * @param value Value for heater in percentage
+    * @return Fan value in percent
+    */
+   uint8_t getFan() const {
+      return fFan;
+   }
+   /**
+    * Record fan value
+    *
+    * @param percent Value for heater in percentage
     */
    void setFan(uint8_t percent) {
-      fan = percent;
+      fFan = percent;
    }
 };
 

@@ -26,6 +26,7 @@ public:
       SW_S     = 1<<4,
       SW_F3F4  = SW_F3|SW_F4, // used for F3 & F4 keys together (chording)
    };
+
 private:
    Values fValue;
    static constexpr uint8_t SW_REPEATING = 1<<7;
@@ -34,18 +35,25 @@ public:
    /**
     * Cast to int\n
     * @note Removes SW_REPEATING flag
+    *
+    * @return Value converted to int
     */
    operator int() const {
       return (int)fValue&~SW_REPEATING;
    }
    /**
     * Indicates if key is repeating
+    *
+    * @return true  Indicates repeating key-press
+    * @return false Indicates normal key-press
     */
    bool isRepeating() const {
       return (int)fValue&SW_REPEATING;
    }
    /**
     * Makes key repeating
+    *
+    * @return Reference to modified object
     */
    SwitchValue &setRepeating() {
       fValue = (Values)((int)fValue|(int)SW_REPEATING);
@@ -53,6 +61,8 @@ public:
    }
    /**
     * Constructor
+    *
+    * @param value Value to base switch on
     */
    SwitchValue(int value) {
       fValue = (Values)value;
@@ -65,6 +75,10 @@ public:
    }
    /**
     * Indivisible get value and clear operation
+    *
+    * @return Previous switch value
+    *
+    * @note The current value is cleared (set to SW_NONE)
     */
    SwitchValue clear() {
       SwitchValue t;
@@ -98,7 +112,7 @@ private:
     * Longer than about 100 ms is a perceptible delay
     * This also affects how easy it is to do intentional chording (multi-press)
     */
-   static constexpr int DEBOUNCE_THRESHOLD = 100/TICK_INTERVAL;
+   static constexpr int DEBOUNCE_THRESHOLD = 50/TICK_INTERVAL;
 
    /* Auto-repeat delay (in TICK_INTERVAL) */
    static constexpr int REPEAT_THRESHOLD   = 1000/TICK_INTERVAL;
@@ -132,7 +146,9 @@ private:
             // Consider de-bounced
             keyQueue.put(SwitchValue(snapshot), 0);
          }
-         if ((debounceCount >= REPEAT_THRESHOLD) && ((debounceCount % REPEAT_PERIOD) == 0)) {
+         if ((debounceCount >= REPEAT_THRESHOLD) &&
+               ((debounceCount % REPEAT_PERIOD) == 0) &&
+               ((snapshot&SwitchValue::SW_S) == 0)) {
             // Pressed and held - auto-repeat
             keyQueue.put(SwitchValue(snapshot).setRepeating(), 0);
          }
@@ -156,7 +172,7 @@ private:
     *
     * @return Key value or SW_NONE is none available before timeout
     */
-   static SwitchValue deQueue(int waitInMilliseconds) {
+   static SwitchValue deQueue(uint32_t waitInMilliseconds) {
       osEvent event = keyQueue.get(waitInMilliseconds);
       if (event.status == osEventMessage) {
          return (SwitchValue)(event.value.v);
@@ -203,7 +219,7 @@ public:
     *
     * @return Button value or SW_NONE if none pressed before timeout
     */
-   static SwitchValue getButton(unsigned millisecondsToWait=osWaitForever) {
+   static SwitchValue getButton(uint32_t millisecondsToWait=osWaitForever) {
       // Get and clear lookahead
       SwitchValue tempKey = lookaheadKey.clear();
       if (tempKey != SwitchValue::SW_NONE) {
@@ -217,7 +233,7 @@ public:
 
 /** Key queue*/
 template<typename f1, typename f2, typename f3, typename f4, typename sel>
-CMSIS::MessageQueue<SwitchValue, 5> SwitchDebouncer<f1, f2, f3, f4, sel>::keyQueue;
+CMSIS::MessageQueue<SwitchValue, 3> SwitchDebouncer<f1, f2, f3, f4, sel>::keyQueue;
 
 /** Timer for callback */
 template<typename f1, typename f2, typename f3, typename f4, typename sel>

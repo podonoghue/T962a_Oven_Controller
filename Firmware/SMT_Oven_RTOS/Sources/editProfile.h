@@ -109,10 +109,11 @@ class ProfileNameSetting : public ProfileSetting {
 private:
    /** Variable value */
    char *name;
-   char nameBuffer[sizeof(SolderProfile::description)+1];
 
    /** Maximum length of completed description string */
-   static constexpr int STRING_LENGTH = 30;
+   static constexpr int STRING_LENGTH = sizeof(SolderProfile::description);
+
+   char nameBuffer[STRING_LENGTH+1];
 
    unsigned editPosition;
    unsigned letterPosition;
@@ -124,16 +125,34 @@ public:
    void draw();
    bool edit();
 
+   /**
+    * Get description string
+    *
+    * @return Pointer to static buffer containing description
+    */
    virtual const char *getDescription() const {
-      static char buff[STRING_LENGTH];
-      snprintf(buff, sizeof(buff), "Name:%s", nameBuffer);
+      static char buff[STRING_LENGTH+1];
+      memset(buff, '\0', sizeof(buff));
+      strncpy(buff, nameBuffer, STRING_LENGTH);
+
+      // Trim trailing spaces etc.
+      int index = STRING_LENGTH;
+      while ((buff[index] == '\0')||(buff[index] == ' ')) {
+         buff[index] = '\0';
+         index--;
+      }
+      buff[STRING_LENGTH] = '\0';
       return buff;
    }
    virtual bool increment() {
-      return edit();
+      bool changed = edit();
+      if (changed) {
+         strcpy(name, getDescription());
+      }
+      return changed;
    }
    virtual bool decrement() {
-      return edit();
+      return increment();
    }
    virtual bool reset() {
       strncpy(nameBuffer, name, sizeof(nameBuffer));
@@ -142,6 +161,7 @@ public:
          memset(nameBuffer+i, ' ', sizeof(nameBuffer)-i);
       }
       nameBuffer[sizeof(nameBuffer)-1] = '\0';
+      editPosition = i;
       return true;
    }
    virtual ~ProfileNameSetting() {}

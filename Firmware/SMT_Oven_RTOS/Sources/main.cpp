@@ -101,11 +101,11 @@ int main() {
 
    USBDM::Usb0::initialise();
 
-   lcd.clear();
+   MainMenu::run();
 
+   // Should not reach here
    for (;;) {
-      MainMenu::run();
-      __WFI();
+      __BKPT();
    }
    return 0;
 }

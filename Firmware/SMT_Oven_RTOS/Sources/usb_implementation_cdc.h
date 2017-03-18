@@ -145,8 +145,11 @@ public:
 
 protected:
    /* end-points */
+   /** In end-point for CDC notifications */
    static InEndpoint  <Usb0Info, Usb0::CDC_NOTIFICATION_ENDPOINT, CDC_NOTIFICATION_EP_MAXSIZE>  epCdcNotification;
+   /** Out end-point for CDC data out */
    static OutEndpoint <Usb0Info, Usb0::CDC_DATA_OUT_ENDPOINT,     CDC_DATA_OUT_EP_MAXSIZE>      epCdcDataOut;
+   /** In end-point for CDC data in */
    static InEndpoint  <Usb0Info, Usb0::CDC_DATA_IN_ENDPOINT,      CDC_DATA_IN_EP_MAXSIZE>       epCdcDataIn;
    /*
     * TODO Add additional End-points here
@@ -158,7 +161,9 @@ protected:
 public:
 
    /**
-    * Initialise the USB interface
+    * Initialise the USB0 interface
+    *
+    *  @note Assumes clock set up for USB operation (48MHz)
     */
    static void initialise();
 
@@ -182,6 +187,8 @@ public:
 
    /**
     * Notify IN (device->host) endpoint that data is available
+    *
+    * @return Not used
     */
    static bool notify();
 
@@ -212,7 +219,7 @@ public:
    };
 
    /**
-    * Other descriptors
+    * All other descriptors
     */
    static const Descriptors otherDescriptors;
 
@@ -250,12 +257,19 @@ protected:
    static void sofCallback();
 
    /**
-    * Call-back handling CDC-IN transaction complete
+    * Call-back handling CDC-IN transaction complete\n
+    * Checks for data and schedules transfer as necessary\n
+    * Each transfer will have a ZLP as necessary.
+    *
+    * @param state Current end-point state
     */
    static void cdcInTransactionCallback(EndpointState state);
 
    /**
-    * Call-back handling CDC-OUT transaction complete
+    * Call-back handling CDC-OUT transaction complete\n
+    * Data received is passed to the cdcInterface
+    *
+    * @param state Current end-point state
     */
    static void cdcOutTransactionCallback(EndpointState state);
 

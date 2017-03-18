@@ -63,6 +63,12 @@ private:
    /** Used to wrap the class function for passing to Timer callback */
    CMSIS::Timer<osTimerPeriodic> timer{callBack};
 
+   struct InterestedThread {
+      CMSIS::Thread *thread;
+      int32_t        signal;
+   };
+   InterestedThread interestedThreads[2];
+
 public:
    /**
     * Constructor
@@ -75,12 +81,31 @@ public:
     * @param outMax      Maximum value of output variable
     */
    Pid_T(double Kp, double Ki, double Kd, double interval, double outMin, double outMax) :
-      interval(interval), outMin(outMin), outMax(outMax), enabled(false) {
+      interval(interval), outMin(outMin), outMax(outMax), enabled(false),
+      interestedThreads{{nullptr, 0}, {nullptr, 0}} {
       setTunings(Kp, Ki, Kd);
       This = this;
    }
 
    ~Pid_T() {
+   }
+
+   void addListener(CMSIS::Thread thread, int32_t signal) {
+      if (interestedThreads[0].thread == nullptr) {
+         interestedThreads[0].thread == thread;
+      }
+      else if (interestedThreads[1].thread == nullptr) {
+         interestedThreads[1].thread == thread;
+      }
+   }
+
+   void removeListener(CMSIS::Thread thread) {
+      if (interestedThreads[0].thread == thread) {
+         interestedThreads[0].thread == nullptr;
+      }
+      else if (interestedThreads[1].thread == thread) {
+         interestedThreads[1].thread == nullptr;
+      }
    }
 
    void initialise() {
@@ -226,9 +251,15 @@ private:
    /**
     * Main PID calculation
     *
-    * Executed at \ref interval by PIT callback
+    * Executed at \ref interval by Timer callback
     */
    void update() {
+      if (interestedThreads[0].thread != nullptr) {
+         interestedThreads[0].thread->signalSet(interestedThreads[0].signal);
+      }
+      if (interestedThreads[1].thread != nullptr) {
+         interestedThreads[1].thread->signalSet(interestedThreads[1].signal);
+      }
       if(!enabled) {
          return;
       }
