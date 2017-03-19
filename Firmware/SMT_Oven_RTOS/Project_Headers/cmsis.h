@@ -82,7 +82,7 @@ public:
     * @note Not usually required as done on first use
     */
    void create(void *argument=nullptr, os_timer_type type=timerType) {
-      osTimerId timer_id = osTimerCreate(&os_timer_def, type, argument);
+      osTimerId timer_id __attribute__((unused)) = osTimerCreate(&os_timer_def, type, argument);
       assert((void*)timer_id == (void*)&os_timer_cb);
    }
    /**
@@ -151,7 +151,7 @@ public:
     * Create mutex
     */
    Mutex() {
-      osMutexId mutex_id = osMutexCreate(&os_mutex_def);
+      osMutexId mutex_id __attribute__((unused)) = osMutexCreate(&os_mutex_def);
       assert((void*)mutex_id == (void*)os_mutex_cb);
    }
    /**
@@ -199,7 +199,7 @@ public:
     * @param count Number of available resources.
     */
    Semaphore(int32_t count) {
-      osSemaphoreId semaphore_id = osSemaphoreCreate(&os_semaphore_def, count);
+      osSemaphoreId semaphore_id __attribute__((unused)) = osSemaphoreCreate(&os_semaphore_def, count);
       assert((void*)semaphore_id == (void*)os_semaphore_cb);
    }
    /**
@@ -224,7 +224,7 @@ public:
     * Release semaphore
     */
    void release() {
-      osStatus status = osSemaphoreRelease((osSemaphoreId)os_semaphore_cb);
+      osStatus status __attribute__((unused)) = osSemaphoreRelease((osSemaphoreId)os_semaphore_cb);
       assert(status == osOK);
    }
    /**
@@ -790,7 +790,7 @@ public:
       if (thread != 0) {
          threadId = thread->getId();
       }
-      osMailQId queue_id = osMailCreate(&os_mail_def, threadId);
+      osMailQId queue_id __attribute__((unused)) = osMailCreate(&os_mail_def, threadId);
       assert(queue_id == (osMailQId)pool);
    }
    /**
