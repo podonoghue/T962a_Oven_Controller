@@ -49,6 +49,13 @@ const char *getStateName(State state) {
 }
 
 /**
+ * Reset reporting
+ */
+void reset() {
+   Draw::reset();
+}
+
+/**
  * Plot oven profile and history to LCD
  */
 static void writePlot() {
@@ -162,30 +169,5 @@ void setProfile(int profile) {
    fProfile = profile;
    Draw::drawProfile(profile);
 }
-
-/**
- * Writes thermocouple status to log
- *
- * @param time  Time to use with log entry
- * @param state State to use with log entry
- * @param point Datapoint to use with log entry
- */
-void logThermocoupleStatus(int time, State state, const DataPoint &point) {
-   char buff[120];
-   sprintf(buff, "%-11s %4d  %5.1f  %5.1f   %4d %4d",
-         getStateName(state), time, point.getTargetTemperature(), point.getAverageTemperature(),
-         point.getHeater(), point.getFan());
-   DataPoint::TemperatureArray temperatures;
-   DataPoint::StatusArray      status;
-   point.getThermocouplePoint(temperatures, status);
-   for (unsigned t=0; t<DataPoint::NUM_THERMOCOUPLES; t++) {
-      char buff2[20];
-      sprintf(buff2, "    %5.1f", temperatures[t]);
-      strcat(buff, buff2);
-   }
-   strcat(buff, "  \n\r");
-   SCPI_Interface::send(buff);
-}
-
 
 }; // end namespace Reporter

@@ -89,23 +89,23 @@ void NvSolderProfile::operator=(const NvSolderProfile &other ) {
    rampDownSlope = other.rampDownSlope;
 }
 
-/**
- * Prints the profile to stdout
- */
-void NvSolderProfile::print() const {
-   printf("{ \n");
-   printf("name          \"%s\"\n",  (const char *)description );
-   printf("flags         %2.2X\n",   (uint8_t)~(uint8_t)flags  );
-   printf("ramp1Slope    %.1f\n",    (float)ramp1Slope         );
-   printf("soakTemp1     %d\n",      (int)  soakTemp1          );
-   printf("soakTemp2     %d\n",      (int)  soakTemp2          );
-   printf("soakTime      %d\n",      (int)  soakTime           );
-   printf("ramp2Slope    %.1f\n",    (float)ramp2Slope         );
-   printf("peakTemp      %d\n",      (int)  peakTemp           );
-   printf("peakDwell     %d\n",      (int)  peakDwell          );
-   printf("rampDownSlope %4.1f\n",   (float)rampDownSlope      );
-   printf("};\n");
-}
+///**
+// * Prints the profile to stdout
+// */
+//void NvSolderProfile::print() const {
+//   printf("{ \n");
+//   printf("name          \"%s\"\n",  (const char *)description );
+//   printf("flags         %2.2X\n",   (uint8_t)~(uint8_t)flags  );
+//   printf("ramp1Slope    %.1f\n",    (float)ramp1Slope         );
+//   printf("soakTemp1     %d\n",      (int)  soakTemp1          );
+//   printf("soakTemp2     %d\n",      (int)  soakTemp2          );
+//   printf("soakTime      %d\n",      (int)  soakTime           );
+//   printf("ramp2Slope    %.1f\n",    (float)ramp2Slope         );
+//   printf("peakTemp      %d\n",      (int)  peakTemp           );
+//   printf("peakDwell     %d\n",      (int)  peakDwell          );
+//   printf("rampDownSlope %4.1f\n",   (float)rampDownSlope      );
+//   printf("};\n");
+//}
 
 /** Amtech 4300 63Sn/37Pb leaded profile */
 const SolderProfile am4300profileA = {

@@ -101,6 +101,8 @@ public:
     * Enables/disables the sensor
     *
     * @param enable True to enable sensor
+    *
+    * @note This is a non-volatile setting
     */
    void enable(bool enable=true) {
       enabled = enable;
@@ -202,6 +204,26 @@ public:
          temperature = 0;
       }
       return status;
+   }
+
+   /**
+    * Set offset added to temperature reading
+    *
+    * @param off Offset to set
+    *
+    * @note This is a non-volatile setting
+    */
+   void setOffset(int off) {
+      offset = off;
+   }
+
+   /**
+    * Get offset that is added to temperature reading
+    *
+    * @note Offset as an integer
+    */
+   int getOffset() {
+      return offset;
    }
 };
 

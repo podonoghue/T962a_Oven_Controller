@@ -10,6 +10,7 @@
 
 #include <dataPoint.h>
 #include <math.h>
+#include <algorithm>    // std::max
 
 #include "max31855.h"
 
@@ -30,12 +31,11 @@ private:
    DataPoint fThermocouple[MAX_PROFILE_TIME];  // Measured oven results
    uint16_t  fProfile[MAX_PROFILE_TIME];       // Profile being attempted
    int       fLastValid;                       // Index of last valid point
-   int       fMarker;                          // Marker
-   bool      fLiveDataPresent;                 // Indicates if measured oven results are present
+   int       fLastProfile;                     // Index of last profile point
 
 
 public:
-   TemperaturePlot() : fLastValid(0), fMarker(0), fLiveDataPresent(false) {
+   TemperaturePlot() : fLastValid(0), fLastProfile(0) {
       reset();
    }
    virtual ~TemperaturePlot() {
@@ -47,9 +47,8 @@ public:
    void reset() {
       memset(fThermocouple, 0, sizeof(fThermocouple));
       memset(fThermocouple, 0, sizeof(fProfile));
-      fLastValid       = 0;
-      fMarker          = 0;
-      fLiveDataPresent = false;
+      fLastValid       = -1;
+      fLastProfile     = -1;
    }
 
 public:
@@ -63,8 +62,8 @@ public:
       if (time>=MAX_PROFILE_TIME) {
          return;
       }
-      if (time>fLastValid) {
-         fLastValid = time;
+      if (time>fLastProfile) {
+         fLastProfile = time;
       }
       fProfile[time] = round(temp*FIXED_POINT_SCALE);
    }
@@ -77,7 +76,7 @@ public:
     * @return Profile target temperature for above time index or NAN is out of range
     */
    float getProfilePoint(int time) {
-      if (time>=fLastValid) {
+      if (time>=fLastProfile) {
          return NAN;
       }
       return fProfile[time]/FIXED_POINT_SCALE;
@@ -93,7 +92,6 @@ public:
       if (time>=MAX_PROFILE_TIME) {
          return;
       }
-      fLiveDataPresent = true;
       if (time>fLastValid) {
          fLastValid = time;
       }
@@ -108,6 +106,10 @@ public:
     * @return Point retrieved.
     */
    const DataPoint &getDataPoint(int index) const {
+      static const DataPoint dummy;
+      if (index>fLastValid) {
+         return dummy;
+      }
       return fThermocouple[index];
    }
 
@@ -118,34 +120,34 @@ public:
     * @return false No oven data
     */
    bool isLiveDataPresent() const {
-      return fLiveDataPresent;
+      return fLastValid>=0;
    }
 
    /**
-    * Get marker
+    * Get index of last temperature point
     *
-    * @return marker value
-    */
-   int getMarker() const {
-      return fMarker;
-   }
-
-   /**
-    * Set marker
-    *
-    * @param marker Marker value to set
-    */
-   void setMarker(int marker) {
-      this->fMarker = marker;
-   }
-
-   /**
-    * Get index of last value
-    *
-    * @return Index as int
+    * @return Index as integer
     */
    int getLastValid() const {
       return fLastValid;
+   }
+
+   /**
+    * Get index of last profile value
+    *
+    * @return Index as integer
+    */
+   int getLastProfile() const {
+      return fLastProfile;
+   }
+
+   /**
+    * Get index of last profile or temperature point
+    *
+    * @return Index as integer
+    */
+   int getLastIndex() const {
+      return std::max(fLastProfile, fLastValid);
    }
 
    /**
@@ -156,6 +158,7 @@ public:
    const DataPoint *getData() const {
       return fThermocouple;
    }
+
    /**
     * Get data points
     *

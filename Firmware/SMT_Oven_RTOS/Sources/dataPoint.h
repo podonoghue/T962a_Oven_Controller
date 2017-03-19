@@ -54,6 +54,11 @@ private:
 
 public:
    /**
+    * Constructor
+    */
+   DataPoint() : fState_status{0}, fHeater{0}, fFan{0}, fTargetTemp{0}, fThermocouples{0,0,0,0} {
+   }
+   /**
     * Get recorded status of a thermocouple
     *
     * @param index Index of thermocouple

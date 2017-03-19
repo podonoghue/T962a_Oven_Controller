@@ -7,6 +7,7 @@
  *      Author: podonoghue
  */
 
+#include <algorithm>    // std::max
 #include <plotting.h>
 #include <temperaturePlot.h>
 #include "lcd_st7920.h"
@@ -54,10 +55,9 @@ static float temperatureScale = 4;
  * Determines the plot scaling for temperaturePlot
  */
 static void calculateScales() {
-
    // Maximum temperature found - Don't scale below MIN_SCALE_TEMP
    int maxTemperature = MIN_SCALE_TEMP;
-   for (int time=0; time<=temperaturePlot.getLastValid(); time++) {
+   for (int time=0; time<=temperaturePlot.getLastIndex(); time++) {
       float pointTemp = temperaturePlot.getDataPoint(time).maximum();
       if (pointTemp>maxTemperature) {
          maxTemperature = pointTemp;
@@ -68,7 +68,7 @@ static void calculateScales() {
       }
    }
    temperatureScale = (maxTemperature-MIN_TEMP)/(float)(lcd.LCD_HEIGHT-lcd.FONT_HEIGHT-10);
-   timeScale        = ((temperaturePlot.getLastValid()<MIN_SCALE_TIME)?MIN_SCALE_TIME:temperaturePlot.getLastValid())/(float)(lcd.LCD_WIDTH-12-24);
+   timeScale        = std::max(temperaturePlot.getLastIndex(),MIN_SCALE_TIME)/(float)(lcd.LCD_WIDTH-12-24);
 }
 /**
  * Plot a temperature point into LCD buffer.
@@ -93,7 +93,7 @@ static void plotTemperatureOnLCD(int time, int temperature) {
  * This includes the profile and average measure temperatures if present.
  */
 static void plotProfilePointsOnLCD() {
-   for (int time=0; time<temperaturePlot.getLastValid(); time++) {
+   for (int time=0; time<=temperaturePlot.getLastIndex(); time++) {
       plotTemperatureOnLCD(time, temperaturePlot.getProfilePoint(time));
       if(temperaturePlot.isLiveDataPresent()) {
          // TODO remove x5 temperature factor
@@ -245,7 +245,7 @@ public:
     *
     * @param profile Profile to use
     */
-   ProfilePlotter(const NvSolderProfile &profile) : state(s_preheat), time(0), setpoint(0.0) {
+   ProfilePlotter(const NvSolderProfile &profile) : state(s_preheat), time(0), setpoint(25.0) {
       while (state != s_off) {
          calculate(profile);
          temperaturePlot.addProfilePoint(time, setpoint);
@@ -268,6 +268,7 @@ static void plotProfile(int profileIndex) {
 void reset() {
    temperaturePlot.reset();
 }
+
 static int profileIndex = 0;
 
 /**
@@ -310,6 +311,15 @@ void addDataPoint(int time, DataPoint dataPoint) {
  */
 const DataPoint &getDataPoint(int time) {
    return  temperaturePlot.getDataPoint(time);
+}
+
+/**
+ * Get reference to entire plot data
+ *
+ * @return TemperaturePlot
+ */
+TemperaturePlot &getData() {
+   return  temperaturePlot;
 }
 
 }; // end namespace Draw

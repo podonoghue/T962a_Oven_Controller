@@ -46,7 +46,7 @@ protected:
     * Alternatively, the startup code may call the static methods directly.
     */
    Flash() {
-      static int singletonFlag = false;
+      static int singletonFlag __attribute__((unused)) = false;
       assert (!singletonFlag);
       singletonFlag = true;
    }
@@ -187,17 +187,15 @@ public:
     * @return true => OK, false => timeout
     */
    static bool waitForFlashReady() {
-      static auto func = [] () { return (FTFL->FSTAT&FTFL_FSTAT_CCIF_MASK) != 0; };
-      if (func()) {
-         // Common case - avoid overhead of timeout code
-         return true;
+      for(int timeout=0; timeout<100000; timeout++) {
+         if ((FTFL->FSTAT&FTFL_FSTAT_CCIF_MASK) != 0) {
+            return true;
+         }
       }
-      // Wait for flash ready
-      // Wait for a maximum of 2000 ms
-      return USBDM::waitMS(2000, func);
+      return false;
    }
-
 };
+
 /**
  * Class to wrap a scalar variable allocated within the FlexRam area\n
  * Size is limited to 1, 2 or 4 bytes.
@@ -293,6 +291,7 @@ public:
     * Return the underlying object - read-only!
     */
    operator T() const {
+      Flash::waitForFlashReady();
       return data;
    }
 };
@@ -374,7 +373,7 @@ public:
    }
 
    /**
-    * Return a reference to the underlying array element - read-only!\
+    * Return a reference to the underlying array element - read-only!
     *
     * @param index Index of element to return
     *

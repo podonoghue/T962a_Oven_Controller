@@ -51,6 +51,13 @@ void addDataPoint(int time, DataPoint dataPoint);
  */
 const DataPoint &getDataPoint(int time);
 
+/**
+ * Get reference to entire plot data
+ *
+ * @return TemperaturePlot
+ */
+TemperaturePlot &getData();
+
 }; // end namespace Draw
 
 #endif /* SOURCES_PLOTTING_H_ */

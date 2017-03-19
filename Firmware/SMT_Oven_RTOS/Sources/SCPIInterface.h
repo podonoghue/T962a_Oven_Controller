@@ -12,128 +12,113 @@
 #include <algorithm>
 #include "cmsis.h"
 #include "CDCInterface.h"
+#include "plotting.h"
+#include "reporter.h"
 
+/**
+ *    USB CDC receive ISR ----> Command Queue -----> SCPI thread
+ *                                                     ...
+ *                                                     ...
+ *    USB CDC send ISR <------- Response Queue <---- SCPI thread
+ */
 class SCPI_Interface: public CDC_Interface {
+
 public:
+   /** Structure holding a command */
    using Command  = struct {uint8_t data[100];  unsigned size; };
+
+   /** Structure holding (part of) a response */
    using Response = struct {uint8_t data[1000]; unsigned size; };
 
 protected:
    SCPI_Interface() {}
    virtual ~SCPI_Interface() {};
 
-public:
-   /** Received command */
+   /** Queue of received commands */
+   static CMSIS::MailQueue<Command, 4>  commandQueue;
+
+   /** Queue of sent responses */
+   static CMSIS::MailQueue<Response, 4> responseQueue;
+
+   /** Current command being assembled by USB receive ISR */
    static Command  *command;
-   /** Sent response */
+
+   /** Current response being assembled by SCPI thread */
    static Response *response;
 
-   /** Queue of commands received */
-   static CMSIS::MailQueue<Command, 4>  *commandQueue;
-   /** Queue of responses sent */
-   static CMSIS::MailQueue<Response, 4> *responseQueue;
+   /** Thread to handle CDC commands */
+   static CMSIS::Thread handlerThread;
 
-   static CMSIS::Thread  *handlerThread;
-   static const char     *IDN;
+   /** Identification string */
+   static const char *IDN;
+
+   /**
+    * Writes thermocouple status to log
+    *
+    * @param time  Time to use with log entry
+    */
+   static void logThermocoupleStatus(int time);
+
+   /**
+    * Thread handling CDC traffic
+    */
+   static void commandThread(const void *);
 
 public:
-
-   static bool send(const char *text) {
-      Response *response = responseQueue->alloc();
-      if (response == nullptr) {
-         return false;
+   /**
+    * Get response
+    *
+    * @return osEvent
+    */
+   static SCPI_Interface::Response *getResponse() {
+      osEvent status = SCPI_Interface::responseQueue.getISR();
+      if (status.status != osEventMail) {
+         // No messages waiting
+         return nullptr;
       }
-      strncpy((char *)(response->data), text, sizeof(Response::data));
-      response->size = std::min(strlen(text), sizeof(Response::data));
-      responseQueue->put(response);
-      notifyUsbIn();
-      return true;
-   }
-
-   static void handler(const void *) {
-      for(;;) {
-         osEvent event = commandQueue->get();
-         if (event.status == osEventMail) {
-            Command *cmd = (Command *)event.value.p;
-            if (strncasecmp((const char *)(cmd->data), "IDN?", cmd->size) == 0) {
-               send(IDN);
-            }
-            commandQueue->free(cmd);
-         }
-      }
-   }
-
-   static void initialise() {
-     commandQueue   = new CMSIS::MailQueue<Command, 4>();
-     responseQueue  = new CMSIS::MailQueue<Response, 4>();
-     command = commandQueue->alloc();
-     assert(command != NULL);
-     command->size = 0;
-     response = nullptr;
-
-     handlerThread = new CMSIS::Thread(handler);
-     handlerThread->run();
-   }
-
-   static void processCommand() {
-      commandQueue->put(command);
-      command       = commandQueue->allocISR();
-      command->size = 0;
+      // Set up new message
+      return (SCPI_Interface::Response*)status.value.p;
    }
 
    /**
-    * Process data received from host
+    * Used to free response buffer
+    *
+    * @param response Buffer to free
+    */
+   static void freeResponseBuffer(SCPI_Interface::Response *&response) {
+      SCPI_Interface::responseQueue.free(response);
+      response = nullptr;
+   }
+
+   /**
+    * Allocate send buffer
+    */
+   static Response *allocResponseBuffer() {
+      return responseQueue.alloc();
+   }
+
+   /**
+    * Set response over CDC
+    *
+    * @param text Response text to send
+    */
+   static bool send(Response *response);
+
+   /**
+    * Initialise
+    */
+   static void initialise();
+
+   /**
+    * Process data received from host\n
+    * The data is collected into a command and then added to command queue
     *
     * @param size Amount of data
     * @param buff Buffer for data
     *
-    * @note the Data is volatile so should be processed or saved immediately.
+    * @note the Data is volatile and is processed or saved immediately.
     */
-   static void putData(int size, const uint8_t *buff) {
-      assert((command->size+size)<(sizeof(command->data)/sizeof(command->data[0])));
-      for (int i=0; i<size; i++) {
-         if ((buff[i] == '\r') || (buff[i] == '\n')) {
-            if (command->size>0) {
-               processCommand();
-            }
-            continue;
-         }
-         command->data[command->size++] = buff[i];
-      }
-   }
-//   /**
-//    * Get data to transmit to host
-//    *
-//    * @param bufSize Size of buffer
-//    * @param buff    Buffer for data
-//    *
-//    * @return Amount of data placed in buffer
-//    */
-//   static int getData(unsigned bufSize, uint8_t *buff) {
-//      static unsigned index = 0;
-//      if (response == nullptr) {
-//         osEvent status = responseQueue->getISR();
-//         if (status.status != osEventMessage) {
-//            // No messages waiting
-//            return 0;
-//         }
-//         // Set up new message
-//         response = (Response*)status.value.p;
-//         index = 0;
-//      }
-//      unsigned size = response->size - index;
-//      if (size>bufSize) {
-//         size = bufSize;
-//      }
-//      memcpy(buff, response->data+index, size);
-//      index += size;
-//      if (index >= response->size) {
-//         responsePool->free(response);
-//         response = nullptr;
-//      }
-//      return size;
-//   }
-
+   static void putData(int size, const uint8_t *buff);
 };
 
 #endif /* SOURCES_SCPIINTERFACE_H_ */

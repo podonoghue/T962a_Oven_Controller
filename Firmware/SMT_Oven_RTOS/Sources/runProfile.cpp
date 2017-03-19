@@ -44,6 +44,7 @@ void monitor() {
    };
 
    // Used to report thermocouple status
+   Reporter::reset();
    Reporter::setTextPrompt(prompt);
    Reporter::setDisplayFormat(false);
 
@@ -60,7 +61,7 @@ void monitor() {
       Reporter::displayThermocoupleStatus();
 
       // Get key-press
-      SwitchValue key = buttons.getButton();
+      SwitchValue key = buttons.getButton(100);
 
       switch(key) {
       case SwitchValue::SW_F1: temperatureSensors.getThermocouple(0).toggleEnable(); break;
@@ -94,7 +95,7 @@ static float ambient;
 static State state = s_off;
 
 /*
- * Call-back from the timer to step through the profile
+ * Call-back from the timer to step through the profile statemachine
  */
 static void handler(const void *) {
    /* Records start of soak time */
@@ -110,12 +111,6 @@ static void handler(const void *) {
    constexpr int DELTA = 5;
 
    const float currentTemperature = temperatureSensors.getTemperature();
-
-   // Add data point to record
-   Draw::addDataPoint(time, temperatureSensors.getLastMeasurement());
-
-   // Advance time
-   time++;
 
    // Handle state
    switch (state) {
@@ -236,6 +231,11 @@ static void handler(const void *) {
       }
       break;
    }
+   // Add data point to record
+   Reporter::addLogPoint(time, state);
+
+   // Advance time
+   time++;
 };
 
 /**
@@ -312,7 +312,7 @@ void runProfile() {
 
    bool plotDisplay = false;
 
-   Draw::reset();
+   Reporter::reset();
    Reporter::setTextPrompt(textPrompt);
    Reporter::setPlotPrompt(graphicPrompt);
    Reporter::setDisplayFormat(plotDisplay);
@@ -325,8 +325,7 @@ void runProfile() {
       if ((uint32_t)(now - last) >= osKernelSysTickMicroSec(1000000U)) {
          temperatureSensors.updateMeasurements();
          last += osKernelSysTickMicroSec(1000000U);
-         Reporter::addLogPoint(time, state);
-         Reporter::logThermocoupleStatus(time, state, Draw::getDataPoint(time));
+//         Reporter::addLogPoint(time, state);
       }
       // Update display
       Reporter::displayThermocoupleStatus();
@@ -350,6 +349,11 @@ void runProfile() {
    pid.enable(false);
    pid.setSetpoint(0);
 
+   if (state != s_complete) {
+      state = s_fail;
+   }
+   Reporter::addLogPoint(time, state);
+
    ovenControl.setHeaterDutycycle(0);
    ovenControl.setFanDutycycle(100);
 
@@ -357,9 +361,6 @@ void runProfile() {
 
    // Sound buzzer
    Buzzer::play();
-   if (state != s_complete) {
-      state = s_fail;
-   }
    static auto completedPrompt = []() {
       lcd.gotoXY(0, 12+4*lcd.FONT_HEIGHT+2);
       lcd.printf("%4ds", (int)round(pid.getElapsedTime()));
@@ -468,7 +469,6 @@ void manualMode() {
          last += osKernelSysTickMicroSec(1000000U);
 //         logger(++time);
          Reporter::addLogPoint(++time, state);
-//         Reporter::logThermocoupleStatus(time, state, Draw::getDataPoint(time));
       }
       // Update display
       drawManualScreen();

@@ -22,6 +22,10 @@ namespace Reporter {
 const char *getStateName(State state);
 
 /**
+ * Reset reporting
+ */
+void reset();
+/**
  * Set prompt to print for text display
  *
  * @param prompt Prompt to print
@@ -69,11 +73,6 @@ void displayThermocoupleStatus();
  * @param state State for report
  */
 void addLogPoint(int time, State state);
-
-/**
- * Writes thermocouple status to log
- */
-void logThermocoupleStatus(int time, State state, const DataPoint &point);
 
 };
 
