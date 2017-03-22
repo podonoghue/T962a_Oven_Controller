@@ -131,11 +131,6 @@ public:
       return (osTimerId)&os_timer_cb;
    }
 };
-//template<void (*callback)(const void *), os_timer_type timerType>
-//osTimerControlBlock_t Timer<callback, timerType>::os_timer_cb;
-//
-//template<void (*callback)(const void *), os_timer_type timerType>
-//const osTimerDef_t   Timer<callback, timerType>::os_timer_def{callback, (void*)&os_timer_cb};
 
 /**
  * Wrapper for CMSIS Mutex
@@ -164,20 +159,31 @@ public:
     * Obtain mutex
     *
     * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait
+    *
+    * @return osOK: The mutex has been obtain.
+    * @return osErrorTimeoutResource: The mutex could not be obtained in the given time.
+    * @return osErrorResource: The mutex could not be obtained when no timeout was specified.
+    * @return osErrorParameter: The parameter mutex_id is incorrect.
+    * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
     */
-   void wait(uint32_t millisec=osWaitForever) {
-      osMutexWait((osMutexId) os_mutex_cb, millisec);
+   osStatus wait(uint32_t millisec=osWaitForever) {
+      return osMutexWait((osMutexId) os_mutex_cb, millisec);
    }
    /**
     * Release mutex
     */
-   void release() {
-      osMutexRelease((osMutexId) os_mutex_cb);
+   osStatus release() {
+      return osMutexRelease((osMutexId) os_mutex_cb);
    }
    /**
     * Get mutex ID
     *
     * @return CMSIS Mutex ID
+    *
+    * @return osOK: The mutex has been correctly released.
+    * @return osErrorResource: The mutex was not obtained before.
+    * @return osErrorParameter: The parameter mutex_id is incorrect.
+    * @return osErrorISR: osMutexRelease cannot be called from interrupt service routines.
     */
    osMutexId getID() {
       return (osMutexId) os_mutex_cb;

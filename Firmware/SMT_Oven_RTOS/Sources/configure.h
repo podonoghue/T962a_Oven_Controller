@@ -198,4 +198,9 @@ extern float getTemperature();
  */
 extern Pid_T<getTemperature, outPutControl> pid;
 
+/**
+ * Mutex to protect Interactive and Remote control
+ */
+extern CMSIS::Mutex *interactiveMutex;
+
 #endif /* SOURCES_CONFIGURE_H_ */

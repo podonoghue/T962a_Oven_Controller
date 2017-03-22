@@ -73,3 +73,8 @@ TemperatureSensors temperatureSensors;
 
 /** Monitor for case temperature */
 CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor;
+
+/**
+ * Mutex to protect Interactive and Remote control
+ */
+CMSIS::Mutex *interactiveMutex;

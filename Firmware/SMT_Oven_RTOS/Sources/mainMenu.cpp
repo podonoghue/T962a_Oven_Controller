@@ -84,32 +84,55 @@ static void drawScreen() {
    lcd.setGraphicMode();
 }
 
+void displayBusy() {
+   lcd.setInversion(false);  lcd.clearFrameBuffer();
+
+   lcd.gotoXY(0, 4);
+   lcd.printf("  Locked for \n  Remote use");
+   lcd.refreshImage();
+   lcd.setGraphicMode();
+}
+
 void run() {
    bool changed = true;
+   osStatus status;
    for(;;) {
       if (changed) {
          drawScreen();
          changed = false;
       }
-      switch(buttons.getButton()) {
-      case SwitchValue::SW_F1:
-         if (selection>0) {
-            selection--;
+      SwitchValue button = buttons.getButton(100);
+      if (button != SwitchValue::SW_NONE) {
+         // Try to get mutex - no wait so we can update display if busy
+         status = interactiveMutex->wait(0);
+         if (status != osOK) {
+            displayBusy();
+            // Wait again until we are successful
             changed = true;
+            interactiveMutex->wait();
+            continue;
          }
-         break;
-      case SwitchValue::SW_F2:
-         if (selection<(NUM_ITEMS-1)) {
-            selection++;
+         switch(button) {
+         case SwitchValue::SW_F1:
+            if (selection>0) {
+               selection--;
+               changed = true;
+            }
+            break;
+         case SwitchValue::SW_F2:
+            if (selection<(NUM_ITEMS-1)) {
+               selection++;
+               changed = true;
+            }
+            break;
+         case SwitchValue::SW_S:
+            menu[selection].action();
             changed = true;
+            break;
+         default:
+            break;
          }
-         break;
-      case SwitchValue::SW_S:
-         menu[selection].action();
-         changed = true;
-         break;
-      default:
-         break;
+         interactiveMutex->release();
       }
    }
 }

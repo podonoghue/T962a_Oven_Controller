@@ -70,6 +70,8 @@ public:
 };
 
 void initialise() {
+   interactiveMutex = new CMSIS::Mutex;
+
    CDC_Interface::initialise();
 
    lcd.initialise();
@@ -77,10 +79,8 @@ void initialise() {
    pid.initialise();
    buttons.initialise();
    Buzzer::init();
-   OvenFanLed::setOutput();
-   OvenFanLed::low();
-   HeaterLed::setOutput();
-   HeaterLed::low();
+   OvenFanLed::init();
+   HeaterLed::init();
    Spare::enable();
    Spare::setDutyCycle(0);
 }

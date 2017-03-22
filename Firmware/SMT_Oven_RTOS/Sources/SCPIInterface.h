@@ -55,9 +55,27 @@ protected:
    /**
     * Writes thermocouple status to log
     *
-    * @param time  Time to use with log entry
+    * @param time  Time of log entry to send
+    * @param lastEntry Indicates this is the last entry so append "\n\r"
     */
-   static void logThermocoupleStatus(int time);
+   static void logThermocoupleStatus(int time, bool lastEntry=false);
+
+   /**
+    * Try to lock the Interactive mutex so that the remote session has ownership
+    *
+    * @param response Buffer to use for response if needed.
+    *
+    * @return true  => success
+    * @return false => failed (A fail response has been sent to the remote and response has been consumed)
+    */
+   static bool getInteractiveMutex(SCPI_Interface::Response *response);
+
+   /**
+    * Handle command
+    *
+    * @param cmd Command to process
+    */
+   static bool doCommand(Command *cmd);
 
    /**
     * Thread handling CDC traffic
