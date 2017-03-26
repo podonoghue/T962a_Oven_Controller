@@ -274,7 +274,6 @@ void Usb0::startCdcIn() {
    if ((epCdcDataIn.getState() == EPIdle) && (cdcOutByteCount>0)) {
       static_assert(epCdcDataIn.BUFFER_SIZE>sizeof(cdcOutBuff), "Buffer too small");
       memcpy(epCdcDataIn.getBuffer(), cdcOutBuff, cdcOutByteCount);
-      //TODO check this
       epCdcDataIn.setNeedZLP();
       epCdcDataIn.startTxTransaction(EPDataIn, cdcOutByteCount);
       cdcOutByteCount = 0;
@@ -380,9 +379,6 @@ void Usb0::initialise() {
 
    cdcInterface::initialise();
    cdcInterface::setUsbNotifyCallback(notify);
-   /*
-    * TODO Additional initialisation
-    */
    response = nullptr;
 }
 

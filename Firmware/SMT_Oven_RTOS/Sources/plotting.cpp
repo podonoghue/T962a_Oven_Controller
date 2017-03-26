@@ -96,8 +96,8 @@ static void plotProfilePointsOnLCD() {
    for (int time=0; time<=temperaturePlot.getLastIndex(); time++) {
       plotTemperatureOnLCD(time, temperaturePlot.getProfilePoint(time));
       if(temperaturePlot.isLiveDataPresent()) {
-         // TODO remove x5 temperature factor
-         plotTemperatureOnLCD(time, 5*temperaturePlot.getDataPoint(time).getAverageTemperature());
+         // TODO add x5 temperature factor for debug
+         plotTemperatureOnLCD(time, temperaturePlot.getDataPoint(time).getAverageTemperature());
       }
    }
 }

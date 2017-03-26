@@ -325,7 +325,6 @@ public:
 
       constexpr IRQn_Type irqNum = (IRQn_Type)(PORTA_IRQn+((pcrAddress-PORTA_BasePtr)/(PORTB_BasePtr-PORTA_BasePtr)));
 
-      //TODO enableNvicInterrupts()
       if (enable) {
          // Enable interrupts
          NVIC_EnableIRQ(irqNum);
