@@ -12,6 +12,9 @@
 
 template<typename T> char ProfileSetting_T<T>::buff[];
 
+static char letters[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ- abcdefghijklmnopqrstuvwxyz";
+static constexpr int LETTER_GRID_WIDTH = 14;
+
 void ProfileNameSetting::draw() {
    lcd.setInversion(false);
    lcd.clearFrameBuffer();
@@ -29,15 +32,17 @@ void ProfileNameSetting::draw() {
    lcd.setInversion(false);
 
    // Draw letter selection list
-   lcd.gotoXY(0, 2*lcd.FONT_HEIGHT+6);
-   lcd.putString("ABCDEFGHIJKLMNOP");
-   lcd.gotoXY(0, 3*lcd.FONT_HEIGHT+6);
-   lcd.putString("QRSTUVWXYZ");
+   for (unsigned index=0; index<sizeof(letters); index++) {
+      lcd.gotoXY((index%LETTER_GRID_WIDTH)*lcd.FONT_WIDTH,
+            (2+(index/LETTER_GRID_WIDTH))*lcd.FONT_HEIGHT+6);
+      lcd.putChar(letters[index]);
+   }
 
    // Highlight selected entry letter
-   lcd.gotoXY((letterPosition%16)*lcd.FONT_WIDTH,(2+(letterPosition/16))*lcd.FONT_HEIGHT+6);
+   lcd.gotoXY((letterPosition%LETTER_GRID_WIDTH)*lcd.FONT_WIDTH,
+         (2+(letterPosition/LETTER_GRID_WIDTH))*lcd.FONT_HEIGHT+6);
    lcd.setInversion(true);
-   lcd.putChar('A'+letterPosition);
+   lcd.putChar(letters[letterPosition]);
    lcd.setInversion(false);
 
    // Draw menu
@@ -71,14 +76,14 @@ bool ProfileNameSetting::edit() {
          }
          break;
       case SwitchValue::SW_F2: // Right
-         if (letterPosition<26) {
+         if ((letterPosition+1)<sizeof(letters)) {
             letterPosition++;
             needsUpdate = true;
          }
          break;
       case SwitchValue::SW_F3: // Sel
          needsUpdate = true;
-         nameBuffer[editPosition] = 'A'+letterPosition;
+         nameBuffer[editPosition] = letters[letterPosition];
          changed = true;
          if (editPosition<STRING_LENGTH) {
             editPosition++;
