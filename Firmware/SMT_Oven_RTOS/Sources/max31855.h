@@ -209,7 +209,7 @@ public:
    /**
     * Set offset added to temperature reading
     *
-    * @param off Offset to set
+    * @param off offset to set
     *
     * @note This is a non-volatile setting
     */
@@ -219,6 +219,8 @@ public:
 
    /**
     * Get offset that is added to temperature reading
+    *
+    * @return Get Offset value
     *
     * @note Offset as an integer
     */

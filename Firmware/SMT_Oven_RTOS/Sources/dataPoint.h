@@ -15,6 +15,7 @@
 enum State {
    s_off,
    s_fail,
+   s_init,
    s_preheat,
    s_soak,
    s_ramp_up,

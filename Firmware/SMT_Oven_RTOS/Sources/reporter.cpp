@@ -9,8 +9,8 @@
 #include <math.h>
 #include <plotting.h>
 #include <reporter.h>
+#include <RemoteInterface.h>
 #include "configure.h"
-#include "SCPIInterface.h"
 
 namespace Reporter {
 
@@ -35,6 +35,7 @@ static int fProfile;
  */
 const char *getStateName(State state) {
    switch(state) {
+   case s_init      : return "init";
    case s_off       : return "off";
    case s_fail      : return "fail";
    case s_preheat   : return "preheat";

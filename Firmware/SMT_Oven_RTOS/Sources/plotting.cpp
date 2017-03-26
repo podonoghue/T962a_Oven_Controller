@@ -187,6 +187,9 @@ protected:
       case s_fail:
       case s_complete:
          return;
+      case s_init:
+         state = s_preheat;
+         // no break
       case s_preheat:
          // Heat from ambient to start of soak temperature
          // A -> soakTemp1 @ ramp1Slope
@@ -263,7 +266,7 @@ static void plotProfile(int profileIndex) {
 }
 
 /**
- * Clears the dataPoints
+ * Clears the plot dataPoints
  */
 void reset() {
    temperaturePlot.reset();
@@ -284,7 +287,7 @@ void drawProfile(int index) {
 }
 
 /**
- * Update the LCD from plot
+ * Update the LCD from plot data
  */
 void update() {
    Draw::calculateScales();

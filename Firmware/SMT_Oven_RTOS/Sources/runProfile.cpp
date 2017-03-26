@@ -11,6 +11,7 @@
 #include <math.h>
 #include <plotting.h>
 #include <reporter.h>
+#include <RemoteInterface.h>
 
 #include "solderProfiles.h"
 #include "hardware.h"
@@ -18,7 +19,6 @@
 #include "configure.h"
 #include "messageBox.h"
 #include "editProfile.h"
-#include "SCPIInterface.h"
 
 using namespace USBDM;
 using namespace std;
@@ -98,6 +98,7 @@ static State state = s_off;
  * Call-back from the timer to step through the profile statemachine
  */
 static void handler(const void *) {
+
    /* Records start of soak time */
    static int startOfSoakTime;
 
@@ -110,7 +111,12 @@ static void handler(const void *) {
    /* Tolerance of temperature checks */
    constexpr int DELTA = 5;
 
+   // Get current temperature (NAN on thermocouple failure)
    const float currentTemperature = temperatureSensors.getTemperature();
+
+   if (std::isnan(getTemperature())) {
+      state = s_fail;
+   }
 
    // Handle state
    switch (state) {
@@ -125,6 +131,17 @@ static void handler(const void *) {
    case s_off:
    case s_manual:
       return;
+   case s_init:
+      /*
+       * Startup
+       */
+      ambient  = currentTemperature;   // Use starting temperature as ambient reference
+      time     = 0;
+      setpoint = ambient;
+      pid.setSetpoint(ambient);
+      pid.enable();
+      state    = s_preheat;
+      // no break
    case s_preheat:
       /*
        * Heat from ambient to start of soak temperature
@@ -238,6 +255,78 @@ static void handler(const void *) {
    time++;
 };
 
+/** Timer used to run a profile */
+CMSIS::Timer<osTimerPeriodic> timer{handler};
+
+/**
+ * Start running a profile.
+ * This will:
+ * - Set profiles to use
+ * - Set initial state
+ * - Start timer
+ *
+ * @param profile Profile to run
+ *
+ * @return true  Successfully started
+ * @return false Failed
+ */
+bool startRunProfile(NvSolderProfile &profile) {
+
+   // Clear data
+   Draw::reset();
+
+   // Check if thermocouples can measure temperature
+   if (std::isnan(getTemperature())) {
+      state = s_fail;
+      return false;
+   }
+   currentProfile = &profile;
+   state          = s_init;
+
+   // Start Timer callback
+   timer.start(1.0);
+
+   return true;
+}
+
+/**
+ * Abort the current sequence
+ */
+void abortRunProfile() {
+   // Stop timer callback
+   timer.stop();
+
+   // Stop PID controller
+   pid.enable(false);
+   pid.setSetpoint(0);
+
+   state = s_fail;
+
+   Reporter::addLogPoint(time, state);
+
+   ovenControl.setHeaterDutycycle(0);
+   ovenControl.setFanDutycycle(100);
+}
+
+/**
+ * Run the current profile
+ *
+ * @return true Successfully started
+ * @return false Failed to start
+ */
+bool remoteStartRunProfile() {
+   return startRunProfile(profiles[profileIndex]);
+}
+
+/**
+ * Run the current profile
+ *
+ * @return State of profile state machine
+ */
+State remoteCheckRunProfile() {
+   return (state);
+}
+
 /**
  * Run the current profile
  */
@@ -247,34 +336,14 @@ void runProfile() {
       return;
    }
 
-   const NvSolderProfile &profile = profiles[profileIndex];
-
    char buff[100];
-   snprintf(buff, sizeof(buff), "%d:%s\n\nRun Profile?", (int)profileIndex, (const volatile char *)profile.description);
+   snprintf(buff, sizeof(buff), "%d:%s\n\nRun Profile?", (int)profileIndex, (const volatile char *)profiles[profileIndex].description);
    MessageBoxResult rc = messageBox("Run Profile", buff, MSG_YES_NO);
    if (rc != MSG_IS_YES) {
       return;
    }
 
-   state          = s_preheat;
-   time           = 0;
-   currentProfile = &profile;
-
-//   currentProfile->print();
-   /*
-    * Obtain ambient temperature as reference
-    */
-   ambient = temperatureSensors.getTemperature();
-
-   setpoint = ambient;
-   pid.setSetpoint(ambient);
-   pid.enable();
-
-   // Start Timer callback
-   CMSIS::Timer<osTimerPeriodic> timer{handler};
-
-   timer.create();
-   timer.start(1.0);
+   startRunProfile(profiles[profileIndex]);
 
    // Menu for thermocouple screen
    static auto textPrompt = []() {
@@ -343,19 +412,7 @@ void runProfile() {
       }
    }
 
-   timer.stop();
-   timer.destroy();
-
-   pid.enable(false);
-   pid.setSetpoint(0);
-
-   if (state != s_complete) {
-      state = s_fail;
-   }
-   Reporter::addLogPoint(time, state);
-
-   ovenControl.setHeaterDutycycle(0);
-   ovenControl.setFanDutycycle(100);
+   abortRunProfile();
 
    Reporter::setDisplayFormat(false);
 

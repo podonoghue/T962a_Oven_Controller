@@ -9,6 +9,8 @@
 #ifndef SOURCES_RUNPROFILE_CPP_
 #define SOURCES_RUNPROFILE_CPP_
 
+#include "dataPoint.h"
+
 namespace Monitor {
 /**
  * Monitor thermocouple status
@@ -28,7 +30,23 @@ namespace RunProfile {
 extern void drawProfile(const NvSolderProfile &profile);
 
 /**
- * Run profile
+ * Start running the current profile remotely
+ */
+bool remoteStartRunProfile();
+
+/**
+ * Abort the current profile sequence
+ */
+extern void abortRunProfile();
+
+/**
+ * Check remote run profile remotely
+ */
+extern State remoteCheckRunProfile();
+
+/**
+ * Run profile interactively\n
+ * Doesn't return until complete
  */
 extern void runProfile();
 

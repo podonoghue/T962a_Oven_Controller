@@ -1,13 +1,12 @@
 /**
- * @file SCPIInterface.h
- * @brief   SCPI (Very incomplete)
+ * @file  RemoteInterface.h
+ * @brief Oven Remote control
  *
  *  Created on: 26Feb.,2017
  *      Author: podonoghue
  */
-
-#ifndef SOURCES_SCPIINTERFACE_H_
-#define SOURCES_SCPIINTERFACE_H_
+#ifndef SOURCES_REMOTEINTERFACE_H_
+#define SOURCES_REMOTEINTERFACE_H_
 
 #include <algorithm>
 #include "cmsis.h"
@@ -16,12 +15,12 @@
 #include "reporter.h"
 
 /**
- *    USB CDC receive ISR ----> Command Queue -----> SCPI thread
+ *    USB CDC receive ISR ----> Command Queue -----> Remote thread
  *                                                     ...
  *                                                     ...
- *    USB CDC send ISR <------- Response Queue <---- SCPI thread
+ *    USB CDC send ISR <------- Response Queue <---- Remote thread
  */
-class SCPI_Interface: public CDC_Interface {
+class RemoteInterface: public CDC_Interface {
 
 public:
    /** Structure holding a command */
@@ -31,8 +30,8 @@ public:
    using Response = struct {uint8_t data[1000]; unsigned size; };
 
 protected:
-   SCPI_Interface() {}
-   virtual ~SCPI_Interface() {};
+   RemoteInterface() {}
+   virtual ~RemoteInterface() {};
 
    /** Queue of received commands */
    static CMSIS::MailQueue<Command, 4>  commandQueue;
@@ -43,7 +42,7 @@ protected:
    /** Current command being assembled by USB receive ISR */
    static Command  *command;
 
-   /** Current response being assembled by SCPI thread */
+   /** Current response being assembled by Remote thread */
    static Response *response;
 
    /** Thread to handle CDC commands */
@@ -68,7 +67,7 @@ protected:
     * @return true  => success
     * @return false => failed (A fail response has been sent to the remote and response has been consumed)
     */
-   static bool getInteractiveMutex(SCPI_Interface::Response *response);
+   static bool getInteractiveMutex(RemoteInterface::Response *response);
 
    /**
     * Handle command
@@ -88,14 +87,14 @@ public:
     *
     * @return osEvent
     */
-   static SCPI_Interface::Response *getResponse() {
-      osEvent status = SCPI_Interface::responseQueue.getISR();
+   static RemoteInterface::Response *getResponse() {
+      osEvent status = RemoteInterface::responseQueue.getISR();
       if (status.status != osEventMail) {
          // No messages waiting
          return nullptr;
       }
       // Set up new message
-      return (SCPI_Interface::Response*)status.value.p;
+      return (RemoteInterface::Response*)status.value.p;
    }
 
    /**
@@ -103,13 +102,16 @@ public:
     *
     * @param response Buffer to free
     */
-   static void freeResponseBuffer(SCPI_Interface::Response *&response) {
-      SCPI_Interface::responseQueue.free(response);
+   static void freeResponseBuffer(RemoteInterface::Response *&response) {
+      RemoteInterface::responseQueue.free(response);
       response = nullptr;
    }
 
    /**
     * Allocate send buffer
+    *
+    * @return Pointer to allocated buffer
+    * @return NULL Failed allocation
     */
    static Response *allocResponseBuffer() {
       return responseQueue.alloc();
@@ -118,7 +120,9 @@ public:
    /**
     * Set response over CDC
     *
-    * @param text Response text to send
+    * @param response Response text to send
+    *
+    * @return true Success
     */
    static bool send(Response *response);
 
@@ -139,4 +143,4 @@ public:
    static void putData(int size, const uint8_t *buff);
 };
 
-#endif /* SOURCES_SCPIINTERFACE_H_ */
+#endif /* SOURCES_REMOTEINTERFACE_H_ */

@@ -22,7 +22,7 @@
  * Under Linux drivers for bulk and CDC are automatically loaded
  */
 #define MS_COMPATIBLE_ID_FEATURE
-#include "SCPIInterface.h"
+#include <RemoteInterface.h>
 
 #define UNIQUE_ID
 //#include "configure.h"
@@ -155,7 +155,7 @@ protected:
     * TODO Add additional End-points here
     */
 	
-   using cdcInterface = SCPI_Interface;
+   using cdcInterface = RemoteInterface;
    static cdcInterface::Response  *response;
 
 public:

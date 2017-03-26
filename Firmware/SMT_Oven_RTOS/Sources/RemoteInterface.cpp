@@ -1,31 +1,32 @@
 /**
- * @file    SCPIInterface.cpp
- * @brief   SCPI (Very incomplete)
+ * @file    RemoteInterface.cpp
+ * @brief   Oven Remote control
  *
  *  Created on: 26Feb.,2017
  *      Author: podonoghue
  */
-
+#include <RemoteInterface.h>
 #include "cmsis.h"
-#include "SCPIInterface.h"
 #include "configure.h"
 
-SCPI_Interface::Command   *SCPI_Interface::command;
-SCPI_Interface::Response  *SCPI_Interface::response;
+RemoteInterface::Command   *RemoteInterface::command;
+RemoteInterface::Response  *RemoteInterface::response;
 
-CMSIS::Thread SCPI_Interface::handlerThread(SCPI_Interface::commandThread);
+CMSIS::Thread RemoteInterface::handlerThread(RemoteInterface::commandThread);
 
-CMSIS::MailQueue<SCPI_Interface::Command, 4>  SCPI_Interface::commandQueue;
-CMSIS::MailQueue<SCPI_Interface::Response, 4> SCPI_Interface::responseQueue;
+CMSIS::MailQueue<RemoteInterface::Command,  4> RemoteInterface::commandQueue;
+CMSIS::MailQueue<RemoteInterface::Response, 4> RemoteInterface::responseQueue;
 
-const char *SCPI_Interface::IDN = "SMT-Oven 1.0.0.0\n\r";
+const char *RemoteInterface::IDN = "SMT-Oven 1.0.0.0\n\r";
 
 /**
  * Set response over CDC
  *
- * @param text Response text to send
+ * @param response Response text to send
+ *
+ * @return true Success
  */
-bool SCPI_Interface::send(Response *response) {
+bool RemoteInterface::send(Response *response) {
    responseQueue.put(response);
    notifyUsbIn();
    return true;
@@ -37,7 +38,7 @@ bool SCPI_Interface::send(Response *response) {
  * @param time  Time of log entry to send
  * @param lastEntry Indicates this is the last entry so append "\n\r"
  */
-void SCPI_Interface::logThermocoupleStatus(int time, bool lastEntry) {
+void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
 
    // Allocate buffer for response
    Response *response = allocResponseBuffer();
@@ -71,7 +72,7 @@ void SCPI_Interface::logThermocoupleStatus(int time, bool lastEntry) {
       strcat(reinterpret_cast<char*>(response->data),"\n\r");
    }
    response->size = strlen(reinterpret_cast<char*>(response->data));
-   SCPI_Interface::send(response);
+   RemoteInterface::send(response);
 }
 
 /**
@@ -79,6 +80,9 @@ void SCPI_Interface::logThermocoupleStatus(int time, bool lastEntry) {
  *
  *  @param cmd Profile described by a string e.g.\n
  *  4,My Profile,FF,1.0,140,183,90,1.4,210,15,-3.0;
+ *
+ *  @return true  Successfully parsed
+ *  @return false Failed parse
  */
 bool parseProfile(char *cmd) {
    int profileNum;
@@ -152,6 +156,9 @@ bool parseProfile(char *cmd) {
  *
  *  @param cmd Describes the enable and offset value for each thermocouple e.g.\n
  *  1,-5,0,0,1,0,1,0;
+ *
+ *  @return true  Successfully parsed
+ *  @return false Failed parse
  */
 bool parseTherocouples(char *cmd) {
    char *tok;
@@ -188,7 +195,7 @@ bool parseTherocouples(char *cmd) {
  * @return true  => success
  * @return false => failed (A fail response has been sent to the remote and response has been consumed)
  */
-bool SCPI_Interface::getInteractiveMutex(SCPI_Interface::Response *response) {
+bool RemoteInterface::getInteractiveMutex(RemoteInterface::Response *response) {
    // Lock interface
    osStatus status = interactiveMutex->wait(0);
 
@@ -198,7 +205,7 @@ bool SCPI_Interface::getInteractiveMutex(SCPI_Interface::Response *response) {
    }
    strcpy(reinterpret_cast<char*>(response->data), "Failed - Busy\n\r");
    response->size = strlen(reinterpret_cast<char*>(response->data));
-   SCPI_Interface::send(response);
+   RemoteInterface::send(response);
    return false;
 }
 
@@ -210,12 +217,13 @@ bool SCPI_Interface::getInteractiveMutex(SCPI_Interface::Response *response) {
  * @return true  => success
  * @return false => failed (A fail response has been sent to the remote)
  */
-bool SCPI_Interface::doCommand(Command *cmd) {
+bool RemoteInterface::doCommand(Command *cmd) {
 
    // Allocate response buffer
    Response *response = allocResponseBuffer();
    if (response == nullptr) {
       // Discard command if we can't respond
+      // This should be impossible
       return false;
    }
 
@@ -255,7 +263,7 @@ bool SCPI_Interface::doCommand(Command *cmd) {
          strcat(reinterpret_cast<char*>(response->data), buff);
       }
       response->size = strlen(reinterpret_cast<char*>(response->data));
-      SCPI_Interface::send(response);
+      RemoteInterface::send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "PROF ", 5) == 0) {
       // Lock interface
@@ -298,7 +306,7 @@ bool SCPI_Interface::doCommand(Command *cmd) {
             (int)  profile.peakDwell,
             (float)profile.rampDownSlope);
       response->size = strlen(reinterpret_cast<char*>(response->data));
-      SCPI_Interface::send(response);
+      RemoteInterface::send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "PLOT?\n") == 0) {
       int lastValid = Draw::getData().getLastValid();
@@ -308,10 +316,58 @@ bool SCPI_Interface::doCommand(Command *cmd) {
          strcat(reinterpret_cast<char*>(response->data), "\n\r");
       }
       response->size = strlen(reinterpret_cast<char*>(response->data));
-      SCPI_Interface::send(response);
+      RemoteInterface::send(response);
       for (int index=0; index<=lastValid; index++) {
          logThermocoupleStatus(index, index == lastValid);
       }
+   }
+   else if (strncasecmp((const char *)(cmd->data), "RUN\n\r", 4) == 0) {
+      // Lock interface
+      if (!getInteractiveMutex(response)) {
+         return false;
+      }
+      RunProfile::remoteStartRunProfile();
+      strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
+      response->size = strlen(reinterpret_cast<char*>(response->data));
+      send(response);
+   }
+   else if (strncasecmp((const char *)(cmd->data), "ABORT\n\r", 4) == 0) {
+      // Lock interface
+      if (!getInteractiveMutex(response)) {
+         return false;
+      }
+      RunProfile::abortRunProfile();
+      // Unlock previous lock
+      interactiveMutex->release();
+      strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
+      response->size = strlen(reinterpret_cast<char*>(response->data));
+      send(response);
+      // Unlock interface
+      interactiveMutex->release();
+   }
+   else if (strncasecmp((const char *)(cmd->data), "RUN?\n\r", 4) == 0) {
+      // Lock interface
+      if (!getInteractiveMutex(response)) {
+         return false;
+      }
+      State state = RunProfile::remoteCheckRunProfile();
+      if (state == s_complete) {
+         // Unlock previous lock
+         interactiveMutex->release();
+         strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
+      }
+      else if (state == s_fail) {
+         // Unlock interface
+         interactiveMutex->release();
+         strcpy(reinterpret_cast<char*>(response->data), "Failed\n\r");
+      }
+      else {
+         strcpy(reinterpret_cast<char*>(response->data), "Running\n\r");
+      }
+      response->size = strlen(reinterpret_cast<char*>(response->data));
+      send(response);
+      // Unlock interface
+      interactiveMutex->release();
    }
    else {
       strcpy(reinterpret_cast<char*>(response->data), "Failed - unrecognized command\n\r");
@@ -324,7 +380,7 @@ bool SCPI_Interface::doCommand(Command *cmd) {
 /**
  * Thread handling CDC traffic
  */
-void SCPI_Interface::commandThread(const void *) {
+void RemoteInterface::commandThread(const void *) {
    for(;;) {
       osEvent event = commandQueue.get();
       if (event.status == osEventMail) {
@@ -343,7 +399,7 @@ void SCPI_Interface::commandThread(const void *) {
  *
  * Starts the thread that handles the communications.
  */
-void SCPI_Interface::initialise() {
+void RemoteInterface::initialise() {
    command  = nullptr;
    response = nullptr;
 
@@ -362,7 +418,7 @@ void SCPI_Interface::initialise() {
  *
  * @note the Data is volatile and is processed or saved immediately.
  */
-void SCPI_Interface::putData(int size, const uint8_t *buff) {
+void RemoteInterface::putData(int size, const uint8_t *buff) {
    for (int i=0; i<size; i++) {
       if (command == nullptr) {
          // Allocate new command buffer

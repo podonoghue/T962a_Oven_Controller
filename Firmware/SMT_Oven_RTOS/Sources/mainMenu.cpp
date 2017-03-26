@@ -87,8 +87,9 @@ static void drawScreen() {
 void displayBusy() {
    lcd.setInversion(false);  lcd.clearFrameBuffer();
 
-   lcd.gotoXY(0, 4);
-   lcd.printf("  Locked for \n  Remote use");
+   lcd.gotoXY(0, 20);
+   lcd.printf("  Locked for \n");
+   lcd.printf("  Remote use");
    lcd.refreshImage();
    lcd.setGraphicMode();
 }
@@ -110,6 +111,9 @@ void run() {
             // Wait again until we are successful
             changed = true;
             interactiveMutex->wait();
+            // Release immediately as we will retry in loop
+            interactiveMutex->release();
+            // Discard key
             continue;
          }
          switch(button) {

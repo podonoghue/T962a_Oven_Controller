@@ -18,8 +18,16 @@
 
 #include "pcr.h"
 
+/**
+ * Namespace enclosing USBDM classes
+ */
 namespace USBDM {
 
+/**
+ * @addtogroup USBDM_Group USBDM Peripheral Interface
+ * @brief Hardware Peripheral Interface and library
+ * @{
+ */
 /** Class to static check signal mapping is valid */
 template<class Info, int signalNum> class CheckSignal {
 #ifdef DEBUG_BUILD
@@ -35,12 +43,14 @@ template<class Info, int signalNum> class CheckSignal {
  */
 /**
  * @addtogroup OSC_Group OSC, Crystal Oscillator
- * @brief Pins used for Crystal Oscillator
+ * @brief Abstraction for Crystal Oscillator
  * @{
  */
 #define USBDM_OSC0_IS_DEFINED 
 /**
  * Peripheral information for OSC, Crystal Oscillator
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Osc0Info {
 public:
@@ -108,7 +118,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       enablePortClocks(PORTA_CLOCK_MASK);
@@ -128,17 +138,19 @@ public:
 };
 
 /** 
- * End OSC_Group
+ * End group OSC_Group
  * @}
  */
 /**
  * @addtogroup RTC_Group RTC, Real Time Clock
- * @brief Pins used for Real Time Clock
+ * @brief Abstraction for Real Time Clock
  * @{
  */
 #define USBDM_RTC_IS_DEFINED 
 /**
  * Peripheral information for RTC, Real Time Clock
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class RtcInfo {
 public:
@@ -212,7 +224,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -227,17 +239,19 @@ public:
 };
 
 /** 
- * End RTC_Group
+ * End group RTC_Group
  * @}
  */
 /**
  * @addtogroup MCG_Group MCG, Multipurpose Clock Generator
- * @brief Pins used for Multipurpose Clock Generator
+ * @brief Abstraction for Multipurpose Clock Generator
  * @{
  */
 #define USBDM_MCG_IS_DEFINED 
 /**
  * Peripheral information for MCG, Multipurpose Clock Generator
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class McgInfo {
 public:
@@ -364,17 +378,19 @@ public:
 };
 
 /** 
- * End MCG_Group
+ * End group MCG_Group
  * @}
  */
 /**
  * @addtogroup SIM_Group SIM, System Integration Module
- * @brief Pins used for System Integration Module
+ * @brief Abstraction for System Integration Module
  * @{
  */
 #define USBDM_SIM_IS_DEFINED 
 /**
  * Peripheral information for SIM, System Integration Module
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class SimInfo {
 public:
@@ -493,17 +509,19 @@ public:
 };
 
 /** 
- * End SIM_Group
+ * End group SIM_Group
  * @}
  */
 /**
  * @addtogroup ADC_Group ADC, Analogue Input
- * @brief Pins used for Analogue Input
+ * @brief Abstraction for Analogue Input
  * @{
  */
 #define USBDM_ADC0_IS_DEFINED 
 /**
  * Peripheral information for ADC, Analogue Input
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Adc0Info {
 public:
@@ -590,7 +608,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -617,7 +635,7 @@ public:
       /**
        * Initialise pins used by peripheral
        * 
-       * @param pcrValue PCR value controling pin options
+       * @param pcrValue PCR value controlling pin options
        */
       static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
          (void)pcrValue;
@@ -646,7 +664,7 @@ public:
       /**
        * Initialise pins used by peripheral
        * 
-       * @param pcrValue PCR value controling pin options
+       * @param pcrValue PCR value controlling pin options
        */
       static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
          (void)pcrValue;
@@ -663,17 +681,19 @@ public:
 };
 
 /** 
- * End ADC_Group
+ * End group ADC_Group
  * @}
  */
 /**
  * @addtogroup CMP_Group CMP, Analogue Comparator
- * @brief Pins used for Analogue Comparator
+ * @brief Abstraction for Analogue Comparator
  * @{
  */
 #define USBDM_CMP0_IS_DEFINED 
 /**
  * Peripheral information for CMP, Analogue Comparator
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Cmp0Info {
 public:
@@ -762,7 +782,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       enablePortClocks(PORTC_CLOCK_MASK);
@@ -784,6 +804,8 @@ public:
 #define USBDM_CMP1_IS_DEFINED 
 /**
  * Peripheral information for CMP, Analogue Comparator
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Cmp1Info {
 public:
@@ -872,7 +894,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -887,17 +909,19 @@ public:
 };
 
 /** 
- * End CMP_Group
+ * End group CMP_Group
  * @}
  */
 /**
  * @addtogroup CMT_Group CMT, Carrier Modulator Transmitter
- * @brief Pins used for Carrier Modulator Transmitter
+ * @brief Abstraction for Carrier Modulator Transmitter
  * @{
  */
 #define USBDM_CMT_IS_DEFINED 
 /**
  * Peripheral information for CMT, Carrier Modulator Transmitter
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class CmtInfo {
 public:
@@ -932,7 +956,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -947,17 +971,19 @@ public:
 };
 
 /** 
- * End CMT_Group
+ * End group CMT_Group
  * @}
  */
 /**
  * @addtogroup Control_Group CONTROL, Control
- * @brief Pins used for Control
+ * @brief Abstraction for Control
  * @{
  */
 #define USBDM_CONTROL_IS_DEFINED 
 /**
  * Peripheral information for CONTROL, Control
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class ControlInfo {
 public:
@@ -985,7 +1011,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       enablePortClocks(PORTA_CLOCK_MASK);
@@ -1005,17 +1031,19 @@ public:
 };
 
 /** 
- * End Control_Group
+ * End group Control_Group
  * @}
  */
 /**
  * @addtogroup CRC_TODO_Group CRC, (Incomplete)
- * @brief Pins used for (Incomplete)
+ * @brief Abstraction for (Incomplete)
  * @{
  */
 #define USBDM_CRC_IS_DEFINED 
 /**
  * Peripheral information for CRC, (Incomplete)
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class CrcInfo {
 public:
@@ -1034,26 +1062,28 @@ public:
 };
 
 /** 
- * End CRC_TODO_Group
+ * End group CRC_TODO_Group
  * @}
  */
 /**
  * @addtogroup CONSOLE_Group Console, Console
- * @brief Pins used for Console
+ * @brief Abstraction for Console
  * @{
  */
 /** 
- * End CONSOLE_Group
+ * End group CONSOLE_Group
  * @}
  */
 /**
  * @addtogroup DMA_TODO_Group DMA, (Incomplete)
- * @brief Pins used for (Incomplete)
+ * @brief Abstraction for (Incomplete)
  * @{
  */
 #define USBDM_DMA0_IS_DEFINED 
 /**
  * Peripheral information for DMA, (Incomplete)
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Dma0Info {
 public:
@@ -1072,17 +1102,19 @@ public:
 };
 
 /** 
- * End DMA_TODO_Group
+ * End group DMA_TODO_Group
  * @}
  */
 /**
  * @addtogroup DMAMUX_Group DMAMUX, Direct Memory Access (DMA)
- * @brief Pins used for Direct Memory Access (DMA)
+ * @brief Abstraction for Direct Memory Access (DMA)
  * @{
  */
 #define USBDM_DMAMUX0_IS_DEFINED 
 /**
  * Peripheral information for DMAMUX, Direct Memory Access (DMA)
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Dmamux0Info {
 public:
@@ -1146,17 +1178,19 @@ public:
 };
 
 /** 
- * End DMAMUX_Group
+ * End group DMAMUX_Group
  * @}
  */
 /**
  * @addtogroup EWM_Group EWM, External Watchdog Monitor
- * @brief Pins used for External Watchdog Monitor
+ * @brief Abstraction for External Watchdog Monitor
  * @{
  */
 #define USBDM_EWM_IS_DEFINED 
 /**
  * Peripheral information for EWM, External Watchdog Monitor
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class EwmInfo {
 public:
@@ -1189,7 +1223,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -1204,17 +1238,19 @@ public:
 };
 
 /** 
- * End EWM_Group
+ * End group EWM_Group
  * @}
  */
 /**
  * @addtogroup FTFL_TODO_Group FTFL, (Incomplete)
- * @brief Pins used for (Incomplete)
+ * @brief Abstraction for (Incomplete)
  * @{
  */
 #define USBDM_FTFL_IS_DEFINED 
 /**
  * Peripheral information for FTFL, (Incomplete)
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class FtflInfo {
 public:
@@ -1233,17 +1269,19 @@ public:
 };
 
 /** 
- * End FTFL_TODO_Group
+ * End group FTFL_TODO_Group
  * @}
  */
 /**
  * @addtogroup FTM_Group FTM, Shared Resources
- * @brief Pins used for Shared Resources
+ * @brief Abstraction for Shared Resources
  * @{
  */
 #define USBDM_FTM_IS_DEFINED 
 /**
  * Peripheral information for FTM, Shared Resources
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class FtmInfo {
 public:
@@ -1264,7 +1302,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -1281,6 +1319,8 @@ public:
 #define USBDM_FTM0_IS_DEFINED 
 /**
  * Peripheral information for FTM, PWM, Input capture and Output compare
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Ftm0Info {
 public:
@@ -1383,7 +1423,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       enablePortClocks(PORTC_CLOCK_MASK);
@@ -1418,7 +1458,7 @@ public:
       /**
        * Initialise pins used by peripheral
        * 
-       * @param pcrValue PCR value controling pin options
+       * @param pcrValue PCR value controlling pin options
        */
       static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
          (void)pcrValue;
@@ -1437,6 +1477,8 @@ public:
 #define USBDM_FTM1_IS_DEFINED 
 /**
  * Peripheral information for FTM, PWM, Input capture and Output compare
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Ftm1Info {
 public:
@@ -1533,7 +1575,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -1560,7 +1602,7 @@ public:
       /**
        * Initialise pins used by peripheral
        * 
-       * @param pcrValue PCR value controling pin options
+       * @param pcrValue PCR value controlling pin options
        */
       static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
          (void)pcrValue;
@@ -1590,7 +1632,7 @@ public:
       /**
        * Initialise pins used by peripheral
        * 
-       * @param pcrValue PCR value controling pin options
+       * @param pcrValue PCR value controlling pin options
        */
       static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
          (void)pcrValue;
@@ -1607,17 +1649,19 @@ public:
 };
 
 /** 
- * End FTM_Group
+ * End group FTM_Group
  * @}
  */
 /**
  * @addtogroup GPIO_Group GPIO, Digital Input/Output
- * @brief Pins used for Digital Input/Output
+ * @brief Abstraction for Digital Input/Output
  * @{
  */
 #define USBDM_GPIOA_IS_DEFINED 
 /**
  * Peripheral information for GPIO, Digital Input/Output
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class GpioAInfo {
 public:
@@ -1655,6 +1699,8 @@ public:
 #define USBDM_GPIOB_IS_DEFINED 
 /**
  * Peripheral information for GPIO, Digital Input/Output
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class GpioBInfo {
 public:
@@ -1692,6 +1738,8 @@ public:
 #define USBDM_GPIOC_IS_DEFINED 
 /**
  * Peripheral information for GPIO, Digital Input/Output
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class GpioCInfo {
 public:
@@ -1729,6 +1777,8 @@ public:
 #define USBDM_GPIOD_IS_DEFINED 
 /**
  * Peripheral information for GPIO, Digital Input/Output
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class GpioDInfo {
 public:
@@ -1766,6 +1816,8 @@ public:
 #define USBDM_GPIOE_IS_DEFINED 
 /**
  * Peripheral information for GPIO, Digital Input/Output
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class GpioEInfo {
 public:
@@ -1801,17 +1853,19 @@ public:
 };
 
 /** 
- * End GPIO_Group
+ * End group GPIO_Group
  * @}
  */
 /**
  * @addtogroup I2C_Group I2C, Inter-Integrated-Circuit Interface
- * @brief Pins used for Inter-Integrated-Circuit Interface
+ * @brief Abstraction for Inter-Integrated-Circuit Interface
  * @{
  */
 #define USBDM_I2C0_IS_DEFINED 
 /**
  * Peripheral information for I2C, Inter-Integrated-Circuit Interface
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class I2c0Info {
 public:
@@ -1864,7 +1918,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -1879,17 +1933,19 @@ public:
 };
 
 /** 
- * End I2C_Group
+ * End group I2C_Group
  * @}
  */
 /**
  * @addtogroup I2S_Group I2S, Inter-Integrated-Circuit Interface
- * @brief Pins used for Inter-Integrated-Circuit Interface
+ * @brief Abstraction for Inter-Integrated-Circuit Interface
  * @{
  */
 #define USBDM_I2S0_IS_DEFINED 
 /**
  * Peripheral information for I2S, Inter-Integrated-Circuit Interface
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class I2s0Info {
 public:
@@ -1931,7 +1987,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -1946,17 +2002,19 @@ public:
 };
 
 /** 
- * End I2S_Group
+ * End group I2S_Group
  * @}
  */
 /**
  * @addtogroup LLWU_Group LLWU, Low-leakage Wake-up Unit
- * @brief Pins used for Low-leakage Wake-up Unit
+ * @brief Abstraction for Low-leakage Wake-up Unit
  * @{
  */
 #define USBDM_LLWU_IS_DEFINED 
 /**
  * Peripheral information for LLWU, Low-leakage Wake-up Unit
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class LlwuInfo {
 public:
@@ -2040,7 +2098,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       enablePortClocks(PORTB_CLOCK_MASK|PORTC_CLOCK_MASK);
@@ -2062,17 +2120,19 @@ public:
 };
 
 /** 
- * End LLWU_Group
+ * End group LLWU_Group
  * @}
  */
 /**
  * @addtogroup LPTMR_Group LPTMR, Low Power Timer
- * @brief Pins used for Low Power Timer
+ * @brief Abstraction for Low Power Timer
  * @{
  */
 #define USBDM_LPTMR0_IS_DEFINED 
 /**
  * Peripheral information for LPTMR, Low Power Timer
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Lptmr0Info {
 public:
@@ -2178,7 +2238,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -2193,17 +2253,19 @@ public:
 };
 
 /** 
- * End LPTMR_Group
+ * End group LPTMR_Group
  * @}
  */
 /**
- * @addtogroup PDB_Group PDB, Programmable Dely Block
- * @brief Pins used for Programmable Dely Block
+ * @addtogroup PDB_Group PDB, Programmable Delay Block
+ * @brief Abstraction for Programmable Delay Block
  * @{
  */
 #define USBDM_PDB0_IS_DEFINED 
 /**
- * Peripheral information for PDB, Programmable Dely Block
+ * Peripheral information for PDB, Programmable Delay Block
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Pdb0Info {
 public:
@@ -2246,7 +2308,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -2261,17 +2323,19 @@ public:
 };
 
 /** 
- * End PDB_Group
+ * End group PDB_Group
  * @}
  */
 /**
  * @addtogroup PIT_Group PIT, Programmable Interrupt Timer
- * @brief Pins used for Programmable Interrupt Timer
+ * @brief Abstraction for Programmable Interrupt Timer
  * @{
  */
 #define USBDM_PIT_IS_DEFINED 
 /**
  * Peripheral information for PIT, Programmable Interrupt Timer
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class PitInfo {
 public:
@@ -2320,17 +2384,19 @@ public:
 };
 
 /** 
- * End PIT_Group
+ * End group PIT_Group
  * @}
  */
 /**
  * @addtogroup Power_Group POWER, Power
- * @brief Pins used for Power
+ * @brief Abstraction for Power
  * @{
  */
 #define USBDM_POWER_IS_DEFINED 
 /**
  * Peripheral information for POWER, Power
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class PowerInfo {
 public:
@@ -2360,7 +2426,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -2375,17 +2441,19 @@ public:
 };
 
 /** 
- * End Power_Group
+ * End group Power_Group
  * @}
  */
 /**
  * @addtogroup SMC_Group SMC, System Mode Controller
- * @brief Pins used for System Mode Controller
+ * @brief Abstraction for System Mode Controller
  * @{
  */
 #define USBDM_SMC_IS_DEFINED 
 /**
  * Peripheral information for SMC, System Mode Controller
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class SmcInfo {
 public:
@@ -2434,17 +2502,19 @@ public:
 };
 
 /** 
- * End SMC_Group
+ * End group SMC_Group
  * @}
  */
 /**
  * @addtogroup SPI_Group SPI, Serial Peripheral Interface
- * @brief Pins used for Serial Peripheral Interface
+ * @brief Abstraction for Serial Peripheral Interface
  * @{
  */
 #define USBDM_SPI0_IS_DEFINED 
 /**
  * Peripheral information for SPI, Serial Peripheral Interface
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Spi0Info {
 public:
@@ -2510,7 +2580,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       enablePortClocks(PORTC_CLOCK_MASK|PORTD_CLOCK_MASK);
@@ -2532,17 +2602,19 @@ public:
 };
 
 /** 
- * End SPI_Group
+ * End group SPI_Group
  * @}
  */
 /**
  * @addtogroup UART_Group UART, Universal Asynchronous Receiver/Transmitter
- * @brief Pins used for Universal Asynchronous Receiver/Transmitter
+ * @brief Abstraction for Universal Asynchronous Receiver/Transmitter
  * @{
  */
 #define USBDM_UART0_IS_DEFINED 
 /**
  * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Uart0Info {
 public:
@@ -2602,7 +2674,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       enablePortClocks(PORTA_CLOCK_MASK);
@@ -2624,6 +2696,8 @@ public:
 #define USBDM_UART1_IS_DEFINED 
 /**
  * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Uart1Info {
 public:
@@ -2682,7 +2756,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -2699,6 +2773,8 @@ public:
 #define USBDM_UART2_IS_DEFINED 
 /**
  * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Uart2Info {
 public:
@@ -2757,7 +2833,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -2772,17 +2848,19 @@ public:
 };
 
 /** 
- * End UART_Group
+ * End group UART_Group
  * @}
  */
 /**
  * @addtogroup USB_Group USB, USB OTG Controller
- * @brief Pins used for USB OTG Controller
+ * @brief Abstraction for USB OTG Controller
  * @{
  */
 #define USBDM_USB0_IS_DEFINED 
 /**
  * Peripheral information for USB, USB OTG Controller
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class Usb0Info {
 public:
@@ -2828,7 +2906,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -2843,17 +2921,19 @@ public:
 };
 
 /** 
- * End USB_Group
+ * End group USB_Group
  * @}
  */
 /**
  * @addtogroup USBDCD_Group USBDCD, USB Device Charger Detection
- * @brief Pins used for USB Device Charger Detection
+ * @brief Abstraction for USB Device Charger Detection
  * @{
  */
 #define USBDM_USBDCD_IS_DEFINED 
 /**
  * Peripheral information for USBDCD, USB Device Charger Detection
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class UsbdcdInfo {
 public:
@@ -2872,17 +2952,19 @@ public:
 };
 
 /** 
- * End USBDCD_Group
+ * End group USBDCD_Group
  * @}
  */
 /**
  * @addtogroup VREF_Group VREF, Voltage Reference
- * @brief Pins used for Voltage Reference
+ * @brief Abstraction for Voltage Reference
  * @{
  */
 #define USBDM_VREF_IS_DEFINED 
 /**
  * Peripheral information for VREF, Voltage Reference
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
  */
 class VrefInfo {
 public:
@@ -2926,7 +3008,7 @@ public:
    /**
     * Initialise pins used by peripheral
     * 
-    * @param pcrValue PCR value controling pin options
+    * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
       (void)pcrValue;
@@ -2941,7 +3023,11 @@ public:
 };
 
 /** 
- * End VREF_Group
+ * End group VREF_Group
+ * @}
+ */
+/** 
+ * End group USBDM_Group
  * @}
  */
 
@@ -2952,11 +3038,19 @@ public:
 #include "ftm.h"
 #include "gpio.h"
 
+/**
+ * Namespace enclosing USBDM classes
+ */
 namespace USBDM {
 
 /**
+ * @addtogroup USBDM_Group USBDM Peripheral Interface
+ * @brief Hardware Peripheral Interface and library
+ * @{
+ */
+/**
  * @addtogroup ADC_Group ADC, Analogue Input
- * @brief Pins used for Analogue Input
+ * @brief Abstraction for Analogue Input
  * @{
  */
 using adc_p8               = const USBDM::Adc0Channel<0>;
@@ -2964,23 +3058,23 @@ using adc_p8               = const USBDM::Adc0Channel<0>;
 using adc_p7               = const USBDM::Adc0Channel<0>;
 //using adc_p7               = const USBDM::Adc0Channel<0>;
 /** 
- * End ADC_Group
+ * End group ADC_Group
  * @}
  */
 /**
  * @addtogroup FTM_Group FTM, PWM, Input capture and Output compare
- * @brief Pins used for PWM, Input capture and Output compare
+ * @brief Abstraction for PWM, Input capture and Output compare
  * @{
  */
 using ftm_p36              = const USBDM::Ftm0Channel<2>;
 using ftm_p37              = const USBDM::Ftm0Channel<3>;
 /** 
- * End FTM_Group
+ * End group FTM_Group
  * @}
  */
 /**
  * @addtogroup GPIO_Group GPIO, Digital Input/Output
- * @brief Pins used for Digital Input/Output
+ * @brief Abstraction for Digital Input/Output
  * @{
  */
 using gpio_p27             = const USBDM::GpioB<0>;
@@ -2994,13 +3088,17 @@ using gpio_p38             = const USBDM::GpioC<5>;
 using gpio_p39             = const USBDM::GpioC<6>;
 using gpio_p48             = const USBDM::GpioD<7>;
 /** 
- * End GPIO_Group
+ * End group GPIO_Group
  * @}
  */
 /**
  * Used to configure pin-mapping before 1st use of peripherals
  */
 extern void mapAllPins();
+/** 
+ * End group USBDM_Group
+ * @}
+ */
 
 } // End namespace USBDM
 

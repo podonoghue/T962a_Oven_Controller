@@ -13,7 +13,7 @@
 #include <temperaturePlot.h>
 
 /**
- * Functions associated with plotting profiles and results
+ * Functions associated with drawing profiles and related
  */
 namespace Draw {
 
@@ -23,9 +23,10 @@ namespace Draw {
 void reset();
 
 /**
- * Draw a profile to plot data
+ * Draw a profile to current plot data\n
+ * This clears the plot data and then plots the given profile.
  *
- * @param index Index of profile to draw
+ * @param index Index of profile to draw to plot
  */
 void drawProfile(int index);
 

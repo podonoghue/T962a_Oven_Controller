@@ -192,7 +192,7 @@ InEndpoint  <Usb0Info, Usb0::CDC_DATA_IN_ENDPOINT,      CDC_DATA_IN_EP_MAXSIZE> 
  * TODO Add additional end-points here
  */
 
-SCPI_Interface::Response  *Usb0::response = nullptr;
+RemoteInterface::Response  *Usb0::response = nullptr;
 
 /**
  * Handler for Start of Frame Token interrupt (~1ms interval)
@@ -338,10 +338,10 @@ void Usb0::cdcInTransactionCallback(EndpointState state) {
    if ((state == EPDataIn)||(state == EPIdle)) {
       if (response != nullptr) {
          // Free last buffer as transfer is now complete
-         SCPI_Interface::freeResponseBuffer(response);
+         RemoteInterface::freeResponseBuffer(response);
       }
       // Get up new message
-      response = SCPI_Interface::getResponse();
+      response = RemoteInterface::getResponse();
       if (response == nullptr) {
          // No messages waiting
          return;
@@ -458,12 +458,6 @@ void Usb0::handleUserEp0SetupRequests(const SetupPacket &setup) {
       default:
          controlEndpoint.stall();
          break;
-   }
-}
-
-void idleLoop() {
-   for(;;) {
-      __asm__("nop");
    }
 }
 

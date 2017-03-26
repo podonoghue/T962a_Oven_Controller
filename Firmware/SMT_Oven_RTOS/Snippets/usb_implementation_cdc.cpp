@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "usb.h"
-#include "usb_cdc_uart.h"
+#include "usb_implementation_cdc.h"
 
 namespace USBDM {
 
@@ -181,12 +181,17 @@ const Usb0::Descriptors Usb0::otherDescriptors = {
        */
 };
 
+/** In end-point for CDC notifications */
+InEndpoint  <Usb0Info, Usb0::CDC_NOTIFICATION_ENDPOINT, CDC_NOTIFICATION_EP_MAXSIZE>  Usb0::epCdcNotification;
+/** Out end-point for CDC data out */
+OutEndpoint <Usb0Info, Usb0::CDC_DATA_OUT_ENDPOINT,     CDC_DATA_OUT_EP_MAXSIZE>      Usb0::epCdcDataOut;
+/** In end-point for CDC data in */
+InEndpoint  <Usb0Info, Usb0::CDC_DATA_IN_ENDPOINT,      CDC_DATA_IN_EP_MAXSIZE>       Usb0::epCdcDataIn;
 /*
  * TODO Add additional end-points here
  */
-InEndpoint  <Usb0Info, Usb0::CDC_NOTIFICATION_ENDPOINT, CDC_NOTIFICATION_EP_MAXSIZE>  Usb0::epCdcNotification;
-OutEndpoint <Usb0Info, Usb0::CDC_DATA_OUT_ENDPOINT,     CDC_DATA_OUT_EP_MAXSIZE>      Usb0::epCdcDataOut;
-InEndpoint  <Usb0Info, Usb0::CDC_DATA_IN_ENDPOINT,      CDC_DATA_IN_EP_MAXSIZE>       Usb0::epCdcDataIn;
+
+SCPI_Interface::Response  *Usb0::response = nullptr;
 
 /**
  * Handler for Start of Frame Token interrupt (~1ms interval)
@@ -315,19 +320,11 @@ void Usb0::handleTokenComplete() {
 void Usb0::cdcOutTransactionCallback(EndpointState state) {
    //   PRINTF("cdc_out\n");
    if (state == EPDataOut) {
-      uint8_t *buff = epCdcDataOut.getBuffer();
-      for (int i=epCdcDataOut.getDataTransferredSize(); i>0; i--) {
-         if (!cdcInterface::putChar(*buff++)) {
-            // Discard further data in this transfer
-            break;
-         }
-      }
-      // Set up for next transfer
-      epCdcDataOut.startRxTransaction(EPDataOut, epCdcDataOut.BUFFER_SIZE);
+      cdcInterface::putData(epCdcDataOut.getDataTransferredSize(), epCdcDataOut.getBuffer());
    }
+   // Set up for next transfer
+   epCdcDataOut.startRxTransaction(EPDataOut, epCdcDataOut.BUFFER_SIZE);
 }
-
-static Queue<100> inQueue;
 
 /**
  * Call-back handling CDC-IN transaction complete\n
@@ -337,43 +334,31 @@ static Queue<100> inQueue;
  * @param state Current end-point state
  */
 void Usb0::cdcInTransactionCallback(EndpointState state) {
-   if (state == EPDataIn) {
-      int     charCount = 0;
-      uint8_t *buff     = epCdcDataIn.getBuffer();
-
-      // Copy characters from cdcInterface to end-point buffer
-      while(!inQueue.isEmpty()) {
-         if (charCount>=epCdcDataIn.BUFFER_SIZE) {
-            // Buffer full. Leave rest for next transfer.
-            break;
-         }
-         *buff++ = inQueue.deQueue();
-         charCount++;
+   if ((state == EPDataIn)||(state == EPIdle)) {
+      if (response != nullptr) {
+         // Free last buffer as transfer is now complete
+         SCPI_Interface::freeResponseBuffer(response);
       }
-      if (charCount>0) {
-//         PRINTF("Sending %d\n", charCount);
-         // Schedules transfer if data available
-         epCdcDataIn.startTxTransaction(EPDataIn, charCount);
+      // Get up new message
+      response = SCPI_Interface::getResponse();
+      if (response == nullptr) {
+         // No messages waiting
+         return;
       }
+      // Schedules transfer
+      epCdcDataIn.setNeedZLP();
+      epCdcDataIn.startTxTransaction(EPDataIn, response->size, response->data);
    }
 }
 
 /**
- * Add character to CDC OUT buffer.
+ * Notify IN (device->host) endpoint that data is available
  *
- * @param ch Character to send
- *
- * @return true  Character added
- * @return false Overrun, character not added
+ * @return Not used
  */
-bool Usb0::putCdcChar(uint8_t ch) {
-   if (inQueue.isFull()) {
-      return false;
-   }
-   inQueue.enQueue(ch);
+bool Usb0::notify() {
    if (epCdcDataIn.getState() == EPIdle) {
       // Have to restart IN transactions
-      IrqProtect ip;
       cdcInTransactionCallback(EPDataIn);
    }
    return true;
@@ -391,9 +376,13 @@ void Usb0::initialise() {
    setUnhandledSetupCallback(handleUserEp0SetupRequests);
 
    setSOFCallback(sofCallback);
+
+   cdcInterface::initialise();
+   cdcInterface::setUsbNotifyCallback(notify);
    /*
     * TODO Additional initialisation
     */
+   response = nullptr;
 }
 
 /**
@@ -422,7 +411,7 @@ void Usb0::handleSetLineCoding() {
 void Usb0::handleGetLineCoding() {
 //   PRINTF("handleGetLineCoding()\n");
    // Send packet
-   ep0StartTxTransaction( sizeof(LineCodingStructure), (const uint8_t*)cdcInterface::getLineCoding());
+   ep0StartTxTransaction( sizeof(LineCodingStructure), (const uint8_t*)&cdcInterface::getLineCoding());
 }
 
 /**
