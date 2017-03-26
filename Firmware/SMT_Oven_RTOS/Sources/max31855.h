@@ -55,7 +55,6 @@ protected:
    void initialise() {
       spi.setPcsPolarity(pinNum, false);
 
-      IrqProtect protect;
       spi.setSpeed(2500000);
       spi.setMode(USBDM::SPI_MODE0);
       spi.setDelays(0.1*USBDM::us, 0.1*USBDM::us, 0.1*USBDM::us);

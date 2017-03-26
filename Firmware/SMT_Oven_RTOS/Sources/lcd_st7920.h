@@ -55,7 +55,6 @@ protected:
    /** Inverts writes to the LCD screen */
    uint8_t invertMask = 0;
 
-protected:
    /** Frame buffer for graphics mode */
    uint8_t frameBuffer[(LCD_WIDTH*LCD_HEIGHT)/8];
 
@@ -75,7 +74,7 @@ protected:
             (uint8_t)(value<<4),
       };
       {
-         IrqProtect protect;
+//         IrqProtect protect;
          spi.setCTAR0Value(spiCtarValue);
          spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
          spi.txRxBytes(sizeof(data), data, nullptr);
@@ -95,7 +94,7 @@ protected:
             (uint8_t)(value<<4),
       };
       {
-         IrqProtect protect;
+//         IrqProtect protect;
          spi.setCTAR0Value(spiCtarValue);
          spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
          spi.txRxBytes(sizeof(data), data, nullptr);
@@ -111,7 +110,7 @@ public:
    void initialise() {
       USBDM::waitMS(200);
       {
-         IrqProtect protect;
+//         IrqProtect protect;
          spi.setPcsPolarity(pinNum, false);
          spi.setSpeed(5000000);
          spi.setMode(USBDM::SPI_MODE3);
