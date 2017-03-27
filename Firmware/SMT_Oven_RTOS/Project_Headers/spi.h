@@ -16,6 +16,7 @@
  * Any manual changes will be lost.
  */
 #include <stdint.h>
+#include "cmsis.h"
 #include "derivative.h"
 #include "hardware.h"
 
@@ -48,6 +49,9 @@ protected:
    uint32_t  pushrMask;            //!< Value to combine with data
 
 protected:
+   /** Mutex to protect access */
+   CMSIS::Mutex mutex;
+
    /**
     * Constructor
     *
@@ -197,6 +201,32 @@ protected:
    }
 
 public:
+   /**
+    * Obtain SPI mutex
+    *
+    * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait
+    *
+    * @return osOK: The mutex has been obtain.
+    * @return osErrorTimeoutResource: The mutex could not be obtained in the given time.
+    * @return osErrorResource: The mutex could not be obtained when no timeout was specified.
+    * @return osErrorParameter: The parameter mutex_id is incorrect.
+    * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
+    */
+   osStatus lock(int milliseconds=osWaitForever) {
+      return mutex.wait(milliseconds);
+   }
+
+   /**
+    * Release SPI mutex
+    *
+    * @return osOK: the mutex has been correctly released.
+    * @return osErrorResource: the mutex was not obtained before.
+    * @return osErrorISR: osMutexRelease cannot be called from interrupt service routines.
+    */
+   virtual osStatus unlock() {
+      return mutex.release();
+   }
+
    /**
     * Enable pins used by SPI
     */
@@ -352,6 +382,32 @@ class Spi_T : public Spi {
 public:
    virtual ~Spi_T() {}
 
+   /**
+    * Obtain SPI mutex
+    *
+    * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait
+    *
+    * @return osOK: The mutex has been obtain.
+    * @return osErrorTimeoutResource: The mutex could not be obtained in the given time.
+    * @return osErrorResource: The mutex could not be obtained when no timeout was specified.
+    * @return osErrorParameter: The parameter mutex_id is incorrect.
+    * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
+    */
+   virtual osStatus lock(int milliseconds=osWaitForever) {
+      return mutex.wait(milliseconds);
+   }
+
+   /**
+    * Release SPI mutex
+    *
+    * @return osOK: the mutex has been correctly released.
+    * @return osErrorResource: the mutex was not obtained before.
+    * @return osErrorISR: osMutexRelease cannot be called from interrupt service routines.
+    */
+   virtual osStatus unlock() {
+      return mutex.release();
+   }
+
    virtual void enablePins() {
       // Configure SPI pins
       Info::initPCRs(PORT_PCR_DSE(1)|PORT_PCR_SRE(1)|PORT_PCR_PE(1)|PORT_PCR_PS(1));
@@ -405,7 +461,7 @@ public:
       __DMB();
 
       spi->MCR = SPI_MCR_HALT_MASK|SPI_MCR_CLR_RXF_MASK|SPI_MCR_ROOE_MASK|SPI_MCR_CLR_TXF_MASK|
-                 SPI_MCR_MSTR_MASK|SPI_MCR_DCONF(0)|SPI_MCR_SMPL_PT(0)|SPI_MCR_PCSIS_MASK;
+            SPI_MCR_MSTR_MASK|SPI_MCR_DCONF(0)|SPI_MCR_SMPL_PT(0)|SPI_MCR_PCSIS_MASK;
 
       setCTAR0Value(0); // Clear
       setCTAR1Value(0); // Clear

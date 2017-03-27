@@ -29,10 +29,7 @@ public:
       TH_DISABLED=0b111,   // Available but disabled (Temperature reading will still be valid)
    };
 
-protected:
-
-   /** Mutex to protect access */
-   CMSIS::Mutex mutex;
+public:
 
    /** SPI CTAR value */
    uint32_t spiCtarValue = 0;
@@ -53,6 +50,7 @@ protected:
     * Initialise the LCD
     */
    void initialise() {
+      spi.lock();
       spi.setPcsPolarity(pinNum, false);
 
       spi.setSpeed(2500000);
@@ -62,9 +60,9 @@ protected:
 
       // Record CTAR value in case SPI shared
       spiCtarValue = spi.getCTAR0Value();
+      spi.unlock();
    }
 
-public:
    /**
     * Constructor
     *
@@ -75,7 +73,7 @@ public:
     */
    Max31855(USBDM::Spi &spi, int pinNum, USBDM::Nonvolatile<int> &offset, USBDM::Nonvolatile<bool> &enabled) :
       spi(spi), pinNum(pinNum), offset(offset), enabled(enabled) {
-      initialise();
+//      initialise();
    }
 
    /**
@@ -135,11 +133,11 @@ public:
       uint8_t data[] = {
             0xFF, 0xFF, 0xFF, 0xFF,
       };
-      mutex.wait(osWaitForever);
+      spi.lock();
       spi.setCTAR0Value(spiCtarValue);
       spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
       spi.txRxBytes(sizeof(data), nullptr, data);
-      mutex.release();
+      spi.unlock();
 
       // Temperature = sign-extended 14-bit value
       temperature = (((int16_t)((data[0]<<8)|data[1]))>>2)/4.0;

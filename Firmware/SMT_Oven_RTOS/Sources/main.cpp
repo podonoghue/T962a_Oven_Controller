@@ -75,6 +75,7 @@ void initialise() {
    CDC_Interface::initialise();
 
    lcd.initialise();
+   temperatureSensors.initialise();
    caseTemperatureMonitor.initialise();
    pid.initialise();
    buttons.initialise();
