@@ -20,7 +20,7 @@ I also provides a basic JAVA application to control the oven in a more convenien
 
 This is a Eclipse workspace.   
  
-Basic application - work in progress
+Basic application - work in progress.  
 Firmware for oven controller.  
 
 [Available here](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Software)  
