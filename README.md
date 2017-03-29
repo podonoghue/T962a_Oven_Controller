@@ -16,17 +16,18 @@ I also provides a basic JAVA application to control the oven in a more convenien
 - It uses a Kinetis microcontroller so requires a compatible programmer e.g. USBDM  
 - Firmware development requires Eclipse/KDS and USBDM plugin  
 
-# T962a Software
+# T962a Software and Firmware
 
-   Basic application - work in progress
-   
-# T962a Firmware
-
-Firmware for T962a replacement oven controller.  
-This is a Kinetis Design Studio workspace.   
+This is a Eclipse workspace.   
  
-[Firmware is available here](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Firmware)  
-[Driver for USB interface](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/WinDrivers)  
+Basic application - work in progress
+Firmware for oven controller.  
+
+[Available here](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Software)  
+
+# Windows Drivers (none needed for Linux)
+
+[Available here](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/WinDrivers)  
 
 # T962a Hardware (PCB Designs)
 
