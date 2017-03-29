@@ -7,9 +7,9 @@ It provides open source firmware that provides extended features.
 **Features**  
 - Supports the two internal thermocouples  
 - Support up to two external thermocouples (with expansion board)  
-- Supports up to 10 profiles stored in non-voltile memory  
-- The current configuration is also stored in non-voltile memory  
-- Uses an additional SSD to completely separate the low-voltage and high-voltage components  
+- Supports up to 10 profiles stored in non-volatile memory  
+- The current configuration is also stored in non-volatile memory  
+- Uses an additional SSR to completely separate the low-voltage and high-voltage components  
 
 **Requirements**  
 - It uses a Kinetis microcontroller so requires a compatible programmer e.g. USBDM  
