@@ -3,6 +3,7 @@
 This is a replacement controller for a T962a Oven.  
 It consists of a complete replacement for the existing controller in a mechnically compatible form.  
 It provides open source firmware that provides extended features.
+I also provides a basic JAVA application to control the oven in a more convenient fashion (WIP)
 
 **Features**  
 - Supports the two internal thermocouples  
@@ -15,6 +16,10 @@ It provides open source firmware that provides extended features.
 - It uses a Kinetis microcontroller so requires a compatible programmer e.g. USBDM  
 - Firmware development requires Eclipse/KDS and USBDM plugin  
 
+# T962a Software
+
+   Basic application - work in progress
+   
 # T962a Firmware
 
 Firmware for T962a replacement oven controller.  
