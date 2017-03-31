@@ -223,6 +223,9 @@ public:
     * @return osErrorISR: osMutexRelease cannot be called from interrupt service routines.
     */
    virtual osStatus unlock() = 0;
+#else
+   int lock(int milliseconds=0) {};
+   int unlock() {};
 #endif
 
    /**
