@@ -77,10 +77,22 @@ public:
             value(value), description(description), delta(delta), defaultValue(defaultValue), min(min), max(max) {
       set((T)value);
    }
+   /**
+    * Get description including value
+    *
+    * @return Pointer to static buffer containing description
+    */
    virtual const char *getDescription() const {
       snprintf(buff, sizeof(buff), description, (T)value);
       return buff;
    }
+   /**
+    * Set value
+    *
+    * @param newValue Value to set
+    *
+    * @return true if value actually changed
+    */
    virtual bool set(T newValue) {
       if (newValue < min) {
          newValue = min;
@@ -92,12 +104,29 @@ public:
       value = newValue;
       return changed;
    }
+   /**
+    * Increment value\n
+    * Applies limits
+    *
+    * @return true if value actually changed
+    */
    virtual bool increment() {
       return set(value + delta);
    }
+   /**
+    * Decrement value\n
+    * Applies limits
+    *
+    * @return true if value actually changed
+    */
    virtual bool decrement() {
       return set(value - delta);
    }
+   /**
+    * Resets value
+    *
+    * @return true if value actually changed
+    */
    virtual bool reset() {
       return set(defaultValue);
    }
@@ -144,6 +173,12 @@ public:
       buff[STRING_LENGTH] = '\0';
       return buff;
    }
+   /**
+    * Increment value\n
+    * Applies limits
+    *
+    * @return true if value actually changed
+    */
    virtual bool increment() {
       bool changed = edit();
       if (changed) {
@@ -151,9 +186,20 @@ public:
       }
       return changed;
    }
+   /**
+    * Decrement value\n
+    * Applies limits
+    *
+    * @return true if value actually changed
+    */
    virtual bool decrement() {
       return increment();
    }
+   /**
+    * Resets value
+    *
+    * @return true if value actually changed
+    */
    virtual bool reset() {
       strncpy(nameBuffer, name, sizeof(nameBuffer));
       unsigned i = strlen(name);
