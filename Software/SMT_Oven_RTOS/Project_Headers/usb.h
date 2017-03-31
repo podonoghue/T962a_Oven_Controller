@@ -480,17 +480,21 @@ protected:
     * Set device Address - Device Request 0x05
     */
    static void handleSetAddress() {
-      //   PUTS("setAddress - ");
+      static uint8_t newAddress;
 
       if (ep0SetupBuffer.bmRequestType != (EP_OUT|RT_DEVICE)) {// Out,Standard,Device
-         controlEndpoint.stall(); // Illegal format - stall controlEndpoint
+         // Illegal format - stall controlEndpoint
+         controlEndpoint.stall();
          return;
       }
 
+      // Record address for callback
+      newAddress = ep0SetupBuffer.wValue.lo();
+
       // Setup callback to update address at end of transaction
-      static uint8_t newAddress  = ep0SetupBuffer.wValue.lo();
       static auto callback = []() {
          setUSBaddressedState(newAddress);
+         PRINTF("setAddresscb - %d\n", newAddress);
       };
       setSetupCompleteCallback(callback);
 
@@ -645,7 +649,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleSetupToken() {
    // Call-backs only persist during a SETUP transaction
    setSetupCompleteCallback(nullptr);
 
-//   PRINTF("handleSetupToken(%s)\n", reportSetupPacket(&ep0SetupBuffer));
+   PRINTF("handleSetupToken(%s)\n", reportSetupPacket(&ep0SetupBuffer));
 
    switch(REQ_TYPE(ep0SetupBuffer.bmRequestType)) {
       case REQ_TYPE_STANDARD :
@@ -770,7 +774,6 @@ bool UsbBase_T<Info, EP0_SIZE>::handleTokenComplete() {
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleUSBReset() {
    PUTS("\nReset");
-   //   pushState('R');
 
    // Disable all interrupts
    usb->INTEN = 0x00;
@@ -781,7 +784,8 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBReset() {
 
    // Clear most USB interrupt flags
    usb->ISTAT = (uint8_t)~USB_ISTAT_TOKDNE_MASK;
-
+   
+   // Set initial USB state
    setUSBdefaultState();
 
    // Initialise control end-point
@@ -802,7 +806,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBReset() {
  */
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleUSBSuspend() {
-   //   PUTS("Suspend");
+   PUTS("Suspend");
    if (connectionState != USBconfigured) {
       // Ignore if not configured
       return;
@@ -822,9 +826,14 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBSuspend() {
    do {
       usb->ISTAT = USB_ISTAT_RESUME_MASK;       // Clear resume interrupt flag
 
+      PUTS("Suspend - WAI");
+      __enable_irq();
+      enableNvicInterrupts();
+
       __WFI();  // Processor stop for low power
 
       // The CPU has woken up!
+      PUTS("Suspend - awake!");
 
       if ((usb->ISTAT&(USB_ISTAT_RESUME_MASK|USB_ISTAT_USBRST_MASK)) == 0) {
          // Ignore if not resume or reset from USB module
@@ -853,7 +862,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBSuspend() {
  */
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleUSBResume() {
-   //   PUTS("Resume");
+   PUTS("Resume");
    // Mask further resume interrupts
    usb->INTEN   &= ~USB_INTEN_RESUMEEN_MASK;
 
@@ -981,9 +990,6 @@ void UsbBase_T<Info, EP0_SIZE>::initialise() {
    // This bit is undocumented but seems to be necessary
    usb->USBTRC0 = 0x40;
 
-   // Set initial USB state
-   setUSBdefaultState();
-
    // Point USB at BDT array
    usb->BDTPAGE3 = (uint8_t) (((unsigned)endPointBdts)>>24);
    usb->BDTPAGE2 = (uint8_t) (((unsigned)endPointBdts)>>16);
@@ -1004,8 +1010,8 @@ void UsbBase_T<Info, EP0_SIZE>::initialise() {
    // Enable interface
    usb->CTL = USB_CTL_USBENSOFEN_MASK;
 
-   // Clear EP0 BDTs
-   memset((uint8_t*)endPointBdts, 0, sizeof(EndpointBdtEntry[4]));
+   // Set initial USB state
+   setUSBdefaultState();
 
    // Initialise control end-point
    initialiseEndpoints();
@@ -1033,8 +1039,8 @@ void UsbBase_T<Info, EP0_SIZE>::initialiseEndpoints() {
 
    //   PUTS("initialiseEndpoints()");
 
-   // Clear BDTs apart from EP0
-   memset((uint8_t*)(endPointBdts+1), 0, sizeof(EndpointBdtEntry[UsbImplementation::NUMBER_OF_ENDPOINTS-1]));
+   // Clear all BDTs
+   memset((uint8_t*)(endPointBdts), 0, sizeof(EndpointBdtEntry[UsbImplementation::NUMBER_OF_ENDPOINTS]));
 
    // Clear odd/even bits & enable USB device
    usb->CTL = USB_CTL_USBENSOFEN_MASK|USB_CTL_ODDRST_MASK;
@@ -1044,7 +1050,7 @@ void UsbBase_T<Info, EP0_SIZE>::initialiseEndpoints() {
 
    controlEndpoint.setCallback(ep0TransactionCallback);
 
-   // Set up to receive 1st SETUP packet
+   // Set up to receive SETUP packet
    ep0ConfigureSetupTransaction();
 }
 
@@ -1330,12 +1336,18 @@ void UsbBase_T<Info, EP0_SIZE>::irqHandler() {
 
    do {
       // Get active and enabled flags only
-      uint8_t enabledInterruptFlags = usb->ISTAT & usb->INTEN;
+      uint8_t pendingInterruptFlags = usb->ISTAT & usb->INTEN;
 
-      if (enabledInterruptFlags == 0) {
+      if (pendingInterruptFlags == 0) {
          return;
       }
-      if ((enabledInterruptFlags&USB_ISTAT_TOKDNE_MASK) != 0) {
+      if ((pendingInterruptFlags&USB_ISTAT_USBRST_MASK) != 0) {
+         // Reset signaled on Bus
+         usb->ISTAT = USB_ISTAT_USBRST_MASK; // Clear source
+         handleUSBReset();
+         return;
+      }
+      if ((pendingInterruptFlags&USB_ISTAT_TOKDNE_MASK) != 0) {
          // Token complete interrupt
          if (!handleTokenComplete()) {
             // Pass to extension routine
@@ -1347,37 +1359,31 @@ void UsbBase_T<Info, EP0_SIZE>::irqHandler() {
           */
          usb->ISTAT = USB_ISTAT_TOKDNE_MASK;
       }
-      if ((enabledInterruptFlags&USB_ISTAT_USBRST_MASK) != 0) {
-         // Reset signaled on Bus
-         usb->ISTAT = USB_ISTAT_USBRST_MASK; // Clear source
-         handleUSBReset();
-         return;
-      }
-      if ((enabledInterruptFlags&USB_ISTAT_RESUME_MASK) != 0) {
+      if ((pendingInterruptFlags&USB_ISTAT_RESUME_MASK) != 0) {
          // Resume signaled on Bus
          handleUSBResume();
          // Clear source
          usb->ISTAT = USB_ISTAT_RESUME_MASK;
       }
-      if ((enabledInterruptFlags&USB_ISTAT_STALL_MASK) != 0) {
+      if ((pendingInterruptFlags&USB_ISTAT_STALL_MASK) != 0) {
          // Stall sent
          handleStallComplete();
          // Clear source
          usb->ISTAT = USB_ISTAT_STALL_MASK;
       }
-      if ((enabledInterruptFlags&USB_ISTAT_SOFTOK_MASK) != 0) {
+      if ((pendingInterruptFlags&USB_ISTAT_SOFTOK_MASK) != 0) {
          // SOF Token
          handleSOFToken();
          usb->ISTAT = USB_ISTAT_SOFTOK_MASK; // Clear source
       }
-      if ((enabledInterruptFlags&USB_ISTAT_SLEEP_MASK) != 0) {
+      if ((pendingInterruptFlags&USB_ISTAT_SLEEP_MASK) != 0) {
          // Bus Idle 3ms => sleep
          //      PUTS("Suspend");
          handleUSBSuspend();
          // Clear source
          usb->ISTAT = USB_ISTAT_SLEEP_MASK;
       }
-      if ((enabledInterruptFlags&USB_ISTAT_ERROR_MASK) != 0) {
+      if ((pendingInterruptFlags&USB_ISTAT_ERROR_MASK) != 0) {
          // Any Error
          PRINTF("Error s=0x%02X\n", usb->ERRSTAT);
          usb->ERRSTAT = 0xFF;

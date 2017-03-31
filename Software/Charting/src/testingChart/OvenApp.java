@@ -1,6 +1,5 @@
 package testingChart;
 
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -107,6 +106,7 @@ public class OvenApp extends JFrame {
     */
    void plotProfile(XYSeries profileSeries, final SolderProfile profile) {
 
+      profileSeries.clear();
       float ambient = 25.0f;
       float time = 0.0f;
       profileSeries.add(time, ambient);
@@ -155,11 +155,12 @@ public class OvenApp extends JFrame {
 
       XYDataset dataset = createDataset();
 
-      JFreeChart chart = ChartFactory.createXYLineChart(chartTitle,
-            xAxisLabel, yAxisLabel, dataset);
-
-      XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-
+      // Create chart
+      JFreeChart chart = ChartFactory.createXYLineChart(chartTitle, xAxisLabel, yAxisLabel, dataset);
+      // Create renderer with line but no shapes (too many points)
+      XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true,false);
+      // Have points for profile only
+      renderer.setSeriesShapesVisible(0, true);
       //      // sets paint color for each series
       //      renderer.setSeriesPaint(0, Color.RED);
       //      renderer.setSeriesPaint(1, Color.GREEN);
@@ -169,7 +170,6 @@ public class OvenApp extends JFrame {
       //      renderer.setSeriesStroke(1, new BasicStroke(3.0f));
 
       XYPlot plot = chart.getXYPlot();
-
       plot.setBackgroundPaint(Color.DARK_GRAY);
 
       plot.setRangeGridlinesVisible(true);
@@ -230,31 +230,32 @@ public class OvenApp extends JFrame {
          }
          data = data + moreData;
       } while (true);
-      System.out.println("data read is :" + data);
+//      System.out.println("data read is :" + data);
       String[] points = data.split(";");
+      targetSeries.clear();
       averageSeries.clear();
       heaterSeries.clear();
       fanSeries.clear();
       for (int index=1; index< points.length; index++) {
          String[] values = points[index].split(",");
          if (values.length == 10) {
-            String state         = values[0];
+//            String state         = values[0];
             int    time          = Integer.parseInt(values[1]);
             float  targetTemp    = Float.parseFloat(values[2]);
             float  averageTemp   = Float.parseFloat(values[3]);
             int    heaterPercent = Integer.parseInt(values[4]);
             int    fanPercent    = Integer.parseInt(values[5]);
-            float  thermocouple1 = Float.parseFloat(values[6]);
-            float  thermocouple2 = Float.parseFloat(values[7]);
-            float  thermocouple3 = Float.parseFloat(values[8]);
-            float  thermocouple4 = Float.parseFloat(values[9]);
+//            float  thermocouple1 = Float.parseFloat(values[6]);
+//            float  thermocouple2 = Float.parseFloat(values[7]);
+//            float  thermocouple3 = Float.parseFloat(values[8]);
+//            float  thermocouple4 = Float.parseFloat(values[9]);
             targetSeries.add((float)time, targetTemp);
             averageSeries.add((float)time, averageTemp);
             heaterSeries.add((float)time, (float)heaterPercent);
             fanSeries.add((float)time, (float)fanPercent);
-            System.out.println(
-                  String.format("%3d %6.1f %6.1f %3d %3d ", 
-                        time, targetTemp, averageTemp, heaterPercent, fanPercent));
+//            System.out.println(
+//                  String.format("%3d %6.1f %6.1f %3d %3d ", 
+//                        time, targetTemp, averageTemp, heaterPercent, fanPercent));
          }
       }
    }
@@ -273,7 +274,7 @@ public class OvenApp extends JFrame {
          scm.configureComPortControl(handle, FLOWCONTROL.NONE, 'x', 'x', false, false);
          scm.writeString(handle, "idn?\n\r", 0);
          String data = scm.readString(handle);
-         System.out.println("data read is :" + data);
+//         System.out.println("data read is :" + data);
          if (data.startsWith("SMT-Oven")) {
             updateOvenChart(scm, handle);
             updateProfileChart(scm, handle);
@@ -295,7 +296,7 @@ public class OvenApp extends JFrame {
 
       chartPanel = createChartPanel();
 
-      final JButton button = new JButton("Add New Data Item");
+      final JButton button = new JButton("Update");
       button.addActionListener(new ActionListener() {
          @Override
          public void actionPerformed(ActionEvent e) {
