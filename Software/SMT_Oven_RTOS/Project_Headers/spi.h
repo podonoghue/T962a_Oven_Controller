@@ -16,9 +16,11 @@
  * Any manual changes will be lost.
  */
 #include <stdint.h>
-#include "cmsis.h"
 #include "derivative.h"
 #include "hardware.h"
+#ifdef __CMSIS_RTOS
+#include "cmsis.h"
+#endif
 
 namespace USBDM {
 
@@ -49,9 +51,6 @@ protected:
    uint32_t  pushrMask;            //!< Value to combine with data
 
 protected:
-   /** Mutex to protect access */
-   CMSIS::Mutex mutex;
-
    /**
     * Constructor
     *
@@ -201,6 +200,8 @@ protected:
    }
 
 public:
+
+#ifdef __CMSIS_RTOS
    /**
     * Obtain SPI mutex
     *
@@ -212,9 +213,7 @@ public:
     * @return osErrorParameter: The parameter mutex_id is incorrect.
     * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
     */
-   osStatus lock(int milliseconds=osWaitForever) {
-      return mutex.wait(milliseconds);
-   }
+   virtual osStatus lock(int milliseconds=osWaitForever) = 0;
 
    /**
     * Release SPI mutex
@@ -223,9 +222,8 @@ public:
     * @return osErrorResource: the mutex was not obtained before.
     * @return osErrorISR: osMutexRelease cannot be called from interrupt service routines.
     */
-   virtual osStatus unlock() {
-      return mutex.release();
-   }
+   virtual osStatus unlock() = 0;
+#endif
 
    /**
     * Enable pins used by SPI
@@ -379,9 +377,12 @@ public:
 template<class Info>
 class Spi_T : public Spi {
 
-public:
-   virtual ~Spi_T() {}
+#ifdef __CMSIS_RTOS
+protected:
+   /** Mutex to protect access - static so per SPI */
+   static CMSIS::Mutex mutex;
 
+public:
    /**
     * Obtain SPI mutex
     *
@@ -407,6 +408,10 @@ public:
    virtual osStatus unlock() {
       return mutex.release();
    }
+#endif
+
+public:
+   virtual ~Spi_T() {}
 
    virtual void enablePins() {
       // Configure SPI pins
@@ -475,6 +480,12 @@ public:
    }
 
 };
+
+#ifdef __CMSIS_RTOS
+/** Mutex to protect access - static so per SPI */
+template<class Info>
+CMSIS::Mutex Spi_T<Info>::mutex;
+#endif
 
 #if defined(USBDM_SPI0_IS_DEFINED)
 /**
