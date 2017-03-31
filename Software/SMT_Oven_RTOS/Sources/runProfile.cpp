@@ -138,36 +138,42 @@ static void handler(const void *) {
       ambient  = currentTemperature;   // Use starting temperature as ambient reference
       time     = 0;
       setpoint = ambient;
+      pid.setTunings(pidKp, pidKi, pidKd);
       pid.setSetpoint(ambient);
       pid.enable();
       state    = s_preheat;
+
+      // Calculate timeout for preheat ramp (10% over)
+      timeout = (int)round(1.1*(currentProfile->soakTemp1-setpoint)/currentProfile->ramp1Slope);
       // no break
    case s_preheat:
       /*
        * Heat from ambient to start of soak temperature
-       * Will wait until reached T~soakTemp1 with 50s timeout
+       * Will wait until reached T~soakTemp1 with 20s timeout
        *
        * Ambient -> soakTemp1 @ ramp1Slope
        */
+      // Check timeout
+      if (--timeout<0) {
+         state = s_fail;
+      }
       if (setpoint<currentProfile->soakTemp1) {
-         // Follow profile
+         // Still following profile
          setpoint += currentProfile->ramp1Slope;
          pid.setSetpoint(setpoint);
-         timeout = 0;
       }
       else {
          // Reached end of profile
-         // Move on if reached soak temperature or been nearly there for a while
+         // Move on if reached soak temperature or been nearly there for 5s
+         // This allows for tolerances in the PID controller
          if ((currentTemperature>=currentProfile->soakTemp1) ||
                ((timeout>5)&&(currentTemperature>=(currentProfile->soakTemp1-DELTA)))) {
             // Reach soak temperature - move on
             state = s_soak;
             startOfSoakTime = time;
-         }
-         // Do timeout
-         timeout++;
-         if (timeout>50) {
-            state = s_fail;
+
+            // Calculate timeout for soak ramp (10% over)
+            timeout = (int)round(1.1*currentProfile->soakTime);
          }
       }
       break;
@@ -178,11 +184,14 @@ static void handler(const void *) {
        *
        * soakTemp1 -> soakTemp2 over soakTime time
        */
+      // Check timeout
+      if (--timeout<0) {
+         state = s_fail;
+      }
       if (setpoint<currentProfile->soakTemp2) {
          // Follow profile
          setpoint = currentProfile->soakTemp1 + (time-startOfSoakTime)*(currentProfile->soakTemp2-currentProfile->soakTemp1)/currentProfile->soakTime;
          pid.setSetpoint(setpoint);
-         timeout = 0;
       }
       if (time >= (startOfSoakTime+currentProfile->soakTime)) {
          // Reached end of soak time
@@ -191,23 +200,23 @@ static void handler(const void *) {
                ((timeout>5)&&(currentTemperature>=(currentProfile->soakTemp2-DELTA)))) {
             // Reach soak temperature 2 - move on
             state = s_ramp_up;
-         }
-         else {
-            // Reached end soak time - do timeout
-            timeout++;
-            if (timeout>40) {
-               state = s_fail;
-            }
+
+            // Calculate timeout for ramp up to peak ramp (10% over)
+            timeout = (int)round(1.1*(currentProfile->peakTemp-setpoint)/currentProfile->ramp2Slope);
          }
       }
       break;
    case s_ramp_up:
       /*
        * Heat from soak end temperature to peak at rampUp rate
-       * Will wait until reached T~peakTemp with 40s timeout
+       * Will wait until reached T~peakTemp with timeout
        *
        * soakTemp2 -> peakTemp @ ramp2Slope
        */
+      // Check timeout
+      if (--timeout<0) {
+         state = s_fail;
+      }
       if (setpoint < currentProfile->peakTemp) {
          setpoint += currentProfile->ramp2Slope;
          pid.setSetpoint(setpoint);
@@ -235,9 +244,9 @@ static void handler(const void *) {
       }
       break;
    case s_ramp_down:
-      /* Ramp down at rampDown rate
+      /* Ramp down at rampDown rate without timeout
        *
-       * peakTemp -> 50 @ rampDown
+       * peakTemp -> ambient @ rampDown
        */
       if (setpoint > ambient) {
          setpoint += currentProfile->rampDownSlope;
@@ -557,6 +566,7 @@ void manualMode() {
          else {
             // Turn on heater
             state = s_manual;
+            pid.setTunings(pidKp, pidKi, pidKd);
             pid.enable(true);
             // PID will control fan+heater
          }
