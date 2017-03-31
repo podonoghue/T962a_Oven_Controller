@@ -128,24 +128,32 @@ DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.GTO
 DItemRevisionGUID=
 
 [GeneratedDocument11]
-DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.GTS
+DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.GTP
 DItemRevisionGUID=
 
 [GeneratedDocument12]
-DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.LDP
+DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.GTS
 DItemRevisionGUID=
 
 [GeneratedDocument13]
-DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.REP
+DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.LDP
 DItemRevisionGUID=
 
 [GeneratedDocument14]
-DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.RUL
+DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.REP
 DItemRevisionGUID=
 
 [GeneratedDocument15]
+DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.RUL
+DItemRevisionGUID=
+
+[GeneratedDocument16]
 DocumentPath=Project Outputs for T962a_Panel\T962a_Panel.TXT
 DItemRevisionGUID=
+
+[Parameter1]
+Name=ProjectRevision
+Value=V1.2
 
 [Configuration1]
 Name=Default Configuration
