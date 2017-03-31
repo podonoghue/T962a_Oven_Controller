@@ -307,7 +307,7 @@ protected:
     * Set callback for user callback\n
     * This function is called whenever the 'user' code needs to be notified of an event
     *
-    *  @param event Reason for callback
+    *  @param callback User callback function
     */
    static void setUserCallback(UserCallbackFunction callback) {
       userCallbackFunction = callback;
