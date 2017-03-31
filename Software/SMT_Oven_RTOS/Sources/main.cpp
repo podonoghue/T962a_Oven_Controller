@@ -87,7 +87,7 @@ void initialise() {
 }
 
 int main() {
-   PRINTF("Starting\n");
+//   PRINTF("Starting\n");
    initialise();
 
    USBDM::mapAllPins();
