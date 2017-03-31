@@ -24,13 +24,6 @@ ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl(fan
 SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons;
 
 /**
- * PID controller parameters
- */
-static constexpr float kp = 20.0;   //4.0f; // 20.0
-static constexpr float ki =  0.016; //0.0f; //  0.016
-static constexpr float kd = 62.5;   //0.0f; // 62.5
-
-/**
  * Set output controlling oven
  *
  * @param dutyCycle Controls the Heater/Fan
@@ -66,7 +59,7 @@ float getTemperature() {
 }
 
 /** PID controller */
-Pid_T<getTemperature, outPutControl> pid(kp, ki, kd, pidInterval, -100, 100);
+Pid_T<getTemperature, outPutControl> pid(pidKp, pidKp, pidKp, pidInterval, -100, 100);
 
 /** Thermocouples */
 TemperatureSensors temperatureSensors;

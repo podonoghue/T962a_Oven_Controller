@@ -55,14 +55,27 @@ Nonvolatile<int> fanKickTime;
 __attribute__ ((section(".flexRAM")))
 Nonvolatile<int> maxHeaterTime;
 
-extern const Setting fanSetting;
-extern const Setting kickSetting;
-extern const Setting heaterSetting;
-extern const Setting thermo1Setting;
-extern const Setting thermo2Setting;
-extern const Setting thermo3Setting;
-extern const Setting thermo4Setting;
-extern const Setting beepSetting;
+__attribute__ ((section(".flexRAM")))
+USBDM::Nonvolatile<float> pidKp;
+
+__attribute__ ((section(".flexRAM")))
+USBDM::Nonvolatile<float> pidKi;
+
+__attribute__ ((section(".flexRAM")))
+USBDM::Nonvolatile<float> pidKd;
+
+extern const Setting_T<int> fanSetting;
+extern const Setting_T<int> kickSetting;
+extern const Setting_T<int> heaterSetting;
+extern const Setting_T<int> thermo1Setting;
+extern const Setting_T<int> thermo2Setting;
+extern const Setting_T<int> thermo3Setting;
+extern const Setting_T<int> thermo4Setting;
+extern const Setting_T<int> beepSetting;
+
+extern const Setting_T<float> pidKpSetting;
+extern const Setting_T<float> pidKiSetting;
+extern const Setting_T<float> pidKdSetting;
 
 /**
  * Constructor - initialises the non-volatile storage\n
@@ -92,18 +105,25 @@ void Settings::initialiseSettings() {
    for (;i<(sizeof(profiles)/sizeof(profiles[0]));i++) {
       profiles[i] = defaultProfile;
    }
-   minimumFanSpeed = fanSetting.defaultValue;
-   fanKickTime     = kickSetting.defaultValue;
-   t1Offset        = thermo1Setting.defaultValue;
-   t2Offset        = thermo2Setting.defaultValue;
-   t3Offset        = thermo3Setting.defaultValue;
-   t4Offset        = thermo4Setting.defaultValue;
+   minimumFanSpeed = fanSetting.getDefaultValue();
+   fanKickTime     = kickSetting.getDefaultValue();
+   t1Offset        = thermo1Setting.getDefaultValue();
+   t2Offset        = thermo2Setting.getDefaultValue();
+   t3Offset        = thermo3Setting.getDefaultValue();
+   t4Offset        = thermo4Setting.getDefaultValue();
    t1Enable        = true;
    t2Enable        = true;
    t3Enable        = true;
    t4Enable        = true;
-   beepTime        = beepSetting.defaultValue;
-   maxHeaterTime   = heaterSetting.defaultValue;
+   beepTime        = beepSetting.getDefaultValue();
+   maxHeaterTime   = heaterSetting.getDefaultValue();
+
+   /**
+    * PID controller parameters
+    */
+   pidKp           = pidKpSetting.getDefaultValue(); //20.0;   //4.0f; // 20.0
+   pidKi           = pidKiSetting.getDefaultValue(); //0.016;  //0.0f; //  0.016
+   pidKd           = pidKdSetting.getDefaultValue(); //62.5;   //0.0f; // 62.5
 
    profileIndex    = 0;
 }
@@ -168,7 +188,7 @@ public:
     * Test Fan operation
     */
    static void testFan(const Setting *setting) {
-      bool kickMode = setting == &kickSetting;
+      bool kickMode = (setting == &kickSetting);
       bool changed = true;
       for(;;) {
          bool motorOn = ovenControl.getFanDutycycle()>0;
@@ -239,17 +259,20 @@ public:
 /**
  * Describes the various settings for the menu
  * Also controls range and default values etc.
- *
- *                              NV variable       Description                 Min  Max  Inc  Default   Test function
  */
-const Setting fanSetting     = {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   30,      FanTest::testFan};
-const Setting kickSetting    = {fanKickTime,     "Fan Kick Cycles  %3d",       0,   50,  1,   10,      FanTest::testFan};
-const Setting thermo1Setting = {t1Offset,        "Thermo 1 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting thermo2Setting = {t2Offset,        "Thermo 2 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting thermo3Setting = {t3Offset,        "Thermo 3 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting thermo4Setting = {t4Offset,        "Thermo 4 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting heaterSetting  = {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 600,       nullptr};
-const Setting beepSetting    = {beepTime,        "Beep time        %3ds",      0,   30,  1,   0,       Settings::testBeep};
+//                                      nvVariable        description                min   max  incr  default  test function
+const Setting_T<int> fanSetting      = {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   30,      FanTest::testFan};
+const Setting_T<int> kickSetting     = {fanKickTime,     "Fan Kick Cycles  %3d",       0,   50,  1,   10,      FanTest::testFan};
+const Setting_T<int> thermo1Setting  = {t1Offset,        "Thermo 1 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting_T<int> thermo2Setting  = {t2Offset,        "Thermo 2 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting_T<int> thermo3Setting  = {t3Offset,        "Thermo 3 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting_T<int> thermo4Setting  = {t4Offset,        "Thermo 4 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting_T<int> heaterSetting   = {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 600,       nullptr};
+const Setting_T<int> beepSetting     = {beepTime,        "Beep time        %3ds",      0,   30,  1,   0,       Settings::testBeep};
+
+const Setting_T<float> pidKpSetting  = {pidKp,           "PID Kp      %6.1f",        0.5,  40.00,  0.1,  20.0f,   nullptr};
+const Setting_T<float> pidKiSetting  = {pidKi,           "PID Ki        %6.3f",      0.0,   1.00,  0.001, 0.016f, nullptr};
+const Setting_T<float> pidKdSetting  = {pidKd,           "PID Kd      %6.1f",        0.0, 200.00,  0.1,  62.5f,   nullptr};
 
 /**
  * Describes the settings and limits for same
@@ -263,6 +286,9 @@ static const Setting * const menu[] = {
       &thermo4Setting,
       &heaterSetting,
       &beepSetting,
+      &pidKpSetting,
+      &pidKiSetting,
+      &pidKdSetting,
 };
 
 static constexpr int NUM_ITEMS         = sizeof(menu)/sizeof(menu[0]);
@@ -290,7 +316,7 @@ void Settings::drawScreen() {
       }
       lcd.setInversion(item == selection);
       lcd.gotoXY(0, (item+1-offset)*lcd.FONT_HEIGHT);
-      lcd.printf(menu[item]->getDescription(), menu[item]->get());
+      lcd.putString(menu[item]->getDescription());
    }
    lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
    lcd.setInversion(true);  lcd.putString(" ");      lcd.putUpArrow();   lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(5);

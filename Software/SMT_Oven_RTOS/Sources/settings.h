@@ -51,41 +51,109 @@ extern USBDM::Nonvolatile<int> profileIndex;
 /** Maximum on time for heater in manual mode */
 extern USBDM::Nonvolatile<int> maxHeaterTime;
 
+/** PID controller parameter - proportional */
+extern USBDM::Nonvolatile<float> pidKp;
+
+/** PID controller parameters - integral */
+extern USBDM::Nonvolatile<float> pidKi;
+
+/** PID controller parameters - differential */
+extern USBDM::Nonvolatile<float> pidKd;
+
+class Setting {
+
+protected:
+   static constexpr int BUF_SIZE = 30;
+
+   /**
+    * Gets pointer to static buffer
+    */
+   static char *getBuff() {
+      static char buff[BUF_SIZE];
+      return buff;
+   }
+
+public:
+   Setting() {
+   }
+   virtual ~Setting() {}
+
+   /**
+    * Get description of variable including value
+    *
+    * @return Description
+    */
+   virtual const char* getDescription() const = 0;
+
+   /**
+    * Increment variable
+    *
+    * @note limits are applied
+    */
+   virtual void increment() const = 0;
+
+   /**
+    * Increment variable
+    *
+    * @note limits are applied
+    */
+   virtual void decrement() const  = 0;
+
+   /**
+    * Reset variable to default value
+    */
+   virtual void reset() const  = 0;
+
+   /**
+    * Carry out action associated with variable\n
+    * e.g. Sound beeper
+    */
+   virtual void action() const  = 0;
+};
+
 /**
  * Class to hold information about how to modify a non-volatile setting
  */
-class Setting {
-public:
+template<typename T>
+class Setting_T : public Setting {
+
+protected:
+
    /** Associated non-volatile variable */
-   USBDM::Nonvolatile<int> &nvVariable;
+   USBDM::Nonvolatile<T> &nvVariable;
 
    /** Description of variable */
    const char *description;
 
    /** Minimum allowed value */
-   const int min;
+   const T min;
 
    /** Maximum allowed value */
-   const int max;
+   const T max;
 
-   /** Increment to use when changing value */
-   const int incr;
+   /** Increment/decrement to use when changing value */
+   const T delta;
 
    /** Default value used when resetting variable */
-   const int defaultValue;
+   const T defaultValue;
 
    /** Function called to test function associated with variable */
    void (*func)(const Setting *setting);
 
 public:
 
-   /*
-    * Get variable value
+   Setting_T(USBDM::Nonvolatile<T> &nvVariable, const char *desc, T min, T max, T delta, T defaultValue, void (*func)(const Setting *setting) ) :
+      nvVariable(nvVariable), description(desc), min(min), max(max), delta(delta), defaultValue(defaultValue), func(func)
+   {}
+
+   /**
+    * Get description of variable including value
     *
-    * @return Value as integer
+    * @return Description
     */
-   int get() const {
-      return nvVariable;
+   virtual const char* getDescription() const {
+      snprintf(getBuff(), BUF_SIZE, description, (T)nvVariable);
+      return getBuff();
    }
 
    /**
@@ -93,11 +161,9 @@ public:
     *
     * @param value Value to set
     *
-    * @return Value forced to valid range
-    *
     * @note limits are applied
     */
-   int set(int value) const {
+   void set(T value) const {
       if (value < min) {
          value = min;
       }
@@ -108,57 +174,50 @@ public:
          // Only update if actually changed (to avoid unnecessary EEPROM update)
          this->nvVariable = value;
       }
-      return nvVariable;
    }
 
    /**
     * Increment variable
     *
-    * @return Modified value
-    *
     * @note limits are applied
     */
-   int increment() const {
-      return set(nvVariable + incr);
+   void increment() const override {
+      set(nvVariable + delta);
    }
 
    /**
     * Increment variable
     *
-    * @return Modified value
-    *
     * @note limits are applied
     */
-   int decrement() const {
-      return set(nvVariable - incr);
+   void decrement() const override {
+      set(nvVariable - delta);
    }
 
    /**
     * Reset variable to default value
-    *
-    * @return Modified value
     */
-   int reset() const {
-      return set(defaultValue);
+   void reset() const override {
+      set(defaultValue);
    }
 
    /**
-    * Get description of variable
-    *
-    * @return Description
-    */
-   const char* getDescription() const {
-      return description;
-   }
-
-   /**
-    * Carry out action associated with variable\n
+    * Carry out action associated with variable (if any)\n
     * e.g. Sound beeper
     */
-   void action() const {
+   void action() const override {
       if (func != nullptr) {
          func(this);
       }
+   }
+
+   /**
+    * Get default value
+    *
+    * @return Default value
+    */
+   T getDefaultValue() const {
+      return defaultValue;
    }
 };
 

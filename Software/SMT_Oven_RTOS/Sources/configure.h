@@ -162,7 +162,7 @@ public:
     * Button press is consumed.
     */
    static void play() {
-      high();
+//      high();
       USBDM::wait(beepTime, [](){ return buttons.getButton() != SwitchValue::SW_NONE; });
       low();
    }
