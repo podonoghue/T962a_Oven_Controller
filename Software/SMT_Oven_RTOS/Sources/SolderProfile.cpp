@@ -7,7 +7,7 @@
  * https://github.com/UnifiedEngineering/T-962-improvements
  *
  */
-#include <solderProfiles.h>
+#include <SolderProfile.h>
 
 /**
  * Assignment from NvSolderProfile

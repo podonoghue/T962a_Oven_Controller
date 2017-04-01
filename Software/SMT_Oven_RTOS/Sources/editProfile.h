@@ -9,7 +9,7 @@
 #ifndef SOURCES_EDITPROFILE_H_
 #define SOURCES_EDITPROFILE_H_
 
-#include <solderProfiles.h>
+#include <SolderProfile.h>
 
 class ProfileSetting {
 public:

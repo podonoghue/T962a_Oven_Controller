@@ -1,13 +1,13 @@
 /**
- * @file    switch_debouncer.h
+ * @file    SwitchDebouncer.h
  * @brief   Switch Debouncer
  *
  *  Created on: 24 Sep 2016
  *      Author: podonoghue
  */
 
-#ifndef SOURCES_SWITCH_DEBOUNCER_H_
-#define SOURCES_SWITCH_DEBOUNCER_H_
+#ifndef SOURCES_SWITCHDEBOUNCER_H_
+#define SOURCES_SWITCHDEBOUNCER_H_
 
 #include "cmsis.h"
 
@@ -33,10 +33,10 @@ private:
 
 public:
    /**
-    * Cast to int\n
+    * Cast to integer\n
     * @note Removes SW_REPEATING flag
     *
-    * @return Value converted to int
+    * @return Value converted to integer
     */
    operator int() const {
       return (int)fValue&~SW_REPEATING;
@@ -107,6 +107,7 @@ private:
     * Interval for switch scanning
     */
    static constexpr int TICK_INTERVAL = 10; // ms
+
    /**
     * Time to debounce the switch (in TICK_INTERVAL)
     * Longer than about 100 ms is a perceptible delay
@@ -141,6 +142,7 @@ private:
             (sel::read()?SwitchValue::SW_S:0);
 
       if ((snapshot != 0) && (snapshot == lastSnapshot)) {
+         // Keys pressed and unchanged
          debounceCount++;
          if (debounceCount == DEBOUNCE_THRESHOLD) {
             // Consider de-bounced
@@ -150,10 +152,12 @@ private:
                ((debounceCount % REPEAT_PERIOD) == 0) &&
                ((snapshot&SwitchValue::SW_S) == 0)) {
             // Pressed and held - auto-repeat
+            // Note - S Key does not repeat
             keyQueue.put(SwitchValue(snapshot).setRepeating(), 0);
          }
       }
       else {
+         // Restart debounce time
          debounceCount = 0;
       }
       lastSnapshot  = snapshot;
@@ -170,7 +174,7 @@ private:
     *
     * @param waitInMilliseconds How long to wait for key
     *
-    * @return Key value or SW_NONE is none available before timeout
+    * @return Key value or SW_NONE if none available before timeout
     */
    static SwitchValue deQueue(uint32_t waitInMilliseconds) {
       osEvent event = keyQueue.get(waitInMilliseconds);
@@ -247,4 +251,4 @@ volatile SwitchValue SwitchDebouncer<f1, f2, f3, f4, sel>::switchNum;
 template<typename f1, typename f2, typename f3, typename f4, typename sel>
 SwitchValue SwitchDebouncer<f1, f2, f3, f4, sel>::lookaheadKey;
 
-#endif /* SOURCES_SWITCH_DEBOUNCER_H_ */
+#endif /* SOURCES_SWITCHDEBOUNCER_H_ */

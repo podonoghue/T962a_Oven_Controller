@@ -6,12 +6,12 @@
  *      Author: podonoghue
  */
 
-#ifndef SOURCES_SOLDERPROFILES_H_
-#define SOURCES_SOLDERPROFILES_H_
+#ifndef SOURCES_SOLDERPROFILE_H_
+#define SOURCES_SOLDERPROFILE_H_
 
+#include <Flash.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <flash.h>
 #include <string.h>
 
 enum {
@@ -137,4 +137,4 @@ constexpr unsigned MAX_PROFILES = 10;
 /** The actual profile in nonvolatile memory */
 extern NvSolderProfile profiles[MAX_PROFILES];
 
-#endif /* SOURCES_SOLDERPROFILES_H_ */
+#endif /* SOURCES_SOLDERPROFILE_H_ */

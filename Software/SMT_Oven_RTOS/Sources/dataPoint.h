@@ -9,8 +9,8 @@
 #define SOURCES_DATAPOINT_H_
 
 #include <math.h>
+#include <Max31855.h>
 #include <stdint.h>
-#include "max31855.h"
 
 enum State {
    s_off,

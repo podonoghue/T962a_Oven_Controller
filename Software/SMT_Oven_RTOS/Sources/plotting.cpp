@@ -9,7 +9,7 @@
 
 #include <algorithm>    // std::max
 #include <plotting.h>
-#include <temperaturePlot.h>
+#include <TemperaturePlot.h>
 #include "lcd_st7920.h"
 #include "configure.h"
 

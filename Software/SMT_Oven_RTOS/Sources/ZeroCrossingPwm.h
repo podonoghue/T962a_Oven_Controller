@@ -6,10 +6,10 @@
  *      Author: podonoghue
  */
 
-#ifndef SOURCES_ZEROCROSSING_PWM_H_
-#define SOURCES_ZEROCROSSING_PWM_H_
+#ifndef SOURCES_ZEROCROSSINGPWM_H_
+#define SOURCES_ZEROCROSSINGPWM_H_
 
-#include "flash.h"
+#include <Flash.h>
 
 /**
  * Simple zero-crossing PWM for oven fan and heater controlled by a zero-crossing SSDs
@@ -172,4 +172,4 @@ int  ZeroCrossingPwm<Heater, HeaterLed, Fan, FanLed, Vmains>::fanDutycycle = 0;
 template<typename Heater, typename HeaterLed, typename Fan, typename FanLed, typename Vmains>
 int  ZeroCrossingPwm<Heater, HeaterLed, Fan, FanLed, Vmains>::fanKick = 0;
 
-#endif /* SOURCES_ZEROCROSSING_PWM_H_ */
+#endif /* SOURCES_ZEROCROSSINGPWM_H_ */

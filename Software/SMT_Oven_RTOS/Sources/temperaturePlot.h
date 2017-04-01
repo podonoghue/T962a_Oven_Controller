@@ -10,9 +10,9 @@
 
 #include <dataPoint.h>
 #include <math.h>
+#include <Max31855.h>
 #include <algorithm>    // std::max
 
-#include "max31855.h"
 
 /**
  * Represents an entire plot of a profile and profile run

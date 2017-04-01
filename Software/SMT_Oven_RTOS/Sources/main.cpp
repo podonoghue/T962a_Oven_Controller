@@ -7,6 +7,7 @@
  *      Author: podonoghue
  ============================================================================
  */
+#include <EditProfile.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -21,7 +22,6 @@
 #include "pid.h"
 #include "settings.h"
 #include "messageBox.h"
-#include "editProfile.h"
 #include "mainMenu.h"
 #include "usb.h"
 #include "utilities.h"
@@ -97,7 +97,7 @@ int main() {
       lcd.clear();
       lcd.printf("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
       lcd.putString(buff);
-      PRINTF("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
+//      PRINTF("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
    }
 
    USBDM::Usb0::initialise();

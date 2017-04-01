@@ -9,8 +9,8 @@
 #define SOURCES_TEMPERATURESENSORS_H_
 
 #include <dataPoint.h>
+#include <Max31855.h>
 #include "cmsis.h"
-#include "max31855.h"
 
 class TemperatureSensors {
 

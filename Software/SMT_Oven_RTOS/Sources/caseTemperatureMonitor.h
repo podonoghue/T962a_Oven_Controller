@@ -9,9 +9,9 @@
 #ifndef SOURCES_CASETEMPERATUREMONITOR_CPP_
 #define SOURCES_CASETEMPERATUREMONITOR_CPP_
 
+#include <Max31855.h>
+#include <TemperatureSensors.h>
 #include "cmsis.h"
-#include "max31855.h"
-#include "temperatureSensors.h"
 
 /**
  * Monitor for case temperature \n

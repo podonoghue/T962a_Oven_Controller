@@ -5,6 +5,7 @@
  *  Created on: 10/1/2016
  *      Author: podonoghue
  */
+#include <Flash.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -13,7 +14,6 @@
 #include "hardware.h"
 #include "delay.h"
 
-#include "Flash.h"
 
 namespace USBDM {
 

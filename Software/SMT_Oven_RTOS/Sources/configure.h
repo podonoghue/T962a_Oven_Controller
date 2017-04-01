@@ -9,8 +9,11 @@
 #ifndef SOURCES_CONFIGURE_H_
 #define SOURCES_CONFIGURE_H_
 
-#include <solderProfiles.h>
+#include <Max31855.h>
 #include <string.h>
+#include <SolderProfile.h>
+#include <SwitchDebouncer.h>
+#include <ZeroCrossingPwm.h>
 
 #include "derivative.h"
 #include "hardware.h"
@@ -18,11 +21,8 @@
 #include "delay.h"
 #include "spi.h"
 #include "lcd_st7920.h"
-#include "max31855.h"
 #include "fonts.h"
 #include "pid.h"
-#include "zerocrossing_pwm.h"
-#include "switch_debouncer.h"
 #include "settings.h"
 #include "runProfile.h"
 
@@ -176,13 +176,13 @@ extern void outPutControl(float dutyCycle);
 /**
  * Thermocouples
  */
-#include "temperatureSensors.h"
+#include <TemperatureSensors.h>
 extern TemperatureSensors temperatureSensors;
 
 /**
  * Monitor case temperature
  */
-#include "caseTemperatureMonitor.h"
+#include <CaseTemperatureMonitor.h>
 extern CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor;
 
 /**

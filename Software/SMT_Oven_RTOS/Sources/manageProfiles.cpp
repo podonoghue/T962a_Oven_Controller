@@ -6,11 +6,11 @@
  */
 
 #include <copyProfile.h>
+#include <EditProfile.h>
 #include <manageProfiles.h>
 #include <plotting.h>
 #include "lcd_st7920.h"
 #include "configure.h"
-#include "editProfile.h"
 
 namespace ManageProfiles {
 

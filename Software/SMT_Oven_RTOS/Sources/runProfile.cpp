@@ -8,17 +8,17 @@
 
 #include <copyProfile.h>
 #include <dataPoint.h>
+#include <EditProfile.h>
 #include <math.h>
 #include <plotting.h>
 #include <reporter.h>
 #include <RemoteInterface.h>
+#include <SolderProfile.h>
 
-#include "solderProfiles.h"
 #include "hardware.h"
 #include "cmsis.h"
 #include "configure.h"
 #include "messageBox.h"
-#include "editProfile.h"
 
 using namespace USBDM;
 using namespace std;

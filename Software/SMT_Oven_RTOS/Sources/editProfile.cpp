@@ -6,8 +6,8 @@
  *      Author: podonoghue
  */
 
+#include <EditProfile.h>
 #include "configure.h"
-#include "editProfile.h"
 #include "messageBox.h"
 
 template<typename T> char ProfileSetting_T<T>::buff[];

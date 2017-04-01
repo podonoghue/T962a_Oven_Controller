@@ -10,7 +10,7 @@
 #ifndef SOURCES_PLOTTING_H_
 #define SOURCES_PLOTTING_H_
 
-#include <temperaturePlot.h>
+#include <TemperaturePlot.h>
 
 /**
  * Functions associated with drawing profiles and related

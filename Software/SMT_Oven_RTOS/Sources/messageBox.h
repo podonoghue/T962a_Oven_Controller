@@ -9,7 +9,7 @@
 #ifndef SOURCES_MESSAGEBOX_H_
 #define SOURCES_MESSAGEBOX_H_
 
-#include "switch_debouncer.h"
+#include "SwitchDebouncer.h"
 
 enum MessageBoxSelection {MSG_OK, MSG_OK_CANCEL, MSG_YES_NO, MSG_YES_NO_CANCEL};
 enum MessageBoxResult    {MSG_IS_OK, MSG_IS_CANCEL, MSG_IS_YES, MSG_IS_NO};
@@ -25,7 +25,7 @@ enum MessageBoxResult    {MSG_IS_OK, MSG_IS_CANCEL, MSG_IS_YES, MSG_IS_NO};
  *
  * @return Value reflecting key pressed
  */
-extern MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSelection selection=MSG_OK);
+MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSelection selection=MSG_OK);
 
 /**
  * Checks if thermocouples are present and enabled\n

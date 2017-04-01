@@ -9,8 +9,8 @@
 #ifndef SOURCES_SETTINGS_H_
 #define SOURCES_SETTINGS_H_
 
-#include <solderProfiles.h>
-#include "flash.h"
+#include <Flash.h>
+#include <SolderProfile.h>
 
 /** Length of beep in seconds */
 extern USBDM::Nonvolatile<int> beepTime;

@@ -6,11 +6,11 @@
  *      Author: podonoghue
  */
 
+#include <EditProfile.h>
 #include <manageProfiles.h>
-#include <solderProfiles.h>
+#include <SolderProfile.h>
 #include "configure.h"
 #include "mainMenu.h"
-#include "editProfile.h"
 #include "settings.h"
 #include "messageBox.h"
 
