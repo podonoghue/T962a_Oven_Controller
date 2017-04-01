@@ -8,9 +8,9 @@
 #ifndef SOURCES_REMOTEINTERFACE_H_
 #define SOURCES_REMOTEINTERFACE_H_
 
+#include <usb_cdc_interface.h>
 #include <algorithm>
 #include "cmsis.h"
-#include "CDCInterface.h"
 #include "plotting.h"
 #include "reporter.h"
 

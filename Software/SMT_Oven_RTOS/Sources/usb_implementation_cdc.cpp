@@ -10,7 +10,6 @@
  */
 #include <string.h>
 
-#include "cmsis.h"
 #include "usb.h"
 #include "usb_implementation_cdc.h"
 
@@ -184,8 +183,10 @@ const Usb0::Descriptors Usb0::otherDescriptors = {
 
 /** In end-point for CDC notifications */
 InEndpoint  <Usb0Info, Usb0::CDC_NOTIFICATION_ENDPOINT, CDC_NOTIFICATION_EP_MAXSIZE>  Usb0::epCdcNotification;
+
 /** Out end-point for CDC data out */
 OutEndpoint <Usb0Info, Usb0::CDC_DATA_OUT_ENDPOINT,     CDC_DATA_OUT_EP_MAXSIZE>      Usb0::epCdcDataOut;
+
 /** In end-point for CDC data in */
 InEndpoint  <Usb0Info, Usb0::CDC_DATA_IN_ENDPOINT,      CDC_DATA_IN_EP_MAXSIZE>       Usb0::epCdcDataIn;
 /*
@@ -339,7 +340,7 @@ void Usb0::cdcInTransactionCallback(EndpointState state) {
          // Free last buffer as transfer is now complete
          RemoteInterface::freeResponseBuffer(response);
       }
-      // Get up new message
+      // Set up new message
       response = RemoteInterface::getResponse();
       if (response == nullptr) {
          // No messages waiting
@@ -378,7 +379,7 @@ void Usb0::initialise() {
    setSOFCallback(sofCallback);
 
    cdcInterface::initialise();
-   cdcInterface::setUsbNotifyCallback(notify);
+   cdcInterface::setUsbInNotifyCallback(notify);
    response = nullptr;
 }
 

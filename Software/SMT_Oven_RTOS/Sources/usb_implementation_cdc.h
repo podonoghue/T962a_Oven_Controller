@@ -8,8 +8,8 @@
  *  This file provides the implementation specific code for the USB interface.
  *  It will need to be modified to suit an application.
  */
-#ifndef PROJECT_HEADERS_USB_IMPLEMENTATION_H_
-#define PROJECT_HEADERS_USB_IMPLEMENTATION_H_
+#ifndef PROJECT_HEADERS_USB_IMPLEMENTATION_CDC_H_
+#define PROJECT_HEADERS_USB_IMPLEMENTATION_CDC_H_
 
 /*
  * Under Windows 8, or 10 there is no need to install a driver for
@@ -245,7 +245,8 @@ protected:
       // Start CDC status transmission
       epCdcSendNotification();
 
-      cdcInterface::setUsbNotifyCallback(notify);
+      // Connect notify callback
+      cdcInterface::setUsbInNotifyCallback(notify);
       /*
        * TODO Initialise additional End-points here
        */
@@ -327,4 +328,4 @@ using UsbImplementation = Usb0;
 
 } // End namespace USBDM
 
-#endif /* PROJECT_HEADERS_USB_IMPLEMENTATION_H_ */
+#endif /* PROJECT_HEADERS_USB_IMPLEMENTATION_CDC_H_ */

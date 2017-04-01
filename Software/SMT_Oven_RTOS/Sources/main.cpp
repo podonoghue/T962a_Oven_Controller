@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <usb_cdc_interface.h>
 #include "cmsis.h"
 #include "system.h"
 #include "derivative.h"
@@ -25,7 +26,6 @@
 #include "mainMenu.h"
 #include "usb.h"
 #include "utilities.h"
-#include "CDCInterface.h"
 
 class profilesMenu {
 

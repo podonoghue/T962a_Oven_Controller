@@ -14,7 +14,6 @@
 #include "hardware.h"
 #include "delay.h"
 
-
 namespace USBDM {
 
 // Flash commands

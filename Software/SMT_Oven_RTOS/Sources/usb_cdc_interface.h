@@ -1,18 +1,22 @@
 /**
- * @file CDCInterface.h
+ * @file     usb_cdc_interface.h
+ * @brief    USB-CDC interface
  *
- *  Created on: 26Feb.,2017
- *      Author: podonoghue
+ * @version  V4.12.1.80
+ * @date     13 April 2016
  */
 
-#ifndef SOURCES_CDCINTERFACE_H_
-#define SOURCES_CDCINTERFACE_H_
+#ifndef SOURCES_USB_CDC_INTERFACE_H_
+#define SOURCES_USB_CDC_INTERFACE_H_
 
 #include <stdint.h>
 #include <string.h>
 #include "usb_defs.h"
 
+namespace USBDM {
+
 class CDC_Interface {
+
 private:
    static constexpr uint8_t CDC_STATE_DCD_MASK        = 1<<0;
    static constexpr uint8_t CDC_STATE_DSR_MASK        = 1<<1;
@@ -63,13 +67,14 @@ public:
    }
 
    /**
-    * Set USB notify notifyUsbInPtr function
+    * Set USB notify function
     *
     * @param cb The function to call to notify the USB In interface that new data is available
     */
    static void setUsbNotifyCallback(simpleCallbak cb) {
       notifyUsbInPtr() = cb;
    }
+
    /**
     * Get state of serial interface
     *
@@ -80,6 +85,7 @@ public:
       static constexpr CdcLineState state = {CDC_STATE_DCD_MASK|CDC_STATE_DSR_MASK};
       return state;
    }
+
    /**
     * Process data received from host
     *
@@ -92,6 +98,7 @@ public:
       (void)size;
       (void)buff;
    }
+
    /**
     * Get data to transmit to host
     *
@@ -150,6 +157,9 @@ public:
    static void sendBreak(uint16_t length) {
       (void)length;
    }
-};
 
-#endif /* SOURCES_CDCINTERFACE_H_ */
+}; // class CDC_interface
+
+}; // end namespace USBDM
+
+#endif /* SOURCES_USB_CDC_INTERFACE_H_ */
