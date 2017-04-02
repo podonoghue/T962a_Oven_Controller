@@ -1,9 +1,16 @@
 /**
  * @file     usb_implementation_cdc.cpp
- * @brief    USB Kinetis implementation
+ * @brief    USB CDC device implementation
  *
- * @version  V4.12.1.150
- * @date     13 Nov 2016
+ * This module provides an implementation of a USB Composite interface
+ * including the following end points:
+ *  - EP0 Standard control
+ *  - EP1 Interrupt CDC notification
+ *  - EP2 CDC data OUT
+ *  - EP3 CDC data IN
+ *
+ * @version  V4.12.1.170
+ * @date     2 April 2017
  *
  *  This file provides the implementation specific code for the USB interface.
  *  It will need to be modified to suit an application.

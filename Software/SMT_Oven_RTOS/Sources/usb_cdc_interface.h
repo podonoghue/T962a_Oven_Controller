@@ -2,6 +2,8 @@
  * @file     usb_cdc_interface.h
  * @brief    USB-CDC interface
  *
+ * This module handles the UART interface for USB CDC
+ *
  * @version  V4.12.1.80
  * @date     13 April 2016
  */

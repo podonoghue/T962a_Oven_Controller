@@ -1,9 +1,16 @@
 /**
  * @file     usb_implementation_cdc.h
- * @brief    USB Kinetis implementation
+ * @brief    USB CDC device implementation
  *
- * @version  V4.12.1.150
- * @date     13 Nov 2016
+ * This module provides an implementation of a USB Composite interface
+ * including the following end points:
+ *  - EP0 Standard control
+ *  - EP1 Interrupt CDC notification
+ *  - EP2 CDC data OUT
+ *  - EP3 CDC data IN
+ *
+ * @version  V4.12.1.170
+ * @date     2 April 2017
  *
  *  This file provides the implementation specific code for the USB interface.
  *  It will need to be modified to suit an application.
@@ -27,8 +34,6 @@
 #define UNIQUE_ID
 //#include "configure.h"
 
-#include "queue.h"
-
 namespace USBDM {
 
 //======================================================================
@@ -36,20 +41,20 @@ namespace USBDM {
 //
 
 /** Causes a semi-unique serial number to be generated for each USB device */
-#define UNIQUE_ID
+//#define UNIQUE_ID
 
-#define PRODUCT_DESCRIPTION   "SMT-Oven"
-#define MANUFACTURER          "pgo"
-
-#define VENDOR_ID             (0x16D0)    // Vendor (actually MCS)
-#define PRODUCT_ID            (0x8888)    // Product ID
-#define VERSION_ID            (1)         // Reported version (via USB)
 
 #ifdef UNIQUE_ID
 #define SERIAL_NO             "SMT-OVEN-%lu"
 #else
 #define SERIAL_NO             "SMT-OVEN-0001"
 #endif
+#define PRODUCT_DESCRIPTION   "SMT-Oven"
+#define MANUFACTURER          "pgo"
+
+#define VENDOR_ID             (0x16D0)    // Vendor (actually MCS)
+#define PRODUCT_ID            (0x8888)    // Product ID
+#define VERSION_ID            (1)         // Reported version (via USB)
 
 //======================================================================
 // Maximum packet sizes for each endpoint
@@ -147,8 +152,10 @@ protected:
    /* end-points */
    /** In end-point for CDC notifications */
    static InEndpoint  <Usb0Info, Usb0::CDC_NOTIFICATION_ENDPOINT, CDC_NOTIFICATION_EP_MAXSIZE>  epCdcNotification;
+   
    /** Out end-point for CDC data out */
    static OutEndpoint <Usb0Info, Usb0::CDC_DATA_OUT_ENDPOINT,     CDC_DATA_OUT_EP_MAXSIZE>      epCdcDataOut;
+   
    /** In end-point for CDC data in */
    static InEndpoint  <Usb0Info, Usb0::CDC_DATA_IN_ENDPOINT,      CDC_DATA_IN_EP_MAXSIZE>       epCdcDataIn;
    /*
