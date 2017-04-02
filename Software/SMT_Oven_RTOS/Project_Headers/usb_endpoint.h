@@ -542,7 +542,7 @@ public:
     * This stall is cleared on the next transmission
     */
    virtual void stall() {
-//      PRINTF("stall\n");
+      PRINTF("stall\n");
       // Stall Transmit only
       BdtEntry *bdt = txOdd?&endPointBdts[0].txOdd:&endPointBdts[0].txEven;
       bdt->u.bits = BDTEntry_OWN_MASK|BDTEntry_STALL_MASK|BDTEntry_DTS_MASK;

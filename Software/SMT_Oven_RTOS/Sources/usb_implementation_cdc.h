@@ -28,8 +28,8 @@
  *
  * Under Linux drivers for bulk and CDC are automatically loaded
  */
-#define MS_COMPATIBLE_ID_FEATURE
-#include <RemoteInterface.h>
+//#define MS_COMPATIBLE_ID_FEATURE
+#include "RemoteInterface.h"
 
 #define UNIQUE_ID
 //#include "configure.h"

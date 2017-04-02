@@ -666,31 +666,35 @@ const uint8_t UsbBase_T<Info, EP0_SIZE>::ms_osStringDescriptor[] = {
 };
 
 // UTF16LE strings
-#define MS_DEVICE_INTERFACE_GUIDs u"MS_DEVICE_INTERFACE_GUIDs"
-#define MS_DEVICE_GUID            u"{93FEBD51-6000-4E7E-A20E-A80FC78C7EA1}\0"
-#define MS_ICONS                  u"MS_ICONS"
-#define MS_ICON_PATH              u"\%SystemRoot\%\\system32\\SHELL32.dll,-4\0"
+#define MS_DEVICE_INTERFACE_GUIDs u"DeviceInterfaceGUIDs"
+#define MS_DEVICE_GUID            u"{93FEBD51-6000-4E7E-A20E-A80FC78C7EA1}"
+#define MS_ICONS                  u"Icons"
+#define MS_ICON_PATH              u"%SystemRoot%\\system32\\shell32.dll,-233"
 
+#pragma pack(push, 2)
 struct MS_PropertiesFeatureDescriptor {
+   /*----------------------- Header ------------------------------*/
    uint32_t lLength;                //!< Size of this Descriptor in Bytes
    uint16_t wVersion;               //!< Version
    uint16_t wIndex;                 //!< Index (must be 5)
    uint16_t bnumSections;           //!< Number of property sections
    /*---------------------- Section 1 -----------------------------*/
    uint32_t lPropertySize0;          //!< Size of property section
-   uint32_t ldataType0;              //!< Data type (1 = Unicode REG_SZ etc
+   uint32_t ldataType0;              //!< Data type 1 = Unicode REG_SZ etc
    uint16_t wNameLength0;            //!< Length of property name
    char16_t bName0[sizeof(MS_DEVICE_INTERFACE_GUIDs)/sizeof(MS_DEVICE_INTERFACE_GUIDs[0])];
    uint32_t wPropertyLength0;        //!< Length of property data
    char16_t bData0[sizeof(MS_DEVICE_GUID)/sizeof(MS_DEVICE_GUID[0])];
    /*---------------------- Section 2 -----------------------------*/
    uint32_t lPropertySize1;          //!< Size of property section
-   uint32_t ldataType1;              //!< Data type (1 = Unicode REG_SZ etc
+   uint32_t ldataType1;              //!< Data type 1 = Unicode REG_SZ etc
    uint16_t wNameLength1;            //!< Length of property name
    char16_t bName1[sizeof(MS_ICONS)/sizeof(MS_ICONS[0])];
    uint32_t wPropertyLength1;        //!< Length of property data
    char16_t bData1[sizeof(MS_ICON_PATH)/sizeof(MS_ICON_PATH[0])];
 };
+#pragma pack(pop)
+
 #endif
 
 extern const MS_CompatibleIdFeatureDescriptor msCompatibleIdFeatureDescriptor;
@@ -1100,7 +1104,7 @@ void UsbBase_T<Info, EP0_SIZE>::initialiseEndpoints() {
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleGetStatus() {
 
-   PRINTF("handleGetStatus()\n");
+//   PRINTF("handleGetStatus()\n");
 
    static const uint8_t        zeroReturn[]    = {0,0};
    static const EndpointStatus epStatusStalled = {1,0,0};

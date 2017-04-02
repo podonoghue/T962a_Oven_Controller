@@ -35,28 +35,6 @@ private:
 protected:
    using simpleCallbak = bool (*)();
 
-   /**
-    * Wrapper for initialised static variable
-    *
-    * @return Reference to notifyUsbIn function pointer
-    */
-   static simpleCallbak &notifyUsbInPtr() {
-      static simpleCallbak cb = nullptr;
-      return cb;
-   }
-
-   /**
-    * Wrapper for initialised static variable
-    *
-    * @return Reference to notifyUsbIn function pointer
-    */
-   static void notifyUsbIn() {
-      simpleCallbak cb = notifyUsbInPtr();
-      if (cb != nullptr) {
-         cb();
-      }
-   }
-
 protected:
    CDC_Interface() {}
    virtual ~CDC_Interface() {}
@@ -65,28 +43,21 @@ public:
    /**
     * Initialise class
     */
-   static void initialise() {
-   }
+   static void initialise();
 
    /**
     * Set USB notify function
     *
     * @param cb The function to call to notify the USB In interface that new data is available
     */
-   static void setUsbInNotifyCallback(simpleCallbak cb) {
-      notifyUsbInPtr() = cb;
-   }
+   static void setUsbInNotifyCallback(simpleCallbak cb);
 
    /**
     * Get state of serial interface
     *
     * @return Bit mask value
     */
-   static CdcLineState getSerialState() {
-      // Assume DCD & DSR
-      static constexpr CdcLineState state = {CDC_STATE_DCD_MASK|CDC_STATE_DSR_MASK};
-      return state;
-   }
+   static CdcLineState getSerialState();
 
    /**
     * Process data received from host
@@ -96,10 +67,7 @@ public:
     *
     * @note the Data is volatile so should be processed or saved immediately.
     */
-   static void putData(int size, const uint8_t *buff) {
-      (void)size;
-      (void)buff;
-   }
+   static void putData(int size, const uint8_t *buff);
 
    /**
     * Get data to transmit to host
@@ -109,21 +77,14 @@ public:
     *
     * @return Amount of data placed in buffer
     */
-   static int getData(int bufSize, uint8_t *buff) {
-      (void)bufSize;
-      (void)buff;
-      return 0;
-   }
+   static int getData(int bufSize, uint8_t *buff);
 
    /**
     *  Get CDC communication characteristics\n
     *
     *  @return lineCodingStructure - Static structure describing current settings
     */
-   static LineCodingStructure &getLineCoding() {
-      static LineCodingStructure currentLineCoding = {0, 0, 0, 0};
-      return currentLineCoding;
-   }
+   static LineCodingStructure const *getLineCoding();
 
 public:
    /**
@@ -131,19 +92,14 @@ public:
     *
     * @param lineCoding Line coding information
     */
-   static void setLineCoding(LineCodingStructure * const lineCoding) {
-      getLineCoding() = *lineCoding;
-   }
+   static void setLineCoding(LineCodingStructure * const lineCoding);
 
    /**
     *  Set CDC Line values
     *
     * @param value - Describes desired settings
     */
-   static void setControlLineState(uint8_t value) {
-      (void) value;
-      // Not implemented as no control signals
-   }
+   static void setControlLineState(uint8_t value);
 
    /**
     *  Send CDC break\n
@@ -156,11 +112,8 @@ public:
     * @note - only partially implemented
     *       - breaks are sent after currently queued characters
     */
-   static void sendBreak(uint16_t length) {
-      (void)length;
-   }
-
-}; // class CDC_interface
+   static void sendBreak(uint16_t length);
+};
 
 }; // end namespace USBDM
 

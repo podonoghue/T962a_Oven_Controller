@@ -72,8 +72,6 @@ public:
 void initialise() {
    interactiveMutex = new CMSIS::Mutex;
 
-   CDC_Interface::initialise();
-
    lcd.initialise();
    temperatureSensors.initialise();
    caseTemperatureMonitor.initialise();

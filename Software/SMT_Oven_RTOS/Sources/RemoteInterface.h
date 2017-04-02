@@ -20,7 +20,7 @@
  *                                                     ...
  *    USB CDC send ISR <------- Response Queue <---- Remote thread
  */
-class RemoteInterface: public CDC_Interface {
+class RemoteInterface: public USBDM::CDC_Interface {
 
 public:
    /** Structure holding a command */
