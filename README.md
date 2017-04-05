@@ -23,6 +23,8 @@ This is a Eclipse workspace.
 Basic application - work in progress.  
 Firmware for oven controller.  
 
+![An image](https://raw.githubusercontent.com/podonoghue/T962a_Oven_Controller/master/Software/JavaApp.png "Java Application")  
+
 [Available here](https://github.com/podonoghue/T962a_Oven_Controller/tree/master/Software)  
 
 # Windows Drivers (none needed for Linux)
