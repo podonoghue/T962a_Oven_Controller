@@ -2,6 +2,10 @@
  * @file    RemoteInterface.cpp
  * @brief   Oven Remote control
  *
+ *  This file contains the handler for the remote USB CDC command handler.\n
+ *  It runs as a separate thread communicating with the USB interrupt handler
+ *  through MailQueue queues.
+ *
  *  Created on: 26Feb.,2017
  *      Author: podonoghue
  */
@@ -9,14 +13,22 @@
 #include "cmsis.h"
 #include "configure.h"
 
+/** Current command */
 RemoteInterface::Command   *RemoteInterface::command;
+
+/** Current response */
 RemoteInterface::Response  *RemoteInterface::response;
 
+/** The remote handler thread */
 CMSIS::Thread RemoteInterface::handlerThread(RemoteInterface::commandThread);
 
+/** Mail queue USB -> handler thread */
 CMSIS::MailQueue<RemoteInterface::Command,  4> RemoteInterface::commandQueue;
+
+/** Mail queue USB <- handler thread */
 CMSIS::MailQueue<RemoteInterface::Response, 4> RemoteInterface::responseQueue;
 
+/** ID string for Oven */
 const char *RemoteInterface::IDN = "SMT-Oven 1.0.0.0\n\r";
 
 /**
@@ -33,7 +45,7 @@ bool RemoteInterface::send(Response *response) {
 }
 
 /**
- * Writes thermocouple status to log
+ * Writes thermocouple status to remote
  *
  * @param time  Time of log entry to send
  * @param lastEntry Indicates this is the last entry so append "\n\r"
@@ -141,7 +153,7 @@ bool parseProfile(char *cmd) {
       return false;
    }
    profile.peakDwell      = strtol(tok, nullptr, 10);
-   tok = strtok(nullptr, ";");
+   tok = strtok(nullptr, ";\n\r");
    if (tok == nullptr) {
       return false;
    }
@@ -160,7 +172,7 @@ bool parseProfile(char *cmd) {
  *  @return true  Successfully parsed
  *  @return false Failed parse
  */
-bool parseTherocouples(char *cmd) {
+bool parseThermocouples(char *cmd) {
    char *tok;
    bool enable;
    int  offset;
@@ -172,7 +184,7 @@ bool parseTherocouples(char *cmd) {
          return false;
       }
       enable = (strtol(tok, nullptr, 10)!=0);
-      tok    = strtok(nullptr, ",;");
+      tok    = strtok(nullptr, ",;\n\r");
       if (tok == nullptr) {
          return false;
       }
@@ -188,7 +200,43 @@ bool parseTherocouples(char *cmd) {
 }
 
 /**
- * Try to lock the Interactive mutex so that the remote session has ownership
+ *  Parse PID information into PID parameters
+ *
+ *  @param cmd Describes the PID parameters e.g.\n
+ *  .1,.024,23.4;
+ *
+ *  @return true  Successfully parsed
+ *  @return false Failed parse
+ */
+bool parsePidParameters(char *cmd) {
+   char *tok;
+
+   tok = strtok(cmd, ",");
+   if (tok == nullptr) {
+      return false;
+   }
+   float kp = strtof(tok, nullptr);
+
+   tok = strtok(nullptr, ",");
+   if (tok == nullptr) {
+      return false;
+   }
+   float ki = strtof(tok, nullptr);
+
+   tok = strtok(nullptr, ";\n\r");
+   if (tok == nullptr) {
+      return false;
+   }
+   float kd = strtof(tok, nullptr);
+
+   pidKp = kp;
+   pidKi = ki;
+   pidKd = kd;
+   return true;
+}
+
+/**
+ * Try to lock the Interactive MUTEX so that the remote session has ownership
  *
  * @param response Buffer to use for response if needed.
  *
@@ -237,7 +285,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
       if (!getInteractiveMutex(response)) {
          return false;
       }
-      if (parseTherocouples(reinterpret_cast<char*>(&cmd->data[6]))) {
+      if (parseThermocouples(reinterpret_cast<char*>(&cmd->data[6]))) {
          strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
       }
       else {
@@ -262,6 +310,28 @@ bool RemoteInterface::doCommand(Command *cmd) {
          }
          strcat(reinterpret_cast<char*>(response->data), buff);
       }
+      response->size = strlen(reinterpret_cast<char*>(response->data));
+      RemoteInterface::send(response);
+   }
+   else if (strncasecmp((const char *)(cmd->data), "PID ", 4) == 0) {
+      // Lock interface
+      if (!getInteractiveMutex(response)) {
+         return false;
+      }
+      if (parsePidParameters(reinterpret_cast<char*>(&cmd->data[4]))) {
+         strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
+      }
+      else {
+         strcpy(reinterpret_cast<char*>(response->data), "Failed - Data error\n\r");
+      }
+      interactiveMutex->release();
+      response->size = strlen(reinterpret_cast<char*>(response->data));
+      send(response);
+   }
+   else if (strcasecmp((const char *)(cmd->data), "PID?\n") == 0) {
+      response->data[0] = (uint8_t)'\0';
+      snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%f,%f,%f\n\r",
+            (float)pidKp, (float)pidKi, (float)pidKd);
       response->size = strlen(reinterpret_cast<char*>(response->data));
       RemoteInterface::send(response);
    }
@@ -397,7 +467,7 @@ void RemoteInterface::commandThread(const void *) {
 /**
  * Initialise
  *
- * Starts the thread that handles the communications.
+ * Starts the thread that handles the CDC communications.
  */
 void RemoteInterface::initialise() {
    command  = nullptr;
@@ -411,7 +481,9 @@ void RemoteInterface::initialise() {
 
 /**
  * Process data received from host\n
- * The data is collected into a command and then added to command queue
+ * The data is collected into a command and then added to command queue\n
+ * This function is actually called from the USB interrupt thread and passes
+ * the assembled command to the handler using a MailQueue queue.
  *
  * @param size Amount of data
  * @param buff Buffer for data
