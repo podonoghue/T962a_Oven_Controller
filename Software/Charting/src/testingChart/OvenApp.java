@@ -10,16 +10,23 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYTextAnnotation;
+import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.CombinedDomainXYPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.TextAnchor;
 
 import com.serialpundit.core.SerialComException;
 import com.serialpundit.serial.SerialComManager;
@@ -37,13 +44,20 @@ import com.serialpundit.serial.SerialComManager.STOPBITS;
  */
 public class OvenApp extends JFrame {
 
+//   final String COM_PORT = "com23";
+   final static String COM_PORT = "com29";
+
    /**
     * Describes a solder profile
     */
    static class SolderProfile {
+      final static int  UNLOCKED      = 1<<0;
+      final static int  LEAD_FREE_SOLDER = 1<<1;
+      
       String   description;      // Description of the profile
       int      flags;
-      float    ramp1Slope;       // Slope up to soakTemp1
+      float    liquidus;         // Liquidus temperature
+      float    preheatTime;      // Time to reach soakTemp1
       float    soakTemp1;        // Temperature for start of soak
       float    soakTemp2;        // Temperature for end of soak
       float    soakTime;         // Length of soak
@@ -69,7 +83,9 @@ public class OvenApp extends JFrame {
        */
       public SolderProfile(
             String   description,      // Description of the profile
-            float    ramp1Slope,       // Slope up to soakTemp1
+            int      flags,
+            float    liquidus,         // Liquidus temperature
+            float    preheatTime,      // Time to reach soakTemp1 from ambient
             float    soakTemp1,        // Temperature for start of soak
             float    soakTemp2,        // Temperature for end of soak
             float    soakTime,         // Length of soak
@@ -79,7 +95,9 @@ public class OvenApp extends JFrame {
             float    rampDownSlope) {  // Slow down after peak (cooling)
 
          this.description   = description;
-         this.ramp1Slope    = ramp1Slope;
+         this.flags         = flags;
+         this.liquidus      = liquidus;
+         this.preheatTime   = preheatTime;
          this.soakTemp1     = soakTemp1;
          this.soakTemp2     = soakTemp2;
          this.soakTime      = soakTime;
@@ -119,12 +137,22 @@ public class OvenApp extends JFrame {
    
    /** Series for heater duty cycle (percent) */
    XYSeries heaterSeries  = new XYSeries("Heater");
-   
+
+   /** Series for heater duty cycle (percent) */
+   XYSeries thermocoupleSeries[]  = {new XYSeries("TC1"), new XYSeries("TC2"), new XYSeries("TC3"), new XYSeries("TC4")};
+
+   /** Marker for liquidus temperature */
+   ValueMarker liquidusMarker = new ValueMarker(0.0);
+
+   /** Name of profile on chart */
+   XYTextAnnotation profileName = new XYTextAnnotation("No Profile", 10, 100);
+
    /**
     * Plots a profile as a line graph connecting profile control points 
     * 
-    * @param profileSeries Profile points are added to this series
-    * @param profile       Profile to plot
+    * @param profileSeries   Profile points are added to this series
+    * @param liquidusMarker  Modified to reflect profile liquidus temperature
+    * @param profile         Profile to plot
     */
    void plotProfile(XYSeries profileSeries, final SolderProfile profile) {
 
@@ -137,7 +165,7 @@ public class OvenApp extends JFrame {
       // Step through profile points
       float time = 0.0f;
       profileSeries.add(time, ambient);
-      time += (profile.soakTemp1-ambient)/profile.ramp1Slope;
+      time += profile.preheatTime;
       profileSeries.add(time, profile.soakTemp1);
       time += profile.soakTime;
       profileSeries.add(time, profile.soakTemp2);
@@ -148,18 +176,6 @@ public class OvenApp extends JFrame {
       time += (25.0f-profile.peakTemp)/profile.rampDownSlope;
       profileSeries.add(time, ambient);
    }
-
-//   SolderProfile profile = new SolderProfile(
-//         /* description   */ "4300 63SN/37PB-a",
-//         /* ramp1Slope    */ 1.0f,
-//         /* soakTemp1     */ 140.0f,
-//         /* soakTemp2     */ 183.0f,
-//         /* soakTime      */ 90.0f,
-//         /* ramp2Slope    */ 1.4f,
-//         /* peakTemp      */ 210.0f,
-//         /* peakDwell     */ 15.0f,
-//         /* rampDownSlope */ -3.0f
-//         );
 
    /**
     * 
@@ -178,6 +194,9 @@ public class OvenApp extends JFrame {
       dataset.addSeries(targetSeries);
       dataset.addSeries(averageSeries);
 
+      for (XYSeries series:thermocoupleSeries) {
+         dataset.addSeries(series);
+      }
       return dataset;
    }
 
@@ -196,7 +215,7 @@ public class OvenApp extends JFrame {
    }
 
    /**
-    * Create chart panel. This includes creating<br>
+    * Create chart panel.<br> This includes creating<br>
     * <li>The panel</li>
     * <li>The XY chart</li>
     * <li>The various series for the chart</li>
@@ -204,56 +223,53 @@ public class OvenApp extends JFrame {
     * @return Chart panel created
     */
    private JPanel createChartPanel() {
-
-      // Create chart
-      JFreeChart chart = ChartFactory.createXYLineChart(
-            chartTitle, 
-            xAxisLabel, 
-            yAxisTemperatureLabel, 
-            createTemperatureDataset());
-      
+      final XYDataset temperatureDataset = createTemperatureDataset();
       // Create renderer with line but no shapes (too many points)
-      XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true,false);
+      XYLineAndShapeRenderer temperatureRenderer = new XYLineAndShapeRenderer(true,false);
       // Have points for profile only
-      renderer.setSeriesShapesVisible(0, true);
-      //      // sets paint color for each series
-      //      renderer.setSeriesPaint(0, Color.RED);
-      //      renderer.setSeriesPaint(1, Color.GREEN);
-      //
-      //      // sets thickness for series (using strokes)
-      //      renderer.setSeriesStroke(0, new BasicStroke(4.0f));
-      //      renderer.setSeriesStroke(1, new BasicStroke(3.0f));
+      temperatureRenderer.setSeriesShapesVisible(0, true);
+      final NumberAxis temperatureAxis = new NumberAxis(yAxisTemperatureLabel);
+      final XYPlot temperaturePlot = new XYPlot(temperatureDataset, null, temperatureAxis, temperatureRenderer);
+      temperatureAxis.setAutoRange(true);
+      temperaturePlot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT);
 
-      XYPlot plot = chart.getXYPlot();
-      plot.setBackgroundPaint(Color.DARK_GRAY);
+      final XYDataset percentageDataset = createPercentageDataset();
+      final XYItemRenderer percentageRenderer = new StandardXYItemRenderer();
+      final NumberAxis percentageAxis = new NumberAxis(yAxisPercentageLabel);
+      percentageAxis.setAutoRange(false);
+      percentageAxis.setRange(0.0, 105.0);
+      final XYPlot percentagePlot = new XYPlot(percentageDataset, null, percentageAxis, percentageRenderer);
+      percentagePlot.setRangeAxisLocation(AxisLocation.TOP_OR_LEFT);
+     
+      final CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis(xAxisLabel));
+      plot.setGap(10.0);
+
+      plot.add(temperaturePlot, 4);
+      plot.add(percentagePlot,  1);
+      plot.setOrientation(PlotOrientation.VERTICAL);
+
+      // return a new chart containing the overlaid plot...
+      JFreeChart chart = new JFreeChart(chartTitle, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+
+      temperaturePlot.addRangeMarker(liquidusMarker);
+      liquidusMarker.setPaint(Color.black);
+      liquidusMarker.setLabel("Liquidus"); 
+      liquidusMarker.setLabelBackgroundColor(Color.white);
+      liquidusMarker.setLabelAnchor(RectangleAnchor.BOTTOM_RIGHT);
+      liquidusMarker.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
+
+      temperaturePlot.addAnnotation(profileName);
+      profileName.setTextAnchor(TextAnchor.TOP_LEFT);
       
-      final NumberAxis axis2 = new NumberAxis(yAxisPercentageLabel);
-//      axis2.setAutoRangeIncludesZero(false);
-      plot.setRangeAxis(1, axis2);
-      plot.setDataset(1, createPercentageDataset());
-      plot.mapDatasetToRangeAxis(1, 1);
-      plot.setRangeAxis(1, axis2);
-      
-      plot.setRangeGridlinesVisible(true);
-      plot.setRangeGridlinePaint(Color.WHITE);
-
-      plot.setDomainGridlinesVisible(true);
-      plot.setDomainGridlinePaint(Color.WHITE);
-      plot.setRenderer(renderer);
-
-      ValueAxis axis = plot.getDomainAxis();
-      axis.setAutoRange(true);
-      //		axis.setRange(0.0, 600.0); // 600 seconds
-      axis = plot.getRangeAxis();
-      axis.setAutoRange(true);
-      //      axis.setRange(0.0, 400.0); 	// 0-400 C
       return new ChartPanel(chart);
    }
 
    /**
+    * Reads the profile from the oven and plots it to the graph 
     * 
-    * @param scm
-    * @param handle
+    * @param scm     Serial communication manager
+    * @param handle  Handle for com port
+    * 
     * @throws SerialComException
     */
    void updateProfileChart(SerialComManager scm, long handle) throws SerialComException {
@@ -267,29 +283,43 @@ public class OvenApp extends JFrame {
          }
          data = data + moreData;
       } while (true);
+      if (data == null) {
+         System.out.println("No data");
+         return;
+      }
       System.out.println("data read is :" + data);
       String[] values = data.split(",");
-      if (values.length == 11) {
+      if (values.length == 12) {
          values[10] = values[10].split(";")[0];
          SolderProfile profile = new SolderProfile();
-         profile.description   = values[1];
-         profile.flags         = Integer.valueOf(values[2], 16);
-         profile.ramp1Slope    = Float.parseFloat(values[3]);
-         profile.soakTemp1     = Integer.parseInt(values[4]);
-         profile.soakTemp2     = Integer.parseInt(values[5]);
-         profile.soakTime      = Integer.parseInt(values[6]);
-         profile.ramp2Slope    = Float.parseFloat(values[7]);
-         profile.peakTemp      = Integer.parseInt(values[8]);
-         profile.peakDwell     = Integer.parseInt(values[9]);
-         profile.rampDownSlope = Float.parseFloat(values[10]);
+         int i = 1;
+         profile.description   = values[i++];
+         profile.flags         = Integer.valueOf(values[i++], 16);
+         profile.liquidus      = Integer.parseInt(values[i++]);
+         profile.preheatTime   = Integer.parseInt(values[i++]);
+         profile.soakTemp1     = Integer.parseInt(values[i++]);
+         profile.soakTemp2     = Integer.parseInt(values[i++]);
+         profile.soakTime      = Integer.parseInt(values[i++]);
+         profile.ramp2Slope    = Float.parseFloat(values[i++]);
+         profile.peakTemp      = Integer.parseInt(values[i++]);
+         profile.peakDwell     = Integer.parseInt(values[i++]);
+         values[i] = values[i].replaceAll("[;\n\r]", "");
+         profile.rampDownSlope = Float.parseFloat(values[i++]);
+         
          plotProfile(profileSeries, profile);
+         liquidusMarker.setValue(profile.liquidus);
+         profileName.setText("Profile: \n" + profile.description);
+         profileName.setY(profileSeries.getMaxY());
       }
    }
 
    /**
+    * Reads the plot from the oven and plots it to the graph.<br>
+    * Plots Target, Average, Fan and Heater.
     * 
-    * @param scm
-    * @param handle
+    * @param scm     Serial communication manager
+    * @param handle  Handle for com port
+    * 
     * @throws SerialComException
     */
    void updateOvenChart(SerialComManager scm, long handle) throws SerialComException {
@@ -309,7 +339,10 @@ public class OvenApp extends JFrame {
       averageSeries.clear();
       heaterSeries.clear();
       fanSeries.clear();
-      for (int index=1; index< points.length; index++) {
+      for (XYSeries series:thermocoupleSeries) {
+         series.clear();
+      }
+      for (int index=1; index<points.length; index++) {
          String[] values = points[index].split(",");
          if (values.length == 10) {
 //            String state         = values[0];
@@ -318,31 +351,34 @@ public class OvenApp extends JFrame {
             float  averageTemp   = Float.parseFloat(values[3]);
             int    heaterPercent = Integer.parseInt(values[4]);
             int    fanPercent    = Integer.parseInt(values[5]);
-//            float  thermocouple1 = Float.parseFloat(values[6]);
-//            float  thermocouple2 = Float.parseFloat(values[7]);
-//            float  thermocouple3 = Float.parseFloat(values[8]);
-//            float  thermocouple4 = Float.parseFloat(values[9]);
+            float  thermocouple1 = Float.parseFloat(values[6]);
+            float  thermocouple2 = Float.parseFloat(values[7]);
+            float  thermocouple3 = Float.parseFloat(values[8]);
+            float  thermocouple4 = Float.parseFloat(values[9]);
             targetSeries.add((float)time, targetTemp);
             averageSeries.add((float)time, averageTemp);
             heaterSeries.add((float)time, (float)heaterPercent);
             fanSeries.add((float)time, (float)fanPercent);
+            thermocoupleSeries[0].add((float)time, (float)thermocouple1);
+            thermocoupleSeries[1].add((float)time, (float)thermocouple2);
+            thermocoupleSeries[2].add((float)time, (float)thermocouple3);
+            thermocoupleSeries[3].add((float)time, (float)thermocouple4);
 //            System.out.println(
 //                  String.format("%3d %6.1f %6.1f %3d %3d ", 
 //                        time, targetTemp, averageTemp, heaterPercent, fanPercent));
          }
       }
    }
+   
    /**
-    * Handles a click on the button by adding new (random) data.
-    *
-    * @param e  the action event.
+    * Updates the graph from the Oven.
     */
    public void update() {
       SerialComManager scm = null;
       long handle = -1;
       try {
          scm = new SerialComManager();
-         handle = scm.openComPort("com29", true, true, true);
+         handle = scm.openComPort(COM_PORT, true, true, true);
          scm.configureComPortData(handle, DATABITS.DB_8, STOPBITS.SB_1, PARITY.P_NONE, BAUDRATE.B115200, 0);
          scm.configureComPortControl(handle, FLOWCONTROL.NONE, 'x', 'x', false, false);
          scm.writeString(handle, "idn?\n\r", 0);
@@ -365,7 +401,7 @@ public class OvenApp extends JFrame {
    }
 
    /**
-    * 
+    * The main application
     */
    public OvenApp() {
       super("SMT Oven");
@@ -390,6 +426,11 @@ public class OvenApp extends JFrame {
       setLocationRelativeTo(null);
    }
 
+   /**
+    * Main application
+    * 
+    * @param args
+    */
    public static void main(String[] args) {
       SwingUtilities.invokeLater(new Runnable() {
          @Override
