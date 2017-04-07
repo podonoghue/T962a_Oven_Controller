@@ -16,6 +16,7 @@
 
 enum {
    P_UNLOCKED = (1<<0),
+   P_LEADFREE = (1<<1),
 };
 
 class NvSolderProfile;
@@ -25,9 +26,10 @@ class NvSolderProfile;
  */
 struct SolderProfile {
 public:
-   uint8_t  flags;            // Various flags
+   uint8_t  flags;            // Properties of the profile
    char     description[39];  // Description of the profile
-   float    ramp1Slope;       // Slope up to soakTemp1
+   uint16_t liquidus;         // Liquidus temperature
+   uint16_t preheatTime;      // Time to reach soakTemp1
    uint16_t soakTemp1;        // Temperature for start of soak
    uint16_t soakTemp2;        // Temperature for end of soak
    uint16_t soakTime;         // Length of soak
@@ -71,6 +73,7 @@ public:
 /**
  * Used to represent a solder profile in nonvolatile memory
  */
+#pragma pack(push, 1)
 class NvSolderProfile {
 
 private:
@@ -80,10 +83,11 @@ private:
    }
 
 public:
-   USBDM::Nonvolatile<uint8_t>       flags;          // Description of the profile
+   USBDM::Nonvolatile<uint8_t>       flags;          // Properties of the profile
    USBDM::NonvolatileArray<char, sizeof(SolderProfile::description)>
                                      description;    // Description of the profile
-   USBDM::Nonvolatile<float>         ramp1Slope;     // Slope up to soakTemp1
+   USBDM::Nonvolatile<uint16_t>      liquidus;       // Liquidus temperature
+   USBDM::Nonvolatile<uint16_t>      preheatTime;    // Time to reach soakTemp1
    USBDM::Nonvolatile<uint16_t>      soakTemp1;      // Temperature for start of soak
    USBDM::Nonvolatile<uint16_t>      soakTemp2;      // Temperature for end of soak
    USBDM::Nonvolatile<uint16_t>      soakTime;       // Length of soak
@@ -123,6 +127,7 @@ public:
     */
    void print() const;
 };
+#pragma pack(pop)
 
 // Predefined profiles
 extern const SolderProfile am4300profileA;

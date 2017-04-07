@@ -226,13 +226,14 @@ private:
    static int offset;
 
    /** Number of editable items in menu */
-   static constexpr int NUM_ITEMS = 9;
+   static constexpr int NUM_ITEMS = 10;
 
    /** Describes the editable items */
    ProfileSetting *items[NUM_ITEMS] = {
          //                             value,                 description                  delta default minimum maximum
          new ProfileNameSetting        (profile.description),
-         new ProfileSetting_T<float>   (profile.ramp1Slope,    "Ramp 1 up    %3.1f\177C/s", 0.1f,   1.0f,  0.1f,   6.0f),
+         new ProfileSetting_T<uint16_t>(profile.liquidus,      "Liquidus T.  %3d\177C",        1,    183,   120,    250),
+         new ProfileSetting_T<uint16_t>(profile.preheatTime,   "Preheat Time %3ds",            1,     90,    60,    200),
          new ProfileSetting_T<uint16_t>(profile.soakTemp1,     "Soak temp. 1 %3d\177C",        1,    140,    80,    160),
          new ProfileSetting_T<uint16_t>(profile.soakTemp2,     "Soak temp. 2 %3d\177C",        1,    183,   150,    250),
          new ProfileSetting_T<uint16_t>(profile.soakTime,      "Soak time    %3ds",            1,    120,    60,    300),

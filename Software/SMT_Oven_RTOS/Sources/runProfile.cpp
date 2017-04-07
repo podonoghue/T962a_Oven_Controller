@@ -144,7 +144,7 @@ static void handler(const void *) {
       state    = s_preheat;
 
       // Calculate timeout for preheat ramp (10% over)
-      timeout = (int)round(1.1*(currentProfile->soakTemp1-setpoint)/currentProfile->ramp1Slope);
+      timeout = (int)round(1.1*currentProfile->preheatTime);
       // no break
    case s_preheat:
       /*
@@ -159,7 +159,7 @@ static void handler(const void *) {
       }
       if (setpoint<currentProfile->soakTemp1) {
          // Still following profile
-         setpoint += currentProfile->ramp1Slope;
+         setpoint = ambient + (time/(float)currentProfile->preheatTime)*(currentProfile->soakTemp1-ambient);
          pid.setSetpoint(setpoint);
       }
       else {
@@ -252,7 +252,7 @@ static void handler(const void *) {
          setpoint += currentProfile->rampDownSlope;
       }
       pid.setSetpoint(setpoint);
-      if (currentTemperature<ambient) {
+      if (currentTemperature<=ambient) {
          state = s_complete;
       }
       break;

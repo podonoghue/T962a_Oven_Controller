@@ -19,7 +19,8 @@ void SolderProfile::operator=(const NvSolderProfile &other ) {
       description[i]   = other.description[i];
    }
    flags         = other.flags;
-   ramp1Slope    = other.ramp1Slope;
+   liquidus      = other.liquidus;
+   preheatTime   = other.preheatTime;
    soakTemp1     = other.soakTemp1;
    soakTemp2     = other.soakTemp2;
    soakTime      = other.soakTime;
@@ -39,7 +40,7 @@ void SolderProfile::operator=(const SolderProfile &other ) {
       description[i]   = other.description[i];
    }
    flags         = other.flags;
-   ramp1Slope    = other.ramp1Slope;
+   preheatTime   = other.preheatTime;
    soakTemp1     = other.soakTemp1;
    soakTemp2     = other.soakTemp2;
    soakTime      = other.soakTime;
@@ -59,7 +60,8 @@ void SolderProfile::operator=(const SolderProfile &other ) {
 void NvSolderProfile::operator=(const SolderProfile &other ) {
    flags         = other.flags;
    description   = other.description;
-   ramp1Slope    = other.ramp1Slope;
+   liquidus      = other.liquidus;
+   preheatTime   = other.preheatTime;
    soakTemp1     = other.soakTemp1;
    soakTemp2     = other.soakTemp2;
    soakTime      = other.soakTime;
@@ -79,7 +81,8 @@ void NvSolderProfile::operator=(const SolderProfile &other ) {
 void NvSolderProfile::operator=(const NvSolderProfile &other ) {
    flags         = other.flags;
    description   = other.description;
-   ramp1Slope    = other.ramp1Slope;
+   liquidus      = other.liquidus;
+   preheatTime   = other.preheatTime;
    soakTemp1     = other.soakTemp1;
    soakTemp2     = other.soakTemp2;
    soakTime      = other.soakTime;
@@ -96,7 +99,8 @@ void NvSolderProfile::operator=(const NvSolderProfile &other ) {
 //   printf("{ \n");
 //   printf("name          \"%s\"\n",  (const char *)description );
 //   printf("flags         %2.2X\n",   (uint8_t)~(uint8_t)flags  );
-//   printf("ramp1Slope    %.1f\n",    (float)ramp1Slope         );
+//   printf("liquidus      %d\n",      (int)  liquidus           );
+//   printf("preheatTime   %d\n",      (int)  preheatTime        );
 //   printf("soakTemp1     %d\n",      (int)  soakTemp1          );
 //   printf("soakTemp2     %d\n",      (int)  soakTemp2          );
 //   printf("soakTime      %d\n",      (int)  soakTime           );
@@ -112,7 +116,8 @@ const SolderProfile am4300profileA = {
       /* Soak 140-180C/60-90s, above liquidus(183 C) for 30-60s, peak 200-230 C */
       /* flags         */ 0,
       /* description   */ "4300 63SN/37PB-a",
-      /* ramp1Slope    */ 1.0,
+      /* liquidus      */ 183,
+      /* preheatTime   */ 115,
       /* soakTemp1     */ 140,
       /* soakTemp2     */ 183,
       /* soakTime      */ 90,
@@ -127,7 +132,8 @@ const SolderProfile am4300profileB = {
       /* Soak 140-180C/90-120s, above liquidus(183 C) for 30-60s, peak 200-230 C */
       /* flags         */ 0,
       /* description   */ "4300 63SN/37PB-b",
-      /* ramp1Slope    */ 1.0,
+      /* liquidus      */ 183,
+      /* preheatTime   */ 115,
       /* soakTemp1     */ 140,
       /* soakTemp2     */ 183,
       /* soakTime      */ 120,
@@ -142,7 +148,8 @@ const SolderProfile nc31profile = {
       /* Soak 90-140C/60-90s, above liquidus(138 C) for 60 s, peak 158-165 C */
       /* flags         */ 0,
       /* description   */ "NC-31 LOW-TEMP LF",
-      /* ramp1Slope    */ 1.0,
+      /* liquidus      */ 140,
+      /* preheatTime   */ 65,
       /* soakTemp1     */ 90,
       /* soakTemp2     */ 140,
       /* soakTime      */ 75,
@@ -157,7 +164,8 @@ const SolderProfile syntechlfprofile = {
       /* Soak 140-200C/60-90s ramp@<2C/s, above liquidus(219 C) for 30-60s, peak 230-249 C */
       /* flags         */ 0,
       /* description   */ "AMTECH SYNTECH-LF",
-      /* ramp1Slope    */ 1.0,
+      /* liquidus      */ 219,
+      /* preheatTime   */ 115,
       /* soakTemp1     */ 140,
       /* soakTemp2     */ 200,
       /* soakTime      */ 75,
@@ -172,7 +180,8 @@ const SolderProfile defaultProfile = {
       /* Soak 140-180C/60-90s, above liquidus(183 C) for 30-60s, peak 200-230 C */
       /* flags         */ P_UNLOCKED,
       /* description   */ "Empty",
-      /* ramp1Slope    */ 0.8,
+      /* liquidus      */ 183,
+      /* preheatTime   */ 144,
       /* soakTemp1     */ 140,
       /* soakTemp2     */ 183,
       /* soakTime      */ 90,

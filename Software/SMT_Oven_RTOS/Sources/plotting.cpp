@@ -176,6 +176,7 @@ protected:
    void calculate(const NvSolderProfile &profile) {
       static int  startOfSoakTime;
       static int  startOfDwellTime;
+      static constexpr float ambient = 25.0f;
 
       // Advance time
       time++;
@@ -192,9 +193,9 @@ protected:
          // no break
       case s_preheat:
          // Heat from ambient to start of soak temperature
-         // A -> soakTemp1 @ ramp1Slope
+         // A -> soakTemp1 over preheatTime
          if (setpoint<profile.soakTemp1) {
-            setpoint += profile.ramp1Slope;
+            setpoint = ambient + (time/(float)profile.preheatTime)*(profile.soakTemp1-ambient);
          }
          else {
             state = s_soak;
@@ -205,7 +206,7 @@ protected:
          // Heat from soak start temperature to soak end temperature over soak time
          // soakTemp1 -> soakTemp2 over soakTime time
          if (setpoint<profile.soakTemp2) {
-            setpoint = profile.soakTemp1 + (time-startOfSoakTime)*(profile.soakTemp2-profile.soakTemp1)/profile.soakTime;
+            setpoint = profile.soakTemp1 + (time-startOfSoakTime)*(profile.soakTemp2-profile.soakTemp1)/(float)profile.soakTime;
          }
          if (time >= (startOfSoakTime+profile.soakTime)) {
             state = s_ramp_up;

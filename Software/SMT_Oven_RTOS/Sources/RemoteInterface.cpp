@@ -49,6 +49,8 @@ bool RemoteInterface::send(Response *response) {
  *
  * @param time  Time of log entry to send
  * @param lastEntry Indicates this is the last entry so append "\n\r"
+ *
+ * @return Number of characters written to buffer
  */
 void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
 
@@ -72,7 +74,7 @@ void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
    for (unsigned t=0; t<DataPoint::NUM_THERMOCOUPLES; t++) {
       char buff2[10];
       float temperature;
-      point.getTemperature(time, temperature);
+      point.getTemperature(t, temperature);
       snprintf(buff2, sizeof(buff2), "%0.1f", temperature);
       if (t != 3) {
          strcat(buff2,",");
@@ -81,6 +83,7 @@ void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
    }
    strcat(reinterpret_cast<char*>(response->data), ";");
    if (lastEntry) {
+      // Terminate the whole transfer sequence
       strcat(reinterpret_cast<char*>(response->data),"\n\r");
    }
    response->size = strlen(reinterpret_cast<char*>(response->data));
@@ -122,7 +125,12 @@ bool parseProfile(char *cmd) {
    if (tok == nullptr) {
       return false;
    }
-   profile.ramp1Slope     = strtof(tok, nullptr);
+   profile.liquidus       = strtol(tok, nullptr, 10);
+   tok = strtok(nullptr, ",");
+   if (tok == nullptr) {
+      return false;
+   }
+   profile.preheatTime     = strtol(tok, nullptr, 10);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
@@ -356,7 +364,8 @@ bool RemoteInterface::doCommand(Command *cmd) {
             /* index         */ "%d,"
             /* name          */ "%s,"
             /* flags         */ "%2.2X,"
-            /* ramp1Slope    */ "%.1f,"
+            /* liquidus      */ "%d,"
+            /* preheatTime   */ "%d,"
             /* soakTemp1     */ "%d,"
             /* soakTemp2     */ "%d,"
             /* soakTime      */ "%d,"
@@ -366,8 +375,9 @@ bool RemoteInterface::doCommand(Command *cmd) {
             /* rampDownSlope */ "%.1f;\n\r",
             (int)profileIndex,
             (const char *)profile.description,
-            (uint8_t)~(uint8_t)profile.flags,
-            (float)profile.ramp1Slope,
+            (int)  profile.flags,
+            (int)  profile.liquidus,
+            (int)  profile.preheatTime,
             (int)  profile.soakTemp1,
             (int)  profile.soakTemp2,
             (int)  profile.soakTime,
