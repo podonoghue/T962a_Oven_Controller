@@ -40,73 +40,11 @@ import com.serialpundit.serial.SerialComManager.STOPBITS;
  * SMT Oven Application using JFreechart library.
  * 
  * @author Peter O'Donoghue
- *
  */
 public class OvenApp extends JFrame {
 
 //   final String COM_PORT = "com23";
    final static String COM_PORT = "com29";
-
-   /**
-    * Describes a solder profile
-    */
-   static class SolderProfile {
-      final static int  UNLOCKED      = 1<<0;
-      final static int  LEAD_FREE_SOLDER = 1<<1;
-      
-      String   description;      // Description of the profile
-      int      flags;
-      float    liquidus;         // Liquidus temperature
-      float    preheatTime;      // Time to reach soakTemp1
-      float    soakTemp1;        // Temperature for start of soak
-      float    soakTemp2;        // Temperature for end of soak
-      float    soakTime;         // Length of soak
-      float    ramp2Slope;       // Slope up to peakTemp
-      float    peakTemp;         // Peak reflow temperature
-      float    peakDwell;        // How long to remain at peakTemp
-      float    rampDownSlope;    // Slope down after peakTemp
-
-      public SolderProfile() {
-      }
-      
-      /**
-       * 
-       * @param description     Description of the profile     
-       * @param ramp1Slope      Slope up to soakTemp1          
-       * @param soakTemp1       Temperature for start of soak  
-       * @param soakTemp2       Temperature for end of soak    
-       * @param soakTime        Length of soak                 
-       * @param ramp2Slope      Slope up to peakTemp           
-       * @param peakTemp        Peak reflow temperature        
-       * @param peakDwell       How long to remain at peakTemp 
-       * @param rampDownSlope   Slow down after peak (cooling)
-       */
-      public SolderProfile(
-            String   description,      // Description of the profile
-            int      flags,
-            float    liquidus,         // Liquidus temperature
-            float    preheatTime,      // Time to reach soakTemp1 from ambient
-            float    soakTemp1,        // Temperature for start of soak
-            float    soakTemp2,        // Temperature for end of soak
-            float    soakTime,         // Length of soak
-            float    ramp2Slope,       // Slope up to peakTemp
-            float    peakTemp,         // Peak reflow temperature
-            float    peakDwell,        // How long to remain at peakTemp
-            float    rampDownSlope) {  // Slow down after peak (cooling)
-
-         this.description   = description;
-         this.flags         = flags;
-         this.liquidus      = liquidus;
-         this.preheatTime   = preheatTime;
-         this.soakTemp1     = soakTemp1;
-         this.soakTemp2     = soakTemp2;
-         this.soakTime      = soakTime;
-         this.ramp2Slope    = ramp2Slope;
-         this.peakTemp      = peakTemp;
-         this.peakDwell     = peakDwell;
-         this.rampDownSlope = rampDownSlope;
-      }
-   };
 
    /** Title for main chart */
    final String chartTitle = "Temperature Information";
@@ -148,36 +86,6 @@ public class OvenApp extends JFrame {
    XYTextAnnotation profileName = new XYTextAnnotation("No Profile", 10, 100);
 
    /**
-    * Plots a profile as a line graph connecting profile control points 
-    * 
-    * @param profileSeries   Profile points are added to this series
-    * @param liquidusMarker  Modified to reflect profile liquidus temperature
-    * @param profile         Profile to plot
-    */
-   void plotProfile(XYSeries profileSeries, final SolderProfile profile) {
-
-      // Clear existing data
-      profileSeries.clear();
-      
-      // Assume starting from ambient of 25 celsius
-      float ambient = 25.0f;
-      
-      // Step through profile points
-      float time = 0.0f;
-      profileSeries.add(time, ambient);
-      time += profile.preheatTime;
-      profileSeries.add(time, profile.soakTemp1);
-      time += profile.soakTime;
-      profileSeries.add(time, profile.soakTemp2);
-      time += (profile.peakTemp-profile.soakTemp2)/profile.ramp2Slope;
-      profileSeries.add(time, profile.peakTemp);
-      time += profile.peakDwell;
-      profileSeries.add(time, profile.peakTemp);
-      time += (25.0f-profile.peakTemp)/profile.rampDownSlope;
-      profileSeries.add(time, ambient);
-   }
-
-   /**
     * 
     */
    private static final long serialVersionUID = 1L;
@@ -215,7 +123,8 @@ public class OvenApp extends JFrame {
    }
 
    /**
-    * Create chart panel.<br> This includes creating<br>
+    * Create chart panel.<br> 
+    * This includes creating:
     * <li>The panel</li>
     * <li>The XY chart</li>
     * <li>The various series for the chart</li>
@@ -300,13 +209,13 @@ public class OvenApp extends JFrame {
          profile.soakTemp1     = Integer.parseInt(values[i++]);
          profile.soakTemp2     = Integer.parseInt(values[i++]);
          profile.soakTime      = Integer.parseInt(values[i++]);
-         profile.ramp2Slope    = Float.parseFloat(values[i++]);
+         profile.rampUpSlope    = Float.parseFloat(values[i++]);
          profile.peakTemp      = Integer.parseInt(values[i++]);
          profile.peakDwell     = Integer.parseInt(values[i++]);
          values[i] = values[i].replaceAll("[;\n\r]", "");
          profile.rampDownSlope = Float.parseFloat(values[i++]);
          
-         plotProfile(profileSeries, profile);
+         profile.plotProfile(profileSeries);
          liquidusMarker.setValue(profile.liquidus);
          profileName.setText("Profile: \n" + profile.description);
          profileName.setY(profileSeries.getMaxY());
