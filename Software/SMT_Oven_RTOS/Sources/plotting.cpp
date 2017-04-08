@@ -216,7 +216,7 @@ protected:
          // Heat from soak end temperature to peak at rampUp rate
          // soakTemp2 -> peakTemp @ ramp2Slope
          if (setpoint < profile.peakTemp) {
-            setpoint += profile.ramp2Slope;
+            setpoint += profile.rampUpSlope;
          }
          else {
             state = s_dwell;

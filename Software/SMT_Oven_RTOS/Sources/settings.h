@@ -46,7 +46,7 @@ extern USBDM::Nonvolatile<bool> t3Enable;
 extern USBDM::Nonvolatile<bool> t4Enable;
 
 /** Index of current profile */
-extern USBDM::Nonvolatile<int> profileIndex;
+extern USBDM::Nonvolatile<int> currentProfileIndex;
 
 /** Maximum on time for heater in manual mode */
 extern USBDM::Nonvolatile<int> maxHeaterTime;

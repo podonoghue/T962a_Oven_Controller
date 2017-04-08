@@ -47,7 +47,7 @@ __attribute__ ((section(".flexRAM")))
 Nonvolatile<bool> t4Enable;
 
 __attribute__ ((section(".flexRAM")))
-Nonvolatile<int> profileIndex;
+Nonvolatile<int> currentProfileIndex;
 
 __attribute__ ((section(".flexRAM")))
 Nonvolatile<int> fanKickTime;
@@ -125,7 +125,7 @@ void Settings::initialiseSettings() {
    pidKi           = pidKiSetting.getDefaultValue(); //0.016;  //0.0f; //  0.016
    pidKd           = pidKdSetting.getDefaultValue(); //62.5;   //0.0f; // 62.5
 
-   profileIndex    = 0;
+   currentProfileIndex    = 0;
 }
 
 /**

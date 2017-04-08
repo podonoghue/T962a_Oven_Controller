@@ -31,7 +31,7 @@ class profilesMenu {
 
 public:
    static void run() {
-      unsigned profileIndex = ::profileIndex;
+      unsigned profileIndex = ::currentProfileIndex;
       bool needUpdate = true;
 
       for(;;) {
@@ -59,7 +59,7 @@ public:
             needUpdate = true;
             break;
          case SwitchValue::SW_S:
-            ::profileIndex.operator =(profileIndex);
+            ::currentProfileIndex.operator =(profileIndex);
             return;
          default:
             break;

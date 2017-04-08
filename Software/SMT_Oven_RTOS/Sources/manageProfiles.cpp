@@ -40,7 +40,7 @@ static void putProfileMenu(const NvSolderProfile &profile) {
  * On exit the current profile may be changed
  */
 void profileMenu() {
-   unsigned profileIndex = ::profileIndex;
+   unsigned profileIndex = ::currentProfileIndex;
    bool needUpdate = true;
 
    for(;;) {
@@ -75,7 +75,7 @@ void profileMenu() {
          needUpdate = true;
          break;
       case SwitchValue::SW_S:
-         ::profileIndex.operator =(profileIndex);
+         ::currentProfileIndex.operator =(profileIndex);
          return;
       default:
          break;

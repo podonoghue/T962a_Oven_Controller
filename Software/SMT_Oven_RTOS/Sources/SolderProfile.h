@@ -33,7 +33,7 @@ public:
    uint16_t soakTemp1;        // Temperature for start of soak
    uint16_t soakTemp2;        // Temperature for end of soak
    uint16_t soakTime;         // Length of soak
-   float    ramp2Slope;       // Slope up to peakTemp
+   float    rampUpSlope;      // Slope up to peakTemp
    uint16_t peakTemp;         // Peak reflow temperature
    uint16_t peakDwell;        // How long to remain at peakTemp
    float    rampDownSlope;    // Slope down after peakTemp
@@ -91,7 +91,7 @@ public:
    USBDM::Nonvolatile<uint16_t>      soakTemp1;      // Temperature for start of soak
    USBDM::Nonvolatile<uint16_t>      soakTemp2;      // Temperature for end of soak
    USBDM::Nonvolatile<uint16_t>      soakTime;       // Length of soak
-   USBDM::Nonvolatile<float>         ramp2Slope;     // Slope up to peakTemp
+   USBDM::Nonvolatile<float>         rampUpSlope;    // Slope up to peakTemp
    USBDM::Nonvolatile<uint16_t>      peakTemp;       // Peak reflow temperature
    USBDM::Nonvolatile<uint16_t>      peakDwell;      // How long to remain at peakTemp
    USBDM::Nonvolatile<float>         rampDownSlope;  // Slope down after peakTemp

@@ -40,6 +40,7 @@ const char *RemoteInterface::IDN = "SMT-Oven 1.0.0.0\n\r";
  */
 bool RemoteInterface::send(Response *response) {
    responseQueue.put(response);
+//   PUTS("send()");
    notifyUsbIn();
    return true;
 }
@@ -100,74 +101,84 @@ void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
  *  @return false Failed parse
  */
 bool parseProfile(char *cmd) {
-   int profileNum;
+   unsigned profileNum;
    SolderProfile profile;
-   char *tok;
 
-   tok = strtok(cmd, ",");
-   profileNum             = strtod(tok, &cmd);
+   char *tok = strtok(cmd, ",");
+
+   profileNum = strtol(tok, &cmd, 10);
+
+   if (profileNum>=MAX_PROFILES) {
+      return false;
+   }
+
+   tok = strtok(nullptr, ",");
+   if (tok == nullptr) {
+      // Assume setting current profile without changes
+      currentProfileIndex = profileNum;
+      return true;
+   }
 
    if ((profiles[profileNum].flags & P_UNLOCKED) == 0) {
       // Profile is locked
       return false;
    }
-   tok = strtok(nullptr, ",");
-   if (tok == nullptr) {
-      return false;
-   }
+
    strncpy(profile.description, tok, sizeof(profile.description));
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.flags          = strtol(tok, nullptr, 16);
+   profile.flags = strtol(tok, nullptr, 16);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.liquidus       = strtol(tok, nullptr, 10);
+   profile.liquidus = strtol(tok, nullptr, 10);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.preheatTime     = strtol(tok, nullptr, 10);
+   profile.preheatTime = strtol(tok, nullptr, 10);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.soakTemp1      = strtol(tok, nullptr, 10);
+   profile.soakTemp1 = strtol(tok, nullptr, 10);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.soakTemp2      = strtol(tok, nullptr, 10);
+   profile.soakTemp2 = strtol(tok, nullptr, 10);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.soakTime       = strtol(tok, nullptr, 10);
+   profile.soakTime = strtol(tok, nullptr, 10);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.ramp2Slope     = strtof(tok, nullptr);
+   profile.rampUpSlope = strtof(tok, nullptr);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.peakTemp       = strtol(tok, nullptr, 10);
+   profile.peakTemp = strtol(tok, nullptr, 10);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;
    }
-   profile.peakDwell      = strtol(tok, nullptr, 10);
+   profile.peakDwell = strtol(tok, nullptr, 10);
    tok = strtok(nullptr, ";\n\r");
    if (tok == nullptr) {
       return false;
    }
-   profile.rampDownSlope  = strtof(tok, nullptr);
+   profile.rampDownSlope = strtof(tok, nullptr);
 
+   currentProfileIndex = profileNum;
    profiles[profileNum] = profile;
+
    return true;
 }
 
@@ -185,7 +196,7 @@ bool parseThermocouples(char *cmd) {
    bool enable;
    int  offset;
 
-   tok    = strtok(cmd, ",");
+   tok = strtok(cmd, ",");
 
    for (int t=0; t<4; t++) {
       if (tok == nullptr) {
@@ -246,7 +257,7 @@ bool parsePidParameters(char *cmd) {
 /**
  * Try to lock the Interactive MUTEX so that the remote session has ownership
  *
- * @param response Buffer to use for response if needed.
+ * @param response Buffer to use for response if getting MUTEX fails.
  *
  * @return true  => success
  * @return false => failed (A fail response has been sent to the remote and response has been consumed)
@@ -319,7 +330,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
          strcat(reinterpret_cast<char*>(response->data), buff);
       }
       response->size = strlen(reinterpret_cast<char*>(response->data));
-      RemoteInterface::send(response);
+      send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "PID ", 4) == 0) {
       // Lock interface
@@ -341,7 +352,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
       snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%f,%f,%f\n\r",
             (float)pidKp, (float)pidKi, (float)pidKd);
       response->size = strlen(reinterpret_cast<char*>(response->data));
-      RemoteInterface::send(response);
+      send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "PROF ", 5) == 0) {
       // Lock interface
@@ -359,7 +370,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "PROF?\n") == 0) {
-      const NvSolderProfile &profile = profiles[profileIndex];
+      const NvSolderProfile &profile = profiles[currentProfileIndex];
       snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data),
             /* index         */ "%d,"
             /* name          */ "%s,"
@@ -373,7 +384,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
             /* peakTemp      */ "%d,"
             /* peakDwell     */ "%d,"
             /* rampDownSlope */ "%.1f;\n\r",
-            (int)profileIndex,
+            (int)currentProfileIndex,
             (const char *)profile.description,
             (int)  profile.flags,
             (int)  profile.liquidus,
@@ -381,12 +392,12 @@ bool RemoteInterface::doCommand(Command *cmd) {
             (int)  profile.soakTemp1,
             (int)  profile.soakTemp2,
             (int)  profile.soakTime,
-            (float)profile.ramp2Slope,
+            (float)profile.rampUpSlope,
             (int)  profile.peakTemp,
             (int)  profile.peakDwell,
             (float)profile.rampDownSlope);
       response->size = strlen(reinterpret_cast<char*>(response->data));
-      RemoteInterface::send(response);
+      send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "PLOT?\n") == 0) {
       int lastValid = Draw::getData().getLastValid();
@@ -396,7 +407,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
          strcat(reinterpret_cast<char*>(response->data), "\n\r");
       }
       response->size = strlen(reinterpret_cast<char*>(response->data));
-      RemoteInterface::send(response);
+      send(response);
       for (int index=0; index<=lastValid; index++) {
          logThermocoupleStatus(index, index == lastValid);
       }
@@ -420,10 +431,10 @@ bool RemoteInterface::doCommand(Command *cmd) {
       // Unlock previous lock
       interactiveMutex->release();
       strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
-      response->size = strlen(reinterpret_cast<char*>(response->data));
-      send(response);
       // Unlock interface
       interactiveMutex->release();
+      response->size = strlen(reinterpret_cast<char*>(response->data));
+      send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "RUN?\n\r", 4) == 0) {
       // Lock interface
@@ -444,10 +455,10 @@ bool RemoteInterface::doCommand(Command *cmd) {
       else {
          strcpy(reinterpret_cast<char*>(response->data), "Running\n\r");
       }
-      response->size = strlen(reinterpret_cast<char*>(response->data));
-      send(response);
       // Unlock interface
       interactiveMutex->release();
+      response->size = strlen(reinterpret_cast<char*>(response->data));
+      send(response);
    }
    else {
       strcpy(reinterpret_cast<char*>(response->data), "Failed - unrecognized command\n\r");

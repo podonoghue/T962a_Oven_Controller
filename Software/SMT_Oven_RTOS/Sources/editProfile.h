@@ -237,7 +237,7 @@ private:
          new ProfileSetting_T<uint16_t>(profile.soakTemp1,     "Soak temp. 1 %3d\177C",        1,    140,    80,    160),
          new ProfileSetting_T<uint16_t>(profile.soakTemp2,     "Soak temp. 2 %3d\177C",        1,    183,   150,    250),
          new ProfileSetting_T<uint16_t>(profile.soakTime,      "Soak time    %3ds",            1,    120,    60,    300),
-         new ProfileSetting_T<float>   (profile.ramp2Slope,    "Ramp 2 up    %3.1f\177C/s",  0.1f,  3.0f,  0.1f,   6.0f),
+         new ProfileSetting_T<float>   (profile.rampUpSlope,   "Ramp up      %3.1f\177C/s",  0.1f,  3.0f,  0.1f,   6.0f),
          new ProfileSetting_T<uint16_t>(profile.peakTemp,      "Peak temp.   %3d\177C",        1,    210,   180,    300),
          new ProfileSetting_T<uint16_t>(profile.peakDwell,     "Peak dwell   %3ds",            1,     20,     1,     30),
          new ProfileSetting_T<float>   (profile.rampDownSlope, "Ramp down    %3.1f\177C/s", 0.1f,  -3.0f, -6.0f,  -0.1f),

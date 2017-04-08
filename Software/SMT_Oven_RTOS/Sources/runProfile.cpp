@@ -202,7 +202,7 @@ static void handler(const void *) {
             state = s_ramp_up;
 
             // Calculate timeout for ramp up to peak ramp (10% over)
-            timeout = (int)round(1.1*(currentProfile->peakTemp-setpoint)/currentProfile->ramp2Slope);
+            timeout = (int)round(1.1*(currentProfile->peakTemp-setpoint)/currentProfile->rampUpSlope);
          }
       }
       break;
@@ -218,7 +218,7 @@ static void handler(const void *) {
          state = s_fail;
       }
       if (setpoint < currentProfile->peakTemp) {
-         setpoint += currentProfile->ramp2Slope;
+         setpoint += currentProfile->rampUpSlope;
          pid.setSetpoint(setpoint);
          timeout = 0;
       }
@@ -324,7 +324,7 @@ void abortRunProfile() {
  * @return false Failed to start
  */
 bool remoteStartRunProfile() {
-   return startRunProfile(profiles[profileIndex]);
+   return startRunProfile(profiles[currentProfileIndex]);
 }
 
 /**
@@ -346,13 +346,13 @@ void runProfile() {
    }
 
    char buff[100];
-   snprintf(buff, sizeof(buff), "%d:%s\n\nRun Profile?", (int)profileIndex, (const volatile char *)profiles[profileIndex].description);
+   snprintf(buff, sizeof(buff), "%d:%s\n\nRun Profile?", (int)currentProfileIndex, (const volatile char *)profiles[currentProfileIndex].description);
    MessageBoxResult rc = messageBox("Run Profile", buff, MSG_YES_NO);
    if (rc != MSG_IS_YES) {
       return;
    }
 
-   startRunProfile(profiles[profileIndex]);
+   startRunProfile(profiles[currentProfileIndex]);
 
    // Menu for thermocouple screen
    static auto textPrompt = []() {
@@ -394,7 +394,7 @@ void runProfile() {
    Reporter::setTextPrompt(textPrompt);
    Reporter::setPlotPrompt(graphicPrompt);
    Reporter::setDisplayFormat(plotDisplay);
-   Reporter::setProfile(profileIndex);
+   Reporter::setProfile(currentProfileIndex);
 
    // Wait for completion with update approximately every second
    uint32_t last = osKernelSysTick();
