@@ -152,9 +152,11 @@ public:
    {}
 
    /**
-    * Get description of variable including value
+    * Get description of variable including value\n
     *
     * @return Description
+    *
+    * @note This uses an internal static buffer that is shared by all Settings objects
     */
    virtual const char* getDescription() const {
       snprintf(getBuff(), BUF_SIZE, description, (T)nvVariable);
@@ -176,7 +178,7 @@ public:
          value = max;
       }
       if (this->nvVariable != value) {
-         // Only update if actually changed (to avoid unnecessary EEPROM update)
+         // Only update if actually changed (to avoid unnecessary FlexRAM update)
          this->nvVariable = value;
       }
    }
@@ -227,7 +229,7 @@ public:
 };
 
 /**
- * This class handles initialising all non-volatile storage
+ * This class allows editing of Oven settings
  */
 class Settings : public USBDM::Flash {
 

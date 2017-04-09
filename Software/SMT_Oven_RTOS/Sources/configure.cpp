@@ -15,20 +15,20 @@
 USBDM::Spi0 spi;
 
 /** LCD */
-LCD_ST7920 lcd(spi, lcd_cs_num);
+LCD_ST7920 lcd{spi, lcd_cs_num};
 
 /** PWM for heater & oven fan */
-ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl(fanKickTime);
+ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl{fanKickTime};
 
 /** Switch debouncer for front panel buttons */
-SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons;
+SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons{};
 
 /**
  * Set output controlling oven
  *
  * @param dutyCycle Controls the Heater/Fan
  */
-void outPutControl(float dutyCycle) {
+inline void outPutControl(float dutyCycle) {
    int heaterDutycycle;
    int fanDutycycle;
 
@@ -54,18 +54,18 @@ void outPutControl(float dutyCycle) {
  *
  * @return Averaged oven temperature
  */
-float getTemperature() {
+inline float getTemperature() {
    return temperatureSensors.getTemperature();
 }
 
 /** PID controller */
-Pid_T<getTemperature, outPutControl> pid(pidKp, pidKp, pidKp, pidInterval, -100, 100);
+Pid_T<getTemperature, outPutControl> pid{pidKp, pidKp, pidKp, pidInterval, -100, 100};
 
 /** Thermocouples */
-TemperatureSensors temperatureSensors;
+TemperatureSensors temperatureSensors{};
 
 /** Monitor for case temperature */
-CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor;
+CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor{};
 
 /**
  * Mutex to protect Interactive and Remote control

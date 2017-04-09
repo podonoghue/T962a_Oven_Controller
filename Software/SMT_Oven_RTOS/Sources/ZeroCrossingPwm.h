@@ -12,18 +12,20 @@
 #include <Flash.h>
 
 /**
- * Simple zero-crossing PWM for oven fan and heater controlled by a zero-crossing SSDs
+ * Simple zero-crossing PWM for oven fan and heater controlled by zero-crossing SSDs
  *
  * The switching waveform will be synchronised to the mains zero crossing
  *
- * @tparam OvenFan USBDM::Gpio controlling the oven fan SSD
- * @tparam Heater  USBDM::Gpio controlling the oven heater SSD
- * @tparam Vmains  USBDM::Cmp used for mains sensing
+ * @tparam Heater     USBDM::Gpio controlling the oven heater SSD
+ * @tparam HeaterLed  USBDM::Gpio controlling the oven heater LED
+ * @tparam Fan        USBDM::Gpio controlling the oven fan SSD
+ * @tparam FanLed     USBDM::Gpio controlling the oven fan LED
+ * @tparam Vmains     USBDM::Cmp used for mains sensing
  */
 template<typename Heater, typename HeaterLed, typename Fan, typename FanLed, typename Vmains>
 class ZeroCrossingPwm {
-private:
 
+private:
    /** Duty cycle for Heater */
    static int  heaterDutycycle;
 
@@ -37,18 +39,21 @@ private:
     * Number of mains half-cycles to run the fan before switching to PWM mode
     * This is to overcome the static friction of the fan on low duty-cycle
     */
-   USBDM::Nonvolatile<int> &fanKickTime;
+   const USBDM::Nonvolatile<int> &fanKickTime;
 
    /*
     * Function is called on zero-crossings of the mains.
     * Implements a simple PWM with variable period (~20ms - ~1s @50Hz mains).
     */
    static void callbackFunction(int status) {
+      (void)status;
+
       // Keeps track of heater drive
       static int heaterDutycount = 0;
+
       // Keeps track of fan drive
       static int fanDutycount = 0;
-      (void)status;
+
 #if 0
       // Simple PWM with fixed period
       static int cycleCount = 0;
@@ -64,8 +69,9 @@ private:
       // Variable period PWM
       int wholePart;
       heaterDutycount += heaterDutycycle;
-      wholePart = heaterDutycount/100;
+      wholePart        = heaterDutycount/100;
       heaterDutycount -= 100*wholePart;
+
       Heater::write(wholePart>0);
       HeaterLed::write(wholePart>0);
 
@@ -92,7 +98,7 @@ public:
     *
     * @param fanKickTime Non-volatile variable used to control the fan kick time applied when starting
     */
-   ZeroCrossingPwm(USBDM::Nonvolatile<int> &fanKickTime) : fanKickTime(fanKickTime) {
+   ZeroCrossingPwm(const USBDM::Nonvolatile<int> &fanKickTime) : fanKickTime(fanKickTime) {
       initialise();
    }
 
@@ -108,7 +114,7 @@ private:
       Fan::low();
 
       /**
-       * Set up comparator to generate events on zero-crossings
+       * Set up comparator to generate events on mains zero-crossings
        */
       Vmains::enable();
       Vmains::setCallback(callbackFunction);
