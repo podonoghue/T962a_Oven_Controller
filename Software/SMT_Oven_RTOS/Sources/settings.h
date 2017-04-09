@@ -9,7 +9,7 @@
 #ifndef SOURCES_SETTINGS_H_
 #define SOURCES_SETTINGS_H_
 
-#include <Flash.h>
+#include "flash.h"
 #include <SolderProfile.h>
 
 /** Length of beep in seconds */

@@ -9,10 +9,10 @@
 #ifndef SOURCES_SOLDERPROFILE_H_
 #define SOURCES_SOLDERPROFILE_H_
 
-#include <Flash.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include "flash.h"
 
 enum {
    P_UNLOCKED = (1<<0),

@@ -39,7 +39,15 @@ __sram_u_size = 0;
  */
 MEMORY
 {
+/*
+ *  <o>  flexRAM    address <constant>
+ *  <o1> flexRAM    size    <constant>
+ */
   flexRAM        (rw)  : ORIGIN = 0x14000000, LENGTH = 0x00001000
+/*
+ *  <o>  flexNVM    address <constant>
+ *  <o1> flexNVM    size    <constant>
+ */
   flexNVM        (rx)  : ORIGIN = 0x10000000, LENGTH = 0x00010000
   bitband        (rw)  : ORIGIN = 0x22000000, LENGTH = 0x02000000
   aips0          (rw)  : ORIGIN = 0x40000000, LENGTH = 0x00080000

@@ -92,7 +92,7 @@ extern const Setting_T<float> pidKdSetting;
  */
 Settings::Settings() : Flash() {
    // Initialise EEPROM
-   USBDM::FlashDriverError_t rc = initialiseEeprom(USBDM::Flash::eeprom2KBytes);
+   USBDM::FlashDriverError_t rc = initialiseEeprom(Flash::eeprom2KBytes);
    if (rc == USBDM::FLASH_ERR_OK) {
       return;
    }

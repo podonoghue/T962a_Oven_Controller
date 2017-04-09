@@ -1242,13 +1242,13 @@ public:
  * @}
  */
 /**
- * @addtogroup FTFL_TODO_Group FTFL, (Incomplete)
- * @brief Abstraction for (Incomplete)
+ * @addtogroup FTFL_Group FTFL, Flash Memory Module
+ * @brief Abstraction for Flash Memory Module
  * @{
  */
 #define USBDM_FTFL_IS_DEFINED 
 /**
- * Peripheral information for FTFL, (Incomplete)
+ * Peripheral information for FTFL, Flash Memory Module
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1266,10 +1266,56 @@ public:
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
 
+   // Template:ftfl
+
+   /** Selects EEPROM size */
+   enum EepromSel {
+      eeprom32Bytes,
+      eeprom64Bytes,
+      eeprom128Bytes,
+      eeprom256Bytes,
+      eeprom512Bytes,
+      eeprom1KBytes,
+      eeprom2KBytes,
+   };
+   
+   /** Selects division of FlexNVM between flash and EEPROM backing storage */
+   enum PartitionSel {
+      partition_flash64K_eeprom0K,
+      partition_flash32K_eeprom32K,
+      partition_flash0K_eeprom64K,
+   
+      // All EEPROM
+      partition_flash0K_eeprom_all = partition_flash0K_eeprom64K,
+   };
+   
+   /**
+    * Selects division of the two regions of EEPROM (if supported on device)
+    * This allows A/B regions to have different wear characteristics
+    */
+   enum PartitionSplit {
+      partition_A1_B7_8ths = 0x00,                 //! A=1/8, B=7/8
+      partition_A2_B6_8ths = 0x10,                 //! A=2/8=1/4, B=6/8=3/4
+      partition_A4_B4_8ths = 0x30,                 //! A=4/8=1/2, B=4/8=1/2
+      partition_A1_B3_8ths = partition_A2_B6_8ths, //! A=2/8=1/4, B=6/8=3/4
+      partition_A1_B1_8ths = partition_A4_B4_8ths, //! A=2/8=1/4, B=6/8=3/4
+   
+      // Default - A = B = 1/2
+      partition_default=partition_A4_B4_8ths,      //! Equal partitions
+   };
+   //! FlexNVM - EEPROM size
+   static constexpr EepromSel eepromSel = eeprom2KBytes;
+
+   //! FlexNVM - Flash EEPROM partition
+   static constexpr PartitionSel partitionSel = partition_flash0K_eeprom64K;
+
+   //! FlexNVM - EEPROM partition
+   static constexpr PartitionSplit partitionSplit = partition_A4_B4_8ths;
+
 };
 
 /** 
- * End group FTFL_TODO_Group
+ * End group FTFL_Group
  * @}
  */
 /**

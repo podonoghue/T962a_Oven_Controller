@@ -54,7 +54,7 @@ inline void outPutControl(float dutyCycle) {
  *
  * @return Averaged oven temperature
  */
-inline float getTemperature() {
+float getTemperature() {
    return temperatureSensors.getTemperature();
 }
 

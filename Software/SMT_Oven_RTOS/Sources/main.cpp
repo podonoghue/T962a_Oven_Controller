@@ -7,12 +7,11 @@
  *      Author: podonoghue
  ============================================================================
  */
-#include <EditProfile.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <usb_cdc_interface.h>
 #include "cmsis.h"
+#include "usb_cdc_interface.h"
 #include "system.h"
 #include "derivative.h"
 #include "hardware.h"
@@ -26,6 +25,7 @@
 #include "mainMenu.h"
 #include "usb.h"
 #include "utilities.h"
+#include "EditProfile.h"
 
 class profilesMenu {
 

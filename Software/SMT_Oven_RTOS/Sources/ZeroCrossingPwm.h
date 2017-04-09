@@ -9,7 +9,7 @@
 #ifndef SOURCES_ZEROCROSSINGPWM_H_
 #define SOURCES_ZEROCROSSINGPWM_H_
 
-#include <Flash.h>
+#include "flash.h"
 
 /**
  * Simple zero-crossing PWM for oven fan and heater controlled by zero-crossing SSDs

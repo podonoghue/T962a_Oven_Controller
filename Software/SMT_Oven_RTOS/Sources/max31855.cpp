@@ -6,7 +6,7 @@
  *      Author: podonoghue
  */
 
-#include <Max31855.h>
+#include "max31855.h"
 
 //CMSIS::Mutex Max31855::mutex;
 
