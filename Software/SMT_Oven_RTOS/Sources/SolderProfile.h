@@ -73,28 +73,26 @@ public:
 /**
  * Used to represent a solder profile in nonvolatile memory
  */
-#pragma pack(push, 1)
 class NvSolderProfile {
 
 private:
    // Can't create these
-   NvSolderProfile (const NvSolderProfile &obj) {
-      (void) obj;
-   }
+   NvSolderProfile (const NvSolderProfile &obj) = delete;
 
 public:
-   USBDM::Nonvolatile<uint8_t>       flags;          // Properties of the profile
-   USBDM::NonvolatileArray<char, sizeof(SolderProfile::description)>
-                                     description;    // Description of the profile
+   USBDM::Nonvolatile<float>         rampUpSlope;    // Slope up to peakTemp
+   USBDM::Nonvolatile<float>         rampDownSlope;  // Slope down after peakTemp
    USBDM::Nonvolatile<uint16_t>      liquidus;       // Liquidus temperature
    USBDM::Nonvolatile<uint16_t>      preheatTime;    // Time to reach soakTemp1
    USBDM::Nonvolatile<uint16_t>      soakTemp1;      // Temperature for start of soak
    USBDM::Nonvolatile<uint16_t>      soakTemp2;      // Temperature for end of soak
    USBDM::Nonvolatile<uint16_t>      soakTime;       // Length of soak
-   USBDM::Nonvolatile<float>         rampUpSlope;    // Slope up to peakTemp
    USBDM::Nonvolatile<uint16_t>      peakTemp;       // Peak reflow temperature
    USBDM::Nonvolatile<uint16_t>      peakDwell;      // How long to remain at peakTemp
-   USBDM::Nonvolatile<float>         rampDownSlope;  // Slope down after peakTemp
+   USBDM::Nonvolatile<uint8_t>       flags;          // Properties of the profile
+   USBDM::NonvolatileArray<char, sizeof(SolderProfile::description)>
+                                     description;    // Description of the profile
+   USBDM::Nonvolatile<uint16_t>      reserved;       // Pad to 4-bye alignment
 
    NvSolderProfile () {
    }
@@ -127,7 +125,6 @@ public:
     */
    void print() const;
 };
-#pragma pack(pop)
 
 // Predefined profiles
 extern const SolderProfile am4300profileA;

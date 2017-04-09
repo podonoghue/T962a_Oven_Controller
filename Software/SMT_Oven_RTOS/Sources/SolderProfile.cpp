@@ -24,7 +24,7 @@ void SolderProfile::operator=(const NvSolderProfile &other ) {
    soakTemp1     = other.soakTemp1;
    soakTemp2     = other.soakTemp2;
    soakTime      = other.soakTime;
-   rampUpSlope    = other.rampUpSlope;
+   rampUpSlope   = other.rampUpSlope;
    peakTemp      = other.peakTemp;
    peakDwell     = other.peakDwell;
    rampDownSlope = other.rampDownSlope;
@@ -44,7 +44,7 @@ void SolderProfile::operator=(const SolderProfile &other ) {
    soakTemp1     = other.soakTemp1;
    soakTemp2     = other.soakTemp2;
    soakTime      = other.soakTime;
-   rampUpSlope    = other.rampUpSlope;
+   rampUpSlope   = other.rampUpSlope;
    peakTemp      = other.peakTemp;
    peakDwell     = other.peakDwell;
    rampDownSlope = other.rampDownSlope;
@@ -65,7 +65,7 @@ void NvSolderProfile::operator=(const SolderProfile &other ) {
    soakTemp1     = other.soakTemp1;
    soakTemp2     = other.soakTemp2;
    soakTime      = other.soakTime;
-   rampUpSlope    = other.rampUpSlope;
+   rampUpSlope   = other.rampUpSlope;
    peakTemp      = other.peakTemp;
    peakDwell     = other.peakDwell;
    rampDownSlope = other.rampDownSlope;
@@ -86,7 +86,7 @@ void NvSolderProfile::operator=(const NvSolderProfile &other ) {
    soakTemp1     = other.soakTemp1;
    soakTemp2     = other.soakTemp2;
    soakTime      = other.soakTime;
-   rampUpSlope    = other.rampUpSlope;
+   rampUpSlope   = other.rampUpSlope;
    peakTemp      = other.peakTemp;
    peakDwell     = other.peakDwell;
    rampDownSlope = other.rampDownSlope;
@@ -191,7 +191,7 @@ const SolderProfile defaultProfile = {
       /* rampDownSlope */ -3.0,
 };
 
-/** The actual profile in nonvolatile memory */
+/** The actual profiles in nonvolatile memory */
 __attribute__ ((section(".flexRAM")))
 NvSolderProfile profiles[MAX_PROFILES];
 
