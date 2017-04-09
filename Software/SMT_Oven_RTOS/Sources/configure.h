@@ -162,8 +162,12 @@ public:
     * Button press is consumed.
     */
    static void play() {
+      // Test for any button press
+      static auto btnTest = []() {
+         return buttons.getButton(0) != SwitchValue::SW_NONE;
+      };
       high();
-      USBDM::wait(beepTime, [](){ return buttons.getButton() != SwitchValue::SW_NONE; });
+      USBDM::wait(beepTime, btnTest);
       low();
    }
 };
