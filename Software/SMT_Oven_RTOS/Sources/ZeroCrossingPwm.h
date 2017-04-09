@@ -1,13 +1,12 @@
 /**
- * @file    zerocrossing_pwm.h
+ * @file    ZeroCrossingPwm.h
  * @brief   Zero-crossing switch controller
  *
  *  Created on: 24 Sep 2016
  *      Author: podonoghue
  */
-
-#ifndef SOURCES_ZEROCROSSINGPWM_H_
-#define SOURCES_ZEROCROSSINGPWM_H_
+#ifndef HEADERS_ZEROCROSSINGPWM_H_
+#define HEADERS_ZEROCROSSINGPWM_H_
 
 #include "flash.h"
 
@@ -178,4 +177,4 @@ int  ZeroCrossingPwm<Heater, HeaterLed, Fan, FanLed, Vmains>::fanDutycycle = 0;
 template<typename Heater, typename HeaterLed, typename Fan, typename FanLed, typename Vmains>
 int  ZeroCrossingPwm<Heater, HeaterLed, Fan, FanLed, Vmains>::fanKick = 0;
 
-#endif /* SOURCES_ZEROCROSSINGPWM_H_ */
+#endif /* HEADERS_ZEROCROSSINGPWM_H_ */

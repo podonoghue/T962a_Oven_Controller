@@ -192,8 +192,6 @@ public:
    /**
     * Obtain mutex
     *
-    * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait
-    *
     * @return osOK: The mutex has been obtain.
     * @return osErrorTimeoutResource: The mutex could not be obtained in the given time.
     */

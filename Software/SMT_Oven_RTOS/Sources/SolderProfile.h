@@ -1,5 +1,5 @@
 /**
- * @file    solderProfiles.h
+ * @file    SolderProfile.h
  * @brief   Solder profiles
  *
  *  Created on: 18 Sep 2016

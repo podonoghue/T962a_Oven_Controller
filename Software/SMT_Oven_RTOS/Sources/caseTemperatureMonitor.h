@@ -9,8 +9,8 @@
 #ifndef SOURCES_CASETEMPERATUREMONITOR_CPP_
 #define SOURCES_CASETEMPERATUREMONITOR_CPP_
 
-#include <Max31855.h>
-#include <TemperatureSensors.h>
+#include "Max31855.h"
+#include "TemperatureSensors.h"
 #include "cmsis.h"
 
 /**
@@ -20,7 +20,6 @@
  * @tparam CaseFan      PWM controlling the case fan
  * @tparam START_TEMP   Temperature at which to start the fan at MIN_FAN_SPEED %
  * @tparam MAX_TEMP     Temperature at which the fan is to be 100% on
- *
  */
 template<typename CaseFan, int START_TEMP=35, int MAX_TEMP=45>
 class CaseTemperatureMonitor {
@@ -46,7 +45,7 @@ public:
    /*
     * Create case temperature monitor
     *
-    * @tparam Sensor       Temperature sensor
+    * @tparam Sensor Temperature sensor
     */
    CaseTemperatureMonitor() {
    }
