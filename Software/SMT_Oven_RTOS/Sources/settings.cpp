@@ -11,10 +11,19 @@
 #include "lcd_st7920.h"
 #include "configure.h"
 
+/** Priority of the FlexRAM initialisation (Settings constructor) */
+constexpr int FLEX_RAM_INIT_PRIORITY     = 1000;
+
+/** Priority of objects that must be constructed before the FlexRAM initialisation */
+//constexpr int FLEX_RAM_PRE_INIT_PRIORITY = 900;
+
 using namespace USBDM;
 
 /*
  * Allocate settings variables to non-volatile storage
+ *
+ * Must be allocated to flash.
+ * These objects must be initialise by the Settings object
  */
 __attribute__ ((section(".flexRAM")))
 Nonvolatile<int> beepTime;
@@ -87,7 +96,10 @@ Settings::Settings() : Flash() {
    if (rc == USBDM::FLASH_ERR_OK) {
       return;
    }
-   // Errors are ignored here but will have already set the USBDM error code
+   /*
+    * Errors are ignored here but will have already set the USBDM error code.
+    * These may be tested later in main()
+    */
    initialiseSettings();
 }
 
@@ -246,19 +258,20 @@ public:
             changed = true;
             break;
          case SwitchValue::SW_S:
+            ovenControl.setFanDutycycle(0);
             return;
          default:
             break;
          }
          __WFI();
       }
-      ovenControl.setFanDutycycle(0);
    }
 };
 
 /**
  * Describes the various settings for the menu
- * Also controls range and default values etc.
+ * Controls range and default values etc.
+ * Also used by the Settings object to initialise FlexRAM objects
  */
 //                                      nvVariable        description                min   max  incr  default  test function
 const Setting_T<int> fanSetting      = {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   30,      FanTest::testFan};
@@ -381,4 +394,4 @@ void Settings::runMenu() {
 }
 
 // Singleton
-Settings settings;
+Settings settings __attribute__ ((init_priority (FLEX_RAM_INIT_PRIORITY)));

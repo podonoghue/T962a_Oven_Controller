@@ -73,10 +73,12 @@ protected:
       return buff;
    }
 
+protected:
+   ~Setting() = default;
+
 public:
-   Setting() {
+   constexpr Setting() {
    }
-   virtual ~Setting() {}
 
    /**
     * Get description of variable including value
@@ -140,9 +142,12 @@ protected:
    /** Function called to test function associated with variable */
    void (*func)(const Setting *setting);
 
+
 public:
 
-   Setting_T(USBDM::Nonvolatile<T> &nvVariable, const char *desc, T min, T max, T delta, T defaultValue, void (*func)(const Setting *setting) ) :
+   ~Setting_T() = default;
+
+   constexpr Setting_T(USBDM::Nonvolatile<T> &nvVariable, const char *desc, T min, T max, T delta, T defaultValue, void (*func)(const Setting *setting) ) :
       nvVariable(nvVariable), description(desc), min(min), max(max), delta(delta), defaultValue(defaultValue), func(func)
    {}
 
