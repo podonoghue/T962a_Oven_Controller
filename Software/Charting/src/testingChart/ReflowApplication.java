@@ -16,12 +16,15 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import testingChart.OvenCommunication.OvenCommunicationException;
-import javax.swing.JSpinner;
 
 public class ReflowApplication {
 
@@ -61,6 +64,12 @@ public class ReflowApplication {
       initialize();
    }
 
+
+   private void setProfileNumber(Number number) throws OvenCommunicationException {
+      OvenCommunication oven = new OvenCommunication();
+      oven.selectProfile(number);
+   }
+   
    /**
     * Initialize the contents of the frame.
     */
@@ -158,18 +167,18 @@ public class ReflowApplication {
       tabbedPane.addTab("Profiles", null, profilesPanel, null);
       profilesPanel.setLayout(new BorderLayout(0, 0));
       
-      JPanel profilePanel = new ProfileChartPanel();
+      ProfileChartPanel profilePanel = new ProfileChartPanel();
       profilesPanel.add(profilePanel, BorderLayout.CENTER);
       
       JPanel parameterPanel = new JPanel();
       profilesPanel.add(parameterPanel, BorderLayout.EAST);
       GridBagLayout gbl_parameterPanel = new GridBagLayout();
-      gbl_parameterPanel.columnWeights = new double[]{0.0, 0.0, 0.0};
-      gbl_parameterPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+      gbl_parameterPanel.columnWeights = new double[]{1.0, 0.0, 0.0};
+      gbl_parameterPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
       parameterPanel.setLayout(gbl_parameterPanel);
       
       JLabel lblParameters = new JLabel("Profile Parameters");
-      lblParameters.setFont(new Font("Tahoma", Font.PLAIN, 16));
+      lblParameters.setFont(new Font("Tahoma", Font.PLAIN, 18));
       lblParameters.setAlignmentX(Component.CENTER_ALIGNMENT);
       lblParameters.setHorizontalAlignment(SwingConstants.CENTER);
       GridBagConstraints gbc_lblParameters = new GridBagConstraints();
@@ -190,7 +199,30 @@ public class ReflowApplication {
       gbc_lblNewLabel.gridy = 2;
       parameterPanel.add(lblNewLabel, gbc_lblNewLabel);
       
-      JSpinner profileNumberSpinner = new JSpinner();
+      JSpinner profileNumberSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 9, 1));
+      profileNumberSpinner.addChangeListener(new ChangeListener() {
+         public void stateChanged(ChangeEvent arg0) {
+            SpinnerNumberModel model = (SpinnerNumberModel) profileNumberSpinner.getModel();
+            System.err.println("Value = " + model.getNumber());
+            try {
+               setProfileNumber(model.getNumber());
+               profilePanel.update();
+            } catch (OvenCommunicationException e) {
+               JOptionPane.showMessageDialog(frame, e.getMessage(), "Communication error", JOptionPane.ERROR_MESSAGE);
+            }
+         }
+      });
+//      profileNumberSpinner.addVetoableChangeListener(new VetoableChangeListener() {
+//         public void vetoableChange(PropertyChangeEvent arg0) throws PropertyVetoException {
+//            SpinnerNumberModel model = (SpinnerNumberModel) profileNumberSpinner.getModel();
+//            System.err.println("Value = " + model.getNumber());
+//            try {
+//               setProfileNumber(model.getNumber());
+//            } catch (OvenCommunicationException e) {
+//               throw new PropertyVetoException(e.getMessage(), arg0);
+//            }
+//         }
+//      });
       GridBagConstraints gbc_profileNumberSpinner = new GridBagConstraints();
       gbc_profileNumberSpinner.weighty = 0.1;
       gbc_profileNumberSpinner.fill = GridBagConstraints.BOTH;
@@ -477,7 +509,7 @@ public class ReflowApplication {
       gbc_lblFiller.gridwidth = 3;
       gbc_lblFiller.weighty = 1.0;
       gbc_lblFiller.gridx = 0;
-      gbc_lblFiller.gridy = 14;
+      gbc_lblFiller.gridy = 15;
       parameterPanel.add(lblFiller, gbc_lblFiller);
    }
 

@@ -52,28 +52,6 @@ protected:
       singletonFlag = true;
    }
 
-   //#define KINETIS_32K_FLEXRAM
-#define KINETIS_64K_FLEXRAM
-
-#if defined(KINETIS_32K_FLEXRAM)
-   /** Selects division of FlexNVM between flash and EEPROM backing storage */
-   enum PartitionSel {
-      partition_flash32K_eeprom0K,
-      partition_flash24K_eeprom8K,
-      partition_flash16K_eeprom16K,
-      partition_flash8K_eeprom24K,
-      partition_flash0K_eeprom32K,
-
-      // All EEPROM
-      partition_flash0K_eeprom_all = partition_flash0K_eeprom32K,
-   };
-   /** Selects division two regions of EEPROM (if supported on device) */
-   enum PartitionSplit {
-      partition_default=0x30, //! Single partition
-   };
-#elif defined(KINETIS_64K_FLEXRAM)
-#endif
-
    /**
     * Launch & wait for Flash command to complete
     */
@@ -124,9 +102,9 @@ protected:
     * @note This routine will only partition EEPROM when first executed after the device has been programmed.
     */
    static FlashDriverError_t initialiseEeprom(
-         EepromSel        eeprom,
-         PartitionSel     partition=partition_flash0K_eeprom_all,
-         PartitionSplit   split=partition_default);
+         EepromSel        eeprom=eepromSel,
+         PartitionSel     partition=partitionSel,
+         PartitionSplit   split=partitionSplit);
 
 public:
 

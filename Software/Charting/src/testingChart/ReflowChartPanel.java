@@ -27,9 +27,7 @@ import com.serialpundit.core.SerialComException;
 import testingChart.OvenCommunication.OvenCommunicationException;
 
 /**
- * SMT Oven Application using JFreechart library.
  * 
- * @author Peter O'Donoghue
  */
 public class ReflowChartPanel extends ChartPanel {
 
@@ -52,10 +50,10 @@ public class ReflowChartPanel extends ChartPanel {
    final String xAxisLabel = "Time (seconds)";
 
    /** Series for selected profile */
-   XYSeries profileSeries = new XYSeries("Profile");
+   XYSeries profileSeries = new XYSeries("Reference Profile");
 
    /** Series for target profile as executed on oven */
-   XYSeries targetSeries  = new XYSeries("Target");
+   XYSeries targetSeries  = new XYSeries("Target Profile");
 
    /** Series for average oven temperature */
    XYSeries averageSeries = new XYSeries("Average");
@@ -83,6 +81,12 @@ public class ReflowChartPanel extends ChartPanel {
 
    /** Name of profile on chart */
    XYTextAnnotation profileName = new XYTextAnnotation("No Profile", 10, 100);
+
+   double initialMovePointY = 0.0;
+
+   ChartPanel localChartPanel = null;
+
+   private JFreeChart chart;
 
    /**
     * Create data set to hold the data for the plot
@@ -153,8 +157,7 @@ public class ReflowChartPanel extends ChartPanel {
       plot.add(percentagePlot,  1);
       plot.setOrientation(PlotOrientation.VERTICAL);
 
-      // return a new chart containing the overlaid plot...
-      JFreeChart chart = new JFreeChart(chartTitle, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+      chart = new JFreeChart(chartTitle, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
 
       temperaturePlot.addRangeMarker(liquidusMarker);
       liquidusMarker.setPaint(Color.black);

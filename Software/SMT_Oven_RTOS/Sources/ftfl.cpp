@@ -159,6 +159,9 @@ struct PartitionInformation {
    const uint8_t  value;         //! Partition value
 };
 
+//#define KINETIS_32K_FLEXRAM
+#define KINETIS_64K_FLEXRAM
+
 #if defined(KINETIS_32K_FLEXRAM)
 static const PartitionInformation partitionInformation[] {
       // Flash   Backing   Value

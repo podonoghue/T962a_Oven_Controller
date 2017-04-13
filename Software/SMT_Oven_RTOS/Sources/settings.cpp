@@ -14,9 +14,6 @@
 /** Priority of the FlexRAM initialisation (Settings constructor) */
 constexpr int FLEX_RAM_INIT_PRIORITY     = 1000;
 
-/** Priority of objects that must be constructed before the FlexRAM initialisation */
-//constexpr int FLEX_RAM_PRE_INIT_PRIORITY = 900;
-
 using namespace USBDM;
 
 /*
@@ -92,7 +89,7 @@ extern const Setting_T<float> pidKdSetting;
  */
 Settings::Settings() : Flash() {
    // Initialise EEPROM
-   USBDM::FlashDriverError_t rc = initialiseEeprom(Flash::eeprom2KBytes);
+   USBDM::FlashDriverError_t rc = initialiseEeprom();
    if (rc == USBDM::FLASH_ERR_OK) {
       return;
    }

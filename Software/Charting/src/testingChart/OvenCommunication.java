@@ -14,8 +14,8 @@ import testingChart.PlotData.PlotDataPoint;
 
 public class OvenCommunication {
 
-   //   final String COM_PORT = "com23";
-   final static String COM_PORT = "com29";
+      final String COM_PORT = "com23";
+//   final static String COM_PORT = "com29";
 
    SerialComManager scm = null;
    long handle = -1;
@@ -227,6 +227,22 @@ public class OvenCommunication {
          throw new OvenCommunicationException("Invalid oven response to query\n\r"+data); 
       }
    }
+
+   /**
+    * Select the a profile on the oven
+    * 
+    * @param number Number of profile to select
+    * @throws OvenCommunicationException 
+    */
+   public void selectProfile(Number index) throws OvenCommunicationException {
+      String command = String.format("PROF %d\n\r", index);
+      String data = commandResponse(command);
+      // Check for correct oven response
+      if ((data == null) || !data.startsWith("OK")) {
+         throw new OvenCommunicationException("Invalid oven response to query\n\r"+data); 
+      }
+   }
+
    /**
     * Reads plot data from Oven
     * 

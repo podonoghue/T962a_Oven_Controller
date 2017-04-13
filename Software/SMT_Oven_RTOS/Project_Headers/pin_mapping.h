@@ -1288,7 +1288,7 @@ public:
       // All EEPROM
       partition_flash0K_eeprom_all = partition_flash0K_eeprom64K,
    };
-   
+
    /**
     * Selects division of the two regions of EEPROM (if supported on device)
     * This allows A/B regions to have different wear characteristics
@@ -1297,8 +1297,8 @@ public:
       partition_A1_B7_8ths = 0x00,                 //! A=1/8, B=7/8
       partition_A2_B6_8ths = 0x10,                 //! A=2/8=1/4, B=6/8=3/4
       partition_A4_B4_8ths = 0x30,                 //! A=4/8=1/2, B=4/8=1/2
-      partition_A1_B3_8ths = partition_A2_B6_8ths, //! A=2/8=1/4, B=6/8=3/4
-      partition_A1_B1_8ths = partition_A4_B4_8ths, //! A=2/8=1/4, B=6/8=3/4
+      partition_A1_B3_4ths = partition_A2_B6_8ths, //! A=2/8=1/4, B=6/8=3/4
+      partition_A1_B1_2ths = partition_A4_B4_8ths, //! A=2/8=1/4, B=6/8=3/4
    
       // Default - A = B = 1/2
       partition_default=partition_A4_B4_8ths,      //! Equal partitions
