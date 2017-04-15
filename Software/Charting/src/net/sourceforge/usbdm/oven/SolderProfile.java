@@ -1,4 +1,4 @@
-package testingChart;
+package net.sourceforge.usbdm.oven;
 
 import org.jfree.data.xy.XYSeries;
 

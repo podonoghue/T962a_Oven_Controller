@@ -1,25 +1,40 @@
-package testingChart;
+package net.sourceforge.usbdm.oven;
 
+import java.awt.Component;
 import java.io.IOException;
 
-import com.serialpundit.core.SerialComException;
-import com.serialpundit.serial.SerialComManager;
-import com.serialpundit.serial.SerialComManager.BAUDRATE;
-import com.serialpundit.serial.SerialComManager.DATABITS;
-import com.serialpundit.serial.SerialComManager.FLOWCONTROL;
-import com.serialpundit.serial.SerialComManager.PARITY;
-import com.serialpundit.serial.SerialComManager.STOPBITS;
+import javax.swing.JOptionPane;
 
-import testingChart.PlotData.PlotDataPoint;
+import net.sourceforge.usbdm.oven.PlotData.PlotDataPoint;
 
-public class OvenCommunication {
+/**
+ * Base class for communication with oven
+ */
+public abstract class OvenCommunication {
 
-      final String COM_PORT = "com23";
-//   final static String COM_PORT = "com29";
+   /**
+    * Name of serial port
+    */
+   static String comPortName = null;
 
-   SerialComManager scm = null;
-   long handle = -1;
+   /**
+    * Oven ID command
+    */
+   static final String OVEN_ID_COMMAND = "idn?\n\r";
 
+   /**
+    * Expected response from oven for ID command
+    */
+   static final String OVEN_ID_RESPONSE = "SMT-Oven";
+
+   /**
+    * Oven serial port description will start with this
+    */
+   static final String OVEN_COMM_NAME = "T962a";
+
+   /**
+    * Exceptions from communication with oven
+    */
    @SuppressWarnings("serial")
    static class OvenCommunicationException extends IOException {
 
@@ -32,8 +47,57 @@ public class OvenCommunication {
       }
    }
 
-   public OvenCommunication() {
+   /**
+    * Select default port name
+    * 
+    * @throws OvenCommunicationException 
+    * @throws IOException 
+    */
+   protected void selectDefaultPortName() throws OvenCommunicationException {
+      String[] portNames = getPortNames();
+      comPortName = null;
+      for (String s:portNames) {
+         if (s.startsWith(OVEN_COMM_NAME)) {
+            comPortName = s;
+            break;
+         }
+      }
    }
+
+   /**
+    * Provides dialogue to select communication port for oven
+    */
+   void selectPortDialogue(Component parent) {
+      try {
+         if (comPortName == null) {
+            // Check for default name
+            selectDefaultPortName();
+         }
+         String[] portNames = getPortNames();
+         if (portNames.length != 0) {
+            comPortName = (String) JOptionPane.showInputDialog(
+                  parent, 
+                  "Choose port...",
+                  "Communication port", 
+                  JOptionPane.QUESTION_MESSAGE, 
+                  null, 
+                  portNames, 
+                  comPortName); 
+            System.out.println(comPortName);
+         }
+      } catch (OvenCommunicationException e) {
+         e.printStackTrace();
+      }
+   }
+
+   /**
+    * Get list of port names
+    * 
+    * @return Array of currently available serial ports
+    * 
+    * @throws IOException
+    */
+   protected abstract String[] getPortNames() throws OvenCommunicationException;
 
    /**
     * Opens the communication to the Oven<br>
@@ -41,52 +105,14 @@ public class OvenCommunication {
     * 
     * @throws OvenCommunicationException 
     */
-   public void open() throws OvenCommunicationException {
-      if ((scm != null) && (handle != -1)) {
-         // Already open - ignore
-         return;
-      }
-      try {
-         // Open com port
-         scm = new SerialComManager();
-         handle = scm.openComPort(COM_PORT, true, true, true);
-         scm.configureComPortData(handle, DATABITS.DB_8, STOPBITS.SB_1, PARITY.P_NONE, BAUDRATE.B115200, 0);
-         scm.configureComPortControl(handle, FLOWCONTROL.NONE, 'x', 'x', false, false);
-
-         // Check for correct oven response
-         scm.writeString(handle, "idn?\n\r", 0);
-         String data = scm.readString(handle);
-         //         System.out.println("data read is :" + data);
-         if (!data.startsWith("SMT-Oven")) {
-            close();
-            throw new OvenCommunicationException("Oven failed to respond"); 
-         }
-      } catch (SerialComException e) {
-         close();
-         throw new OvenCommunicationException("Failed to open Oven serial port\nCheck serial port name", e); 
-      } catch (IOException e) {
-         close();
-         throw new OvenCommunicationException("Creation of Serial Communication Manager failed", e); 
-      }
-   }
+   abstract void open() throws OvenCommunicationException;
 
    /**
     * Closes communication with the oven
     * 
     * @throws OvenCommunicationException 
     */
-   public void close() throws OvenCommunicationException {
-      try {
-         if ((scm != null) && (handle != -1)) {
-            scm.closeComPort(handle);
-         }
-      } catch (Exception e) {
-         throw new OvenCommunicationException("Failed to close Oven communication", e); 
-      } finally {
-         scm    = null;
-         handle = -1;
-      }
-   }
+   abstract void close() throws OvenCommunicationException;
 
    /**
     * Write string to the Oven
@@ -95,34 +121,16 @@ public class OvenCommunication {
     * 
     * @throws OvenCommunicationException
     */
-   void writeString(String string) throws OvenCommunicationException {
-      if ((scm == null) && (handle == -1)) {
-         throw new OvenCommunicationException("Oven communication not open"); 
-      }
-      try {
-         scm.writeString(handle, string, 0);
-      } catch (SerialComException e) {
-         throw new OvenCommunicationException("Failed write to Oven", e); 
-      }
-   }
+   protected abstract void writeString(String string) throws OvenCommunicationException;
 
    /**
-    * Write string to the Oven
+    * Read string from the Oven
     * 
-    * @param string
+    * @return String read
     * 
     * @throws OvenCommunicationException
     */
-   String readString() throws OvenCommunicationException {
-      if ((scm == null) && (handle == -1)) {
-         throw new OvenCommunicationException("Oven communication not open"); 
-      }
-      try {
-         return scm.readString(handle);
-      } catch (SerialComException e) {
-         throw new OvenCommunicationException("Failed read from Oven", e); 
-      }
-   }
+   protected abstract String readString() throws OvenCommunicationException;
 
    /**
     * Send command and get response from Oven
@@ -133,7 +141,7 @@ public class OvenCommunication {
     * 
     * @throws OvenCommunicationException
     */
-   String commandResponse(String command) throws OvenCommunicationException {
+   protected String commandResponse(String command) throws OvenCommunicationException {
       String data;
       try {
          open();
@@ -141,14 +149,6 @@ public class OvenCommunication {
          writeString(command);
          // Get response
          data = readString();
-         String moreData;
-         do {
-            moreData = readString();
-            if (moreData == null) {
-               break;
-            }
-            data = data + moreData;
-         } while (true);
          if (data != null) {
             // Remove line breaks
             data = data.replaceAll("[\n\r]", "");
@@ -173,7 +173,7 @@ public class OvenCommunication {
       if (data == null) {
          throw new OvenCommunicationException("Failed to read profile");
       }
-//      System.out.println("data read is :" + data);
+      //      System.out.println("data read is :" + data);
       String[] values = data.split(",");
       if (values.length != 12) {
          throw new OvenCommunicationException("Invalid oven response to query\n\r"+data);
@@ -234,7 +234,7 @@ public class OvenCommunication {
     * @param number Number of profile to select
     * @throws OvenCommunicationException 
     */
-   public void selectProfile(Number index) throws OvenCommunicationException {
+   void selectProfile(Number index) throws OvenCommunicationException {
       String command = String.format("PROF %d\n\r", index);
       String data = commandResponse(command);
       // Check for correct oven response
@@ -250,7 +250,7 @@ public class OvenCommunication {
     * 
     * @throws OvenCommunicationException
     */
-   PlotData getPlotValues() throws OvenCommunicationException {
+   protected PlotData getPlotValues() throws OvenCommunicationException {
       String data = commandResponse("plot?\n\r");
       if (data == null) {
          throw new OvenCommunicationException("Failed to read plot");
@@ -260,7 +260,7 @@ public class OvenCommunication {
 
       // Parse into PlotData
       PlotData plotData = new PlotData(points.length);
-//      System.out.println(PlotData.PlotDataPoint.title());
+      //      System.out.println(PlotData.PlotDataPoint.title());
       for (int index=1; index<points.length; index++) {
          String[] values = points[index].split(",");
          if (values.length == 10) {
@@ -280,7 +280,7 @@ public class OvenCommunication {
          else {
             System.err.println("Opps");
          }
-//         System.out.println(plotData.points[index].toString());
+         //         System.out.println(plotData.points[index].toString());
       }
       return plotData;
    }
@@ -334,8 +334,8 @@ public class OvenCommunication {
     */
    Thermocouple[] getThermocouples() {
       Thermocouple result[] = new Thermocouple[4];
+      //TODO
       return result;
-
    }
 
    /**
@@ -370,11 +370,11 @@ public class OvenCommunication {
    /**
     * Class representing parameters for PID controller
     */
-   static class PidParameters {
+   class PidParameters {
       float kp = 0.0f;
       float ki = 0.0f;
       float kd = 0.0f;
-      
+
       PidParameters() {
       }
       PidParameters(float kp, float ki, float kd) {
@@ -382,12 +382,12 @@ public class OvenCommunication {
          this.ki = ki;
          this.kd = kd;
       }
-      
+
       public String toString() {
          return String.format("[p=%f, i=%f, d=%f]", kp, ki, kd);
       }
    }
-   
+
    /**
     * Set PID parameters
     *  

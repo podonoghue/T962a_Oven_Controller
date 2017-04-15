@@ -1,4 +1,4 @@
-package testingChart;
+package net.sourceforge.usbdm.oven;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -35,7 +35,7 @@ import org.jfree.ui.TextAnchor;
 
 import com.serialpundit.core.SerialComException;
 
-import testingChart.OvenCommunication.OvenCommunicationException;
+import net.sourceforge.usbdm.oven.OvenCommunication.OvenCommunicationException;
 
 /**
  * 
@@ -168,9 +168,7 @@ ChartMouseListener, MouseListener, MouseMotionListener {
    /**
     * Updates the graph from the Oven.
     */
-   public void update() {
-      OvenCommunication oven = new OvenCommunication();
-
+   public void update(OvenCommunication oven) {
       try {
          updateProfileChart(oven);
       } catch (OvenCommunicationException e) {

@@ -1,4 +1,4 @@
-package testingChart;
+package net.sourceforge.usbdm.oven;
 
 import java.awt.Color;
 
@@ -24,72 +24,74 @@ import org.jfree.ui.TextAnchor;
 
 import com.serialpundit.core.SerialComException;
 
-import testingChart.OvenCommunication.OvenCommunicationException;
+import net.sourceforge.usbdm.oven.OvenCommunication.OvenCommunicationException;
 
 /**
- * 
+ * Panel displaying reflow chart
  */
 public class ReflowChartPanel extends ChartPanel {
 
    /** SerialNumber */
    private static final long serialVersionUID = 6840754021687208492L;
 
-   //   final String COM_PORT = "com23";
-   final static String COM_PORT = "com29";
-
    /** Title for main chart */
-   final String chartTitle = "Temperature Information";
+   private static final String CHART_TITLE = "Temperature Information";
 
    /** Y-Axis title */
-   final String yAxisTemperatureLabel = "Temperature (Celsius)";
+   private static final String Y_AXIS_TEMPERATURE_LABEL = "Temperature (Celsius)";
 
    /** Y-Axis title */
-   final String yAxisPercentageLabel = "Percentage";
+   private static final String Y_AXIS_PERCENTAGE_LABEL = "Percentage";
 
    /** X-Axis title */
-   final String xAxisLabel = "Time (seconds)";
+   private static final String X_AXIS_LABEL = "Time (seconds)";
 
    /** Series for selected profile */
-   XYSeries profileSeries = new XYSeries("Reference Profile");
+   private final XYSeries profileSeries = new XYSeries("Reference Profile");
 
    /** Series for target profile as executed on oven */
-   XYSeries targetSeries  = new XYSeries("Target Profile");
+   private final XYSeries targetSeries  = new XYSeries("Target Profile");
 
    /** Series for average oven temperature */
-   XYSeries averageSeries = new XYSeries("Average");
+   private final XYSeries averageSeries = new XYSeries("Average");
 
    /** Series for fan speed (percent) */
-   XYSeries fanSeries     = new XYSeries("Fan"); 
+   private final XYSeries fanSeries     = new XYSeries("Fan"); 
 
    /** Series for heater duty cycle (percent) */
-   XYSeries heaterSeries  = new XYSeries("Heater");
+   private final XYSeries heaterSeries  = new XYSeries("Heater");
 
    /** Series for thermocouple 1 */
-   XYSeries thermocoupleSeries1  = new XYSeries("TC1");
+   private final XYSeries thermocoupleSeries1 = new XYSeries("TC1");
 
    /** Series for thermocouple 2 */
-   XYSeries thermocoupleSeries2  = new XYSeries("TC2");
+   private final XYSeries thermocoupleSeries2 = new XYSeries("TC2");
 
    /** Series for thermocouple 3 */
-   XYSeries thermocoupleSeries3  = new XYSeries("TC3");
+   private final XYSeries thermocoupleSeries3 = new XYSeries("TC3");
 
    /** Series for thermocouple 4 */
-   XYSeries thermocoupleSeries4  = new XYSeries("TC4");
+   private final XYSeries thermocoupleSeries4 = new XYSeries("TC4");
 
    /** Marker for liquidus temperature */
-   ValueMarker liquidusMarker = new ValueMarker(0.0);
+   private final ValueMarker liquidusMarker = new ValueMarker(0.0);
 
    /** Name of profile on chart */
-   XYTextAnnotation profileName = new XYTextAnnotation("No Profile", 10, 100);
+   private final XYTextAnnotation profileName = new XYTextAnnotation("No Profile", 10, 100);
 
-   double initialMovePointY = 0.0;
-
-   ChartPanel localChartPanel = null;
-
-   private JFreeChart chart;
+   /** The actual chart */
+   private final JFreeChart chart;
 
    /**
-    * Create data set to hold the data for the plot
+    * Create data set to hold the temperature data for the plot
+    * 
+    * <li>Profile</li>
+    * <li>Target temperature</li>
+    * <li>Average temperature</li>
+    * <li>Thermocouple 1 temperature</li>
+    * <li>Thermocouple 2 temperature</li>
+    * <li>Thermocouple 3 temperature</li>
+    * <li>Thermocouple 4 temperature</li>
     * 
     * @return Created data set
     */
@@ -107,7 +109,9 @@ public class ReflowChartPanel extends ChartPanel {
    }
 
    /**
-    * Create data set to hold the data for the plot
+    * Create data set to hold the percentage data for the plot
+    * <li>Fan percentage</li>
+    * <li>Heater percentage</li>
     * 
     * @return Created data set
     */
@@ -137,27 +141,27 @@ public class ReflowChartPanel extends ChartPanel {
       XYLineAndShapeRenderer temperatureRenderer = new XYLineAndShapeRenderer(true,false);
       // Have points for profile only
       temperatureRenderer.setSeriesShapesVisible(0, true);
-      final NumberAxis temperatureAxis = new NumberAxis(yAxisTemperatureLabel);
+      final NumberAxis temperatureAxis = new NumberAxis(Y_AXIS_TEMPERATURE_LABEL);
       final XYPlot temperaturePlot = new XYPlot(temperatureDataset, null, temperatureAxis, temperatureRenderer);
       temperatureAxis.setAutoRange(true);
       temperaturePlot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT);
 
       final XYDataset percentageDataset = createPercentageDataset();
       final XYItemRenderer percentageRenderer = new StandardXYItemRenderer();
-      final NumberAxis percentageAxis = new NumberAxis(yAxisPercentageLabel);
+      final NumberAxis percentageAxis = new NumberAxis(Y_AXIS_PERCENTAGE_LABEL);
       percentageAxis.setAutoRange(false);
       percentageAxis.setRange(0.0, 105.0);
       final XYPlot percentagePlot = new XYPlot(percentageDataset, null, percentageAxis, percentageRenderer);
       percentagePlot.setRangeAxisLocation(AxisLocation.TOP_OR_LEFT);
 
-      final CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis(xAxisLabel));
+      final CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis(X_AXIS_LABEL));
       plot.setGap(10.0);
 
       plot.add(temperaturePlot, 4);
       plot.add(percentagePlot,  1);
       plot.setOrientation(PlotOrientation.VERTICAL);
 
-      chart = new JFreeChart(chartTitle, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+      chart = new JFreeChart(CHART_TITLE, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
 
       temperaturePlot.addRangeMarker(liquidusMarker);
       liquidusMarker.setPaint(Color.black);
@@ -175,8 +179,8 @@ public class ReflowChartPanel extends ChartPanel {
    /**
     * Reads the profile from the oven and plots it to the graph 
     * 
-    * @param scm     Serial communication manager
-    * @param handle  Handle for com port
+    * @param oven Oven communication
+    * 
     * @throws OvenCommunicationException 
     * 
     * @throws SerialComException
@@ -194,11 +198,11 @@ public class ReflowChartPanel extends ChartPanel {
    }
 
    /**
-    * Reads the plot from the oven and plots it to the graph.<br>
-    * Plots Target, Average, Fan and Heater.
+    * Reads the plot from the oven and plots it to the chart.<br>
+    * Plots Target, Average, Thermocouples, Fan and Heater.
     * 
-    * @param scm     Serial communication manager
-    * @param handle  Handle for com port
+    * @param oven Oven communication
+    * 
     * @throws OvenCommunicationException 
     * 
     * @throws SerialComException
@@ -228,20 +232,15 @@ public class ReflowChartPanel extends ChartPanel {
    /**
     * Updates the graph from the Oven.
     */
-   public void update() {
-      OvenCommunication oven = new OvenCommunication();
-
+   public void update(OvenCommunication oven) {
       try {
+         chart.setNotify(false);
          updateOvenChart(oven);
          updateProfileChart(oven);
+         chart.setNotify(true);
       } catch (OvenCommunicationException e) {
          JOptionPane.showMessageDialog(this, e.getMessage(), "Communication error", JOptionPane.ERROR_MESSAGE);
       } finally {
-         try {
-            oven.close();
-         } catch (OvenCommunicationException e) {
-            // Ignore
-         }
       }
    }
 

@@ -1,4 +1,4 @@
-package testingChart;
+package net.sourceforge.usbdm.oven;
 
 /**
  * Represents a set of plot points
