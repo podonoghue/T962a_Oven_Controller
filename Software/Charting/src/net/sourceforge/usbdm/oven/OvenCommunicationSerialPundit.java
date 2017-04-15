@@ -38,7 +38,6 @@ public class OvenCommunicationSerialPundit extends OvenCommunication {
     * Select default port name
     * 
     * @throws OvenCommunicationException 
-    * @throws IOException 
     */
    protected void selectDefaultPortName() throws OvenCommunicationException {
       String[] portNames = getPortNames();
@@ -58,9 +57,8 @@ public class OvenCommunicationSerialPundit extends OvenCommunication {
     * Get list of port names
     * 
     * @return Array of currently available serial ports
-    * @throws SerialComException 
-    * 
-    * @throws IOException
+	*
+    * @throws OvenCommunicationException
     */
    protected String[] getPortNames() throws OvenCommunicationException {
       try {
@@ -77,7 +75,7 @@ public class OvenCommunicationSerialPundit extends OvenCommunication {
     * 
     * @throws OvenCommunicationException 
     */
-   public void open() throws OvenCommunicationException {
+   void open() throws OvenCommunicationException {
       if (handle != -1) {
          throw new OvenCommunicationException("Oven already open"); 
       }
@@ -115,7 +113,7 @@ public class OvenCommunicationSerialPundit extends OvenCommunication {
     * 
     * @throws OvenCommunicationException 
     */
-    void close() throws OvenCommunicationException {
+   void close() throws OvenCommunicationException {
       try {
          if ((scm != null) && (handle != -1)) {
             scm.closeComPort(handle);
@@ -134,7 +132,7 @@ public class OvenCommunicationSerialPundit extends OvenCommunication {
     * 
     * @throws OvenCommunicationException
     */
-    protected void writeString(String string) throws OvenCommunicationException {
+   protected void writeString(String string) throws OvenCommunicationException {
       if ((scm == null) && (handle == -1)) {
          throw new OvenCommunicationException("Oven communication not open"); 
       }
@@ -152,7 +150,7 @@ public class OvenCommunicationSerialPundit extends OvenCommunication {
     * 
     * @throws OvenCommunicationException
     */
-    protected String readString() throws OvenCommunicationException {
+   protected String readString() throws OvenCommunicationException {
       if ((scm == null) && (handle == -1)) {
          throw new OvenCommunicationException("Oven communication not open"); 
       }

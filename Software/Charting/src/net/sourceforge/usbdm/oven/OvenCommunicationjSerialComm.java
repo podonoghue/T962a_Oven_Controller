@@ -1,6 +1,5 @@
 package net.sourceforge.usbdm.oven;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -23,7 +22,7 @@ public class OvenCommunicationjSerialComm extends OvenCommunication {
    /**
     * Select default port name
     * 
-    * @throws IOException 
+    * @throws OvenCommunicationException 
     */
    protected void selectDefaultPortName() {
       String[] portNames = getPortNames();
@@ -34,14 +33,17 @@ public class OvenCommunicationjSerialComm extends OvenCommunication {
             break;
          }
       }
+      if ((comPortName == null) && (portNames.length>0)) {
+         comPortName = portNames[0];
+      }
    }
 
    /**
     * Get list of port names
     * 
     * @return Array of currently available serial ports
-    * 
-    * @throws IOException
+	*
+    * @throws OvenCommunicationException
     */
    protected String[] getPortNames() {
       ArrayList<String> portNames = new ArrayList<>();
