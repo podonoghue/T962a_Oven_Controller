@@ -35,5 +35,3 @@
 /usb_implementation_composite.h
 /usb_implementation_composite.cpp
 /usb_cdc_uart.h
-/usb_cdc_interface.cpp
-/usb_cdc_interface.h

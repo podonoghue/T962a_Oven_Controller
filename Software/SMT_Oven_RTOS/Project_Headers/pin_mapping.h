@@ -1266,7 +1266,7 @@ public:
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
 
-   // Template:ftfl
+   // Template:ftfl_64k_flexrom
 
    /** Selects EEPROM size */
    enum EepromSel {
@@ -1277,8 +1277,9 @@ public:
       eeprom512Bytes,
       eeprom1KBytes,
       eeprom2KBytes,
+      eeprom4KBytes,
    };
-   
+
    /** Selects division of FlexNVM between flash and EEPROM backing storage */
    enum PartitionSel {
       partition_flash64K_eeprom0K,
@@ -1290,7 +1291,7 @@ public:
    };
 
    /**
-    * Selects division of the two regions of EEPROM (if supported on device)
+    * Selects division of the EEPROM into two regions 
     * This allows A/B regions to have different wear characteristics
     */
    enum PartitionSplit {
@@ -1298,11 +1299,12 @@ public:
       partition_A2_B6_8ths = 0x10,                 //! A=2/8=1/4, B=6/8=3/4
       partition_A4_B4_8ths = 0x30,                 //! A=4/8=1/2, B=4/8=1/2
       partition_A1_B3_4ths = partition_A2_B6_8ths, //! A=2/8=1/4, B=6/8=3/4
-      partition_A1_B1_2ths = partition_A4_B4_8ths, //! A=2/8=1/4, B=6/8=3/4
+      partition_A1_B1_2ths = partition_A4_B4_8ths, //! A=4/8=1/2, B=4/8=1/2
    
       // Default - A = B = 1/2
       partition_default=partition_A4_B4_8ths,      //! Equal partitions
    };
+
    //! FlexNVM - EEPROM size
    static constexpr EepromSel eepromSel = eeprom2KBytes;
 

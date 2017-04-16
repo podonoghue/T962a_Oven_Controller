@@ -1,5 +1,5 @@
 /**
- * @file    ftfl.cpp
+ * @file    ftfl.cpp (derived from ftfl_64k_flexrom.cpp)
  * @brief   Flash support code
  *
  *  Created on: 10/1/2016
@@ -13,7 +13,6 @@
 #include "hardware.h"
 #include "delay.h"
 #include "ftfl.h"
-
 
 namespace USBDM {
 
@@ -141,6 +140,7 @@ struct EepromSizes {
    const uint8_t  value;   // Value to select size
 };
 
+/** EEPROM Data Set Size Field */
 static const EepromSizes eepromSizes[] = {
       // Size  Value
       {  32,   0x09, },
@@ -150,7 +150,7 @@ static const EepromSizes eepromSizes[] = {
       {  512,  0x05, },
       {  1024, 0x04, },
       {  2048, 0x03, },
-      {  4096, 0x02, }, // Only for 64K FlexNVM devices
+      {  4096, 0x02, },
 };
 
 struct PartitionInformation {
@@ -159,26 +159,12 @@ struct PartitionInformation {
    const uint8_t  value;         //! Partition value
 };
 
-//#define KINETIS_32K_FLEXRAM
-#define KINETIS_64K_FLEXRAM
-
-#if defined(KINETIS_32K_FLEXRAM)
-static const PartitionInformation partitionInformation[] {
-      // Flash   Backing   Value
-      { 32*1024, 0*1024 ,  0xFF},
-      { 24*1024, 8*1024 ,  0x01},
-      { 16*1024, 16*1024,  0x0A},
-      { 8*1024,  24*1024,  0x09},
-      { 0*1024,  32*1024,  0x08},
-};
-#elif defined(KINETIS_64K_FLEXRAM)
 static const PartitionInformation partitionInformation[] {
       // Flash   Backing   Value
       { 64*1024, 0*1024 ,  0xFF},
       { 32*1024, 32*1024 , 0x09},
       { 0*1024,  64*1024,  0x08},
 };
-#endif
 
 /** Minimum ratio for EEPROM to Flash backing storage */
 constexpr unsigned MINIMUM_BACKING_RATIO = 16;
