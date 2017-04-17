@@ -48,7 +48,8 @@ template<class Info, int signalNum> class CheckSignal {
  */
 #define USBDM_OSC0_IS_DEFINED 
 /**
- * Peripheral information for OSC, Crystal Oscillator
+ * Peripheral information for OSC, Crystal Oscillator.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -148,7 +149,8 @@ public:
  */
 #define USBDM_RTC_IS_DEFINED 
 /**
- * Peripheral information for RTC, Real Time Clock
+ * Peripheral information for RTC, Real Time Clock.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -249,7 +251,8 @@ public:
  */
 #define USBDM_MCG_IS_DEFINED 
 /**
- * Peripheral information for MCG, Multipurpose Clock Generator
+ * Peripheral information for MCG, Multipurpose Clock Generator.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -388,7 +391,8 @@ public:
  */
 #define USBDM_SIM_IS_DEFINED 
 /**
- * Peripheral information for SIM, System Integration Module
+ * Peripheral information for SIM, System Integration Module.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -519,7 +523,8 @@ public:
  */
 #define USBDM_ADC0_IS_DEFINED 
 /**
- * Peripheral information for ADC, Analogue Input
+ * Peripheral information for ADC, Analogue Input.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -691,7 +696,8 @@ public:
  */
 #define USBDM_CMP0_IS_DEFINED 
 /**
- * Peripheral information for CMP, Analogue Comparator
+ * Peripheral information for CMP, Analogue Comparator.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -803,7 +809,8 @@ public:
 
 #define USBDM_CMP1_IS_DEFINED 
 /**
- * Peripheral information for CMP, Analogue Comparator
+ * Peripheral information for CMP, Analogue Comparator.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -919,7 +926,8 @@ public:
  */
 #define USBDM_CMT_IS_DEFINED 
 /**
- * Peripheral information for CMT, Carrier Modulator Transmitter
+ * Peripheral information for CMT, Carrier Modulator Transmitter.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -981,7 +989,8 @@ public:
  */
 #define USBDM_CONTROL_IS_DEFINED 
 /**
- * Peripheral information for CONTROL, Control
+ * Peripheral information for CONTROL, Control.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1041,7 +1050,8 @@ public:
  */
 #define USBDM_CRC_IS_DEFINED 
 /**
- * Peripheral information for CRC, (Incomplete)
+ * Peripheral information for CRC, (Incomplete).
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1081,7 +1091,8 @@ public:
  */
 #define USBDM_DMA0_IS_DEFINED 
 /**
- * Peripheral information for DMA, (Incomplete)
+ * Peripheral information for DMA, (Incomplete).
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1112,7 +1123,8 @@ public:
  */
 #define USBDM_DMAMUX0_IS_DEFINED 
 /**
- * Peripheral information for DMAMUX, Direct Memory Access (DMA)
+ * Peripheral information for DMAMUX, Direct Memory Access (DMA).
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1188,7 +1200,8 @@ public:
  */
 #define USBDM_EWM_IS_DEFINED 
 /**
- * Peripheral information for EWM, External Watchdog Monitor
+ * Peripheral information for EWM, External Watchdog Monitor.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1248,7 +1261,8 @@ public:
  */
 #define USBDM_FTFL_IS_DEFINED 
 /**
- * Peripheral information for FTFL, Flash Memory Module
+ * Peripheral information for FTFL, Flash Memory Module.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1267,6 +1281,50 @@ public:
    static constexpr uint32_t irqCount  = 0;
 
    // Template:ftfl_64k_flexrom
+
+   // Sector size for program flash (minimum erase element)
+   static constexpr unsigned programFlashSectorSize = 2048;
+
+   // Phrase size for program flash (minimum programming element)
+   static constexpr unsigned programFlashPhraseSize = 4;
+
+   // Sector size for data flash (minimum erase element)
+   static constexpr unsigned dataFlashSectorSize = 2048;
+
+   // Phrase size for data flash (minimum programming element)
+   static constexpr unsigned dataFlashPhraseSize = 4;
+
+   struct EepromSizes {
+      const uint16_t size;    // EEPROM size
+      const uint8_t  value;   // Value to select size
+   };
+
+   /** EEPROM Data Set Size Field */
+   static constexpr EepromSizes eepromSizes[] = {
+         // Size  Value
+         {  32,   0x09, },
+         {  64,   0x08, },
+         {  128,  0x07, },
+         {  256,  0x06, },
+         {  512,  0x05, },
+         {  1024, 0x04, },
+         {  2048, 0x03, },
+         {  4096, 0x02, },
+   };
+
+   struct PartitionInformation {
+      const uint32_t flashSize;     //! Remaining data flash
+      const uint32_t eeepromSize;   //! Flash allocated to EEPROM backing store
+      const uint8_t  value;         //! Partition value
+   };
+
+   /** Flash partition information */
+   static constexpr PartitionInformation partitionInformation[] {
+         // Flash   Backing   Value
+         { 64*1024, 0*1024 ,  0xFF},
+         { 32*1024, 32*1024 , 0x09},
+         { 0*1024,  64*1024,  0x08},
+   };
 
    /** Selects EEPROM size */
    enum EepromSel {
@@ -1327,7 +1385,8 @@ public:
  */
 #define USBDM_FTM_IS_DEFINED 
 /**
- * Peripheral information for FTM, Shared Resources
+ * Peripheral information for FTM, Shared Resources.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1366,7 +1425,8 @@ public:
 
 #define USBDM_FTM0_IS_DEFINED 
 /**
- * Peripheral information for FTM, PWM, Input capture and Output compare
+ * Peripheral information for FTM, PWM, Input capture and Output compare.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1524,7 +1584,8 @@ public:
 
 #define USBDM_FTM1_IS_DEFINED 
 /**
- * Peripheral information for FTM, PWM, Input capture and Output compare
+ * Peripheral information for FTM, PWM, Input capture and Output compare.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1707,7 +1768,8 @@ public:
  */
 #define USBDM_GPIOA_IS_DEFINED 
 /**
- * Peripheral information for GPIO, Digital Input/Output
+ * Peripheral information for GPIO, Digital Input/Output.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1746,7 +1808,8 @@ public:
 
 #define USBDM_GPIOB_IS_DEFINED 
 /**
- * Peripheral information for GPIO, Digital Input/Output
+ * Peripheral information for GPIO, Digital Input/Output.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1785,7 +1848,8 @@ public:
 
 #define USBDM_GPIOC_IS_DEFINED 
 /**
- * Peripheral information for GPIO, Digital Input/Output
+ * Peripheral information for GPIO, Digital Input/Output.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1824,7 +1888,8 @@ public:
 
 #define USBDM_GPIOD_IS_DEFINED 
 /**
- * Peripheral information for GPIO, Digital Input/Output
+ * Peripheral information for GPIO, Digital Input/Output.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1863,7 +1928,8 @@ public:
 
 #define USBDM_GPIOE_IS_DEFINED 
 /**
- * Peripheral information for GPIO, Digital Input/Output
+ * Peripheral information for GPIO, Digital Input/Output.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1911,7 +1977,8 @@ public:
  */
 #define USBDM_I2C0_IS_DEFINED 
 /**
- * Peripheral information for I2C, Inter-Integrated-Circuit Interface
+ * Peripheral information for I2C, Inter-Integrated-Circuit Interface.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -1991,7 +2058,8 @@ public:
  */
 #define USBDM_I2S0_IS_DEFINED 
 /**
- * Peripheral information for I2S, Inter-Integrated-Circuit Interface
+ * Peripheral information for I2S, Inter-Integrated-Circuit Interface.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2060,7 +2128,8 @@ public:
  */
 #define USBDM_LLWU_IS_DEFINED 
 /**
- * Peripheral information for LLWU, Low-leakage Wake-up Unit
+ * Peripheral information for LLWU, Low-leakage Wake-up Unit.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2178,7 +2247,8 @@ public:
  */
 #define USBDM_LPTMR0_IS_DEFINED 
 /**
- * Peripheral information for LPTMR, Low Power Timer
+ * Peripheral information for LPTMR, Low Power Timer.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2311,7 +2381,8 @@ public:
  */
 #define USBDM_PDB0_IS_DEFINED 
 /**
- * Peripheral information for PDB, Programmable Delay Block
+ * Peripheral information for PDB, Programmable Delay Block.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2381,7 +2452,8 @@ public:
  */
 #define USBDM_PIT_IS_DEFINED 
 /**
- * Peripheral information for PIT, Programmable Interrupt Timer
+ * Peripheral information for PIT, Programmable Interrupt Timer.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2442,7 +2514,8 @@ public:
  */
 #define USBDM_POWER_IS_DEFINED 
 /**
- * Peripheral information for POWER, Power
+ * Peripheral information for POWER, Power.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2499,7 +2572,8 @@ public:
  */
 #define USBDM_SMC_IS_DEFINED 
 /**
- * Peripheral information for SMC, System Mode Controller
+ * Peripheral information for SMC, System Mode Controller.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2560,7 +2634,8 @@ public:
  */
 #define USBDM_SPI0_IS_DEFINED 
 /**
- * Peripheral information for SPI, Serial Peripheral Interface
+ * Peripheral information for SPI, Serial Peripheral Interface.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2660,7 +2735,8 @@ public:
  */
 #define USBDM_UART0_IS_DEFINED 
 /**
- * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter
+ * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2743,7 +2819,8 @@ public:
 
 #define USBDM_UART1_IS_DEFINED 
 /**
- * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter
+ * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2820,7 +2897,8 @@ public:
 
 #define USBDM_UART2_IS_DEFINED 
 /**
- * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter
+ * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2906,7 +2984,8 @@ public:
  */
 #define USBDM_USB0_IS_DEFINED 
 /**
- * Peripheral information for USB, USB OTG Controller
+ * Peripheral information for USB, USB OTG Controller.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -2979,7 +3058,8 @@ public:
  */
 #define USBDM_USBDCD_IS_DEFINED 
 /**
- * Peripheral information for USBDCD, USB Device Charger Detection
+ * Peripheral information for USBDCD, USB Device Charger Detection.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
@@ -3010,7 +3090,8 @@ public:
  */
 #define USBDM_VREF_IS_DEFINED 
 /**
- * Peripheral information for VREF, Voltage Reference
+ * Peripheral information for VREF, Voltage Reference.
+ * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
