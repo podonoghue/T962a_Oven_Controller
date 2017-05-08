@@ -36,7 +36,7 @@ public abstract class OvenCommunication {
     * Exceptions from communication with oven
     */
    @SuppressWarnings("serial")
-   static class OvenCommunicationException extends IOException {
+   static class OvenCommunicationException extends Exception {
 
       public OvenCommunicationException(String message) {
          super(message);

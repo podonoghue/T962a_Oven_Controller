@@ -95,7 +95,7 @@ public class OvenCommunicationSerialPundit extends OvenCommunication {
          scm.writeString(handle, "idn?\n\r", 0);
          String data = scm.readString(handle);
          //         System.out.println("data read is :" + data);
-         if (!data.startsWith("SMT-Oven")) {
+         if ((data==null) || !data.startsWith("SMT-Oven")) {
             close();
             throw new OvenCommunicationException("Oven failed to respond"); 
          }
