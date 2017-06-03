@@ -35,12 +35,17 @@ public:
    /** Cold junction references from last measurement */
    float coldReferences[4];
 
-   TemperatureSensors() {
-   }
+   TemperatureSensors() {}
    virtual ~TemperatureSensors() {}
 
    CMSIS::Mutex mutex;
    float fAverageTemperature = 0;
+
+   void initialise() {
+      for (unsigned index=0; index<(sizeof(temperatureSensors)/sizeof(temperatureSensors[0])); index++) {
+         temperatureSensors[index].initialise();
+      }
+   }
 
    /**
     * Update current thermocouple readings

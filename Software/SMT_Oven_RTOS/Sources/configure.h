@@ -9,11 +9,11 @@
 #ifndef SOURCES_CONFIGURE_H_
 #define SOURCES_CONFIGURE_H_
 
+#include <Max31855.h>
 #include <string.h>
-#include "Max31855.h"
-#include "SolderProfile.h"
-#include "SwitchDebouncer.h"
-#include "ZeroCrossingPwm.h"
+#include <SolderProfile.h>
+#include <SwitchDebouncer.h>
+#include <ZeroCrossingPwm.h>
 
 #include "derivative.h"
 #include "hardware.h"
@@ -35,12 +35,12 @@ using F4Button = USBDM::GpioB<0, USBDM::ActiveLow>;
 /** Select button */
 using SButton  = USBDM::GpioB<16, USBDM::ActiveLow>;
 
-/** PCS # for SPI connected to LCD and Thermocouples */
-static constexpr int lcd_cs_num = 4;
-static constexpr int t1_cs_num  = 2;
-static constexpr int t2_cs_num  = 3;
-static constexpr int t3_cs_num  = 1;
-static constexpr int t4_cs_num  = 0;
+/** PCS # for SPI */
+constexpr int lcd_cs_num = 4;
+constexpr int t1_cs_num  = 2;
+constexpr int t2_cs_num  = 3;
+constexpr int t3_cs_num  = 1;
+constexpr int t4_cs_num  = 0;
 
 /** Case fan PWM output */
 using CaseFan  = USBDM::Ftm0Channel<2>;
@@ -70,6 +70,7 @@ public:
     */
    static void init() {
      setOutput();
+     off();
    }
 };
 /**
@@ -94,6 +95,7 @@ public:
     */
    static void init() {
      setOutput();
+     off();
    }
 };
 
@@ -122,6 +124,18 @@ extern USBDM::Spi0 spi;
  */
 extern LCD_ST7920 lcd;
 
+/** PIT timer channel for PID */
+constexpr int pid_pit_channel          = 0;
+
+/** PIT timer channel for button debouncer */
+constexpr int button_pit_channel       = 1;
+
+/** PIT timer channel for sequencing a solder profile */
+constexpr int profile_pit_channel      = 2;
+
+/** PIT timer channel for case temperature monitor. Controls case fan */
+constexpr int caseMonitor_pit_channel  = 3;
+
 /** PWM for heater & oven fan */
 extern ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl;
 
@@ -141,6 +155,7 @@ public:
     */
    static void init() {
       Buzzer::setOutput();
+      Buzzer::low();
    }
    /**
     * Sound buzzer with abort on button press.\n
@@ -172,7 +187,7 @@ extern TemperatureSensors temperatureSensors;
  * Monitor case temperature
  */
 #include <CaseTemperatureMonitor.h>
-extern CaseTemperatureMonitor<CaseFan> caseTemperatureMonitor;
+extern CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor;
 
 /**
  * Get oven temperature
@@ -190,6 +205,6 @@ extern Pid_T<getTemperature, outPutControl> pid;
 /**
  * Mutex to protect Interactive and Remote control
  */
-extern CMSIS::Mutex interactiveMutex;
+extern CMSIS::Mutex *interactiveMutex;
 
 #endif /* SOURCES_CONFIGURE_H_ */

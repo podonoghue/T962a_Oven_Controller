@@ -105,14 +105,14 @@ void run() {
       SwitchValue button = buttons.getButton(100);
       if (button != SwitchValue::SW_NONE) {
          // Try to get mutex - no wait so we can update display if busy
-         status = interactiveMutex.wait(0);
+         status = interactiveMutex->wait(0);
          if (status != osOK) {
             displayBusy();
             // Wait again until we are successful
             changed = true;
-            interactiveMutex.wait();
+            interactiveMutex->wait();
             // Release immediately as we will retry in loop
-            interactiveMutex.release();
+            interactiveMutex->release();
             // Discard key
             continue;
          }
@@ -136,7 +136,7 @@ void run() {
          default:
             break;
          }
-         interactiveMutex.release();
+         interactiveMutex->release();
       }
    }
 }

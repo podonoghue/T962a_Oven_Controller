@@ -12,7 +12,7 @@
 #include "configure.h"
 
 /** Priority of the FlexRAM initialisation (Settings constructor) */
-#define FLEX_RAM_INIT_PRIORITY  (1000)
+constexpr int FLEX_RAM_INIT_PRIORITY     = 1000;
 
 using namespace USBDM;
 

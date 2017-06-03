@@ -176,6 +176,12 @@ public:
 
    // Template:rtc_tamper_wpon
 
+   //! Callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = false;
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  0;
+
    //! Frequency of RTC External Clock or Crystal
    static constexpr uint32_t rtcclk_clock = 0UL;
 
@@ -188,55 +194,8 @@ public:
       RTC_CR_WPE(0)  | // Wakeup Pin Enable
       RTC_CR_SCP(2);   // RTC Oscillator load capacitance
 
-   //! RTC Time Compensation Register
-   static constexpr uint32_t tcr =
-      RTC_TCR_CIR(0) | // Compensation Interval Register
-      RTC_TCR_TCR(0);  // Time Compensation Register
-
-   //! RTC Lock Register
-   static constexpr uint32_t lr =
-      RTC_LR_LRL(1) | // Lock Register Lock
-      RTC_LR_SRL(1) | // Status Register Lock 
-      RTC_LR_CRL(1) | // Control Register Lock
-      RTC_LR_TCL(1);  // Time Compensation Lock
-
-   //! RTC Write Access Register
-   static constexpr uint32_t war =
-      RTC_WAR_IERW(1) | // Interrupt Enable Register Write
-      RTC_WAR_LRW(1)  | // Lock Register Write
-      RTC_WAR_SRW(1)  | // Status Register Write
-      RTC_WAR_CRW(1)  | // Control Register Write
-      RTC_WAR_TCRW(1) | // Time Compensation Register Write
-      RTC_WAR_TARW(1) | // Time Alarm Register Write
-      RTC_WAR_TPRW(1) | // Time Prescaler Register Write
-      RTC_WAR_TSRW(1);  // Time Seconds Register Write
-
-   //! RTC Read Access Register
-   static constexpr uint32_t rar =
-      RTC_RAR_IERR(1) | // Interrupt Enable Register Read  
-      RTC_RAR_LRR(1)  | // Lock Register Read              
-      RTC_RAR_SRR(1)  | // Status Register Read            
-      RTC_RAR_CRR(1)  | // Control Register Read           
-      RTC_RAR_TCRR(1) | // Time Compensation Register Read 
-      RTC_RAR_TARR(1) | // Time Alarm Register Read        
-      RTC_RAR_TPRR(1) | // Time Prescaler Register Read    
-      RTC_RAR_TSRR(1);  // Time Seconds Register Read
-
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
-
-   //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
-
-   //! Time for cold start (corrected for 12 leap years since 1970)
-   static constexpr uint32_t coldStartTime = 
-            ((((2017-1970)*365UL +
-               (181) +
-               (1+12-1))*24 +
-              (12))*60 +
-             (0))*60;
    /**
-    * Get RTC clock frequency (internal, not masked by RTC_CR_CLKO)
+    * Get RTC clock (internal, not masked by RTC_CR_CLKO)
     *
     * @return Clock frequency as uint32_t
     */
@@ -245,7 +204,7 @@ public:
    }
 
    /**
-    * Get RTC clock frequency (external, masked by RTC_CR_CLKO)
+    * Get RTC clock (external, masked by RTC_CR_CLKO)
     *
     * @return Clock frequency as uint32_t
     */
@@ -1089,17 +1048,17 @@ public:
  * @brief Abstraction for (Incomplete)
  * @{
  */
-#define USBDM_CRC0_IS_DEFINED 
+#define USBDM_CRC_IS_DEFINED 
 /**
  * Peripheral information for CRC, (Incomplete).
  * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
-class Crc0Info {
+class CrcInfo {
 public:
    //! Hardware base pointer
-   static constexpr volatile CRC_Type *crc   = (volatile CRC_Type *)CRC0_BasePtr;
+   static constexpr volatile CRC_Type *crc   = (volatile CRC_Type *)CRC_BasePtr;
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_CRC_MASK;
@@ -3274,7 +3233,7 @@ extern void mapAllPins();
 
 /**
  *
- * @page PinSummary Pin Mapping
+ * @mainpage Summary
  *
  * @section PinsByPinName Pins by Pin Name
  *

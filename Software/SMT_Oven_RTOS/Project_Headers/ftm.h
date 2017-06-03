@@ -229,7 +229,7 @@ public:
     *
     * @param enable true to enable, false to disable
     */
-   static void enableTimerOverflowInterrupts(bool enable=true) {
+   static void enableToiInterrupts(bool enable=true) {
       if (enable) {
          tmr->SC |= FTM_SC_TOIE_MASK;
       }
@@ -586,7 +586,7 @@ public:
     *
     * @param theCallback Callback function to execute on interrupt
     */
-   static void setTimerOverflowCallback(FTMCallbackFunction theCallback) {
+   static void setToiCallback(FTMCallbackFunction theCallback) {
       toiCallback = theCallback;
    }
    /**
@@ -678,12 +678,7 @@ public:
       }
    }
 
-   /**
-    * Set Pin Control Register Value (apart from mux)
-    *
-    * @param pcrValue PCR value to set
-    */
-   static void setPCR(PcrValue pcrValue) {
+   static void setPCR(uint32_t pcrValue) {
       PcrTable_T<Info,  channel>::setPCR((pcrValue&~PORT_PCR_MUX_MASK)|(Info::info[channel].pcrValue&PORT_PCR_MUX_MASK));
    }
 
@@ -901,47 +896,6 @@ public:
       return (int16_t)(ftm->CNT);
    }
 };
-
-
-#ifdef USBDM_FTM0_IS_DEFINED
-/**
- * Class representing FTM0 as Quadrature encoder
- * Not all FTMs support this mode
- */
-using QuadEncoder0 = QuadEncoder_T<Ftm0Info>;
-#endif
-
-#ifdef USBDM_FTM1_IS_DEFINED
-/**
- * Class representing FTM1 as Quadrature encoder
- * Not all FTMs support this mode
- */
-using QuadEncoder1 = QuadEncoder_T<Ftm1Info>;
-#endif
-
-#ifdef USBDM_FTM2_IS_DEFINED
-/**
- * Class representing FTM2 as Quadrature encoder
- * Not all FTMs support this mode
- */
-using QuadEncoder2 = QuadEncoder_T<Ftm2Info>;
-#endif
-
-#ifdef USBDM_FTM3_IS_DEFINED
-/**
- * Class representing FTM3 as Quadrature encoder
- * Not all FTMs support this mode
- */
-using QuadEncoder3 = QuadEncoder_T<Ftm3Info>;
-#endif
-
-#ifdef USBDM_FTM4_IS_DEFINED
-/**
- * Class representing FTM4 as Quadrature encoder
- * Not all FTMs support this mode
- */
-using QuadEncoder4 = QuadEncoder_T<Ftm4Info>;
-#endif
 
 /**
  * @}

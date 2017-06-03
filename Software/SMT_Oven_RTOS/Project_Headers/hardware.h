@@ -17,9 +17,8 @@
  */
 namespace USBDM {
 
-static constexpr float ns = 1E-9; //!< Scale factor for nanoseconds
-static constexpr float us = 1E-6; //!< Scale factor for microseconds
-static constexpr float ms = 1E-3; //!< Scale factor for milliseconds
+static constexpr float us = 1E-6;
+static constexpr float ms = 1E-3;
 
 enum ErrorCode {
    E_NO_ERROR = 0,      // No error
@@ -135,6 +134,5 @@ inline void clearError() {
 } // End namespace USBDM
 
 #include "pin_mapping.h"
-#include "delay.h"
 
 #endif /* PROJECT_HEADERS_HARDWARE_H_ */

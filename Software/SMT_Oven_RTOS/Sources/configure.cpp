@@ -65,9 +65,9 @@ Pid_T<getTemperature, outPutControl> pid{pidKp, pidKp, pidKp, pidInterval, -100,
 TemperatureSensors temperatureSensors{};
 
 /** Monitor for case temperature */
-CaseTemperatureMonitor<CaseFan> caseTemperatureMonitor{};
+CaseTemperatureMonitor<CaseFan, caseMonitor_pit_channel> caseTemperatureMonitor{};
 
 /**
  * Mutex to protect Interactive and Remote control
  */
-CMSIS::Mutex interactiveMutex;
+CMSIS::Mutex *interactiveMutex;
