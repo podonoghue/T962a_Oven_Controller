@@ -264,7 +264,7 @@ bool parsePidParameters(char *cmd) {
  */
 bool RemoteInterface::getInteractiveMutex(RemoteInterface::Response *response) {
    // Lock interface
-   osStatus status = interactiveMutex->wait(0);
+   osStatus status = interactiveMutex.wait(0);
 
    // Obtained lock
    if (status == osOK) {
@@ -310,7 +310,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
       else {
          strcpy(reinterpret_cast<char*>(response->data), "Failed - Data error\n\r");
       }
-      interactiveMutex->release();
+      interactiveMutex.release();
       response->size = strlen(reinterpret_cast<char*>(response->data));
       send(response);
    }
@@ -343,7 +343,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
       else {
          strcpy(reinterpret_cast<char*>(response->data), "Failed - Data error\n\r");
       }
-      interactiveMutex->release();
+      interactiveMutex.release();
       response->size = strlen(reinterpret_cast<char*>(response->data));
       send(response);
    }
@@ -365,7 +365,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
       else {
          strcpy(reinterpret_cast<char*>(response->data), "Failed - data error\n\r");
       }
-      interactiveMutex->release();
+      interactiveMutex.release();
       response->size = strlen(reinterpret_cast<char*>(response->data));
       send(response);
    }
@@ -429,10 +429,10 @@ bool RemoteInterface::doCommand(Command *cmd) {
       }
       RunProfile::abortRunProfile();
       // Unlock previous lock
-      interactiveMutex->release();
+      interactiveMutex.release();
       strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
       // Unlock interface
-      interactiveMutex->release();
+      interactiveMutex.release();
       response->size = strlen(reinterpret_cast<char*>(response->data));
       send(response);
    }
@@ -444,19 +444,19 @@ bool RemoteInterface::doCommand(Command *cmd) {
       State state = RunProfile::remoteCheckRunProfile();
       if (state == s_complete) {
          // Unlock previous lock
-         interactiveMutex->release();
+         interactiveMutex.release();
          strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
       }
       else if (state == s_fail) {
          // Unlock interface
-         interactiveMutex->release();
+         interactiveMutex.release();
          strcpy(reinterpret_cast<char*>(response->data), "Failed\n\r");
       }
       else {
          strcpy(reinterpret_cast<char*>(response->data), "Running\n\r");
       }
       // Unlock interface
-      interactiveMutex->release();
+      interactiveMutex.release();
       response->size = strlen(reinterpret_cast<char*>(response->data));
       send(response);
    }

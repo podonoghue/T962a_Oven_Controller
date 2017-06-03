@@ -5,7 +5,7 @@
 <booleanAttribute key="net.sourceforge.usbdm.gdb.bdmSerialNumberMatchRequired" value="false"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.buildToolId" value="net.sourceforge.usbdm.cdt.toolchain.processor.usbdmConfigure.armLtdGnuToolsForARM"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.catchVLLSxEvents" value="false"/>
-<intAttribute key="net.sourceforge.usbdm.gdb.clockTrimFrequency" value="0"/>
+<stringAttribute key="net.sourceforge.usbdm.gdb.clockTrimFrequency" value="0"/>
 <intAttribute key="net.sourceforge.usbdm.gdb.connectionTimeout" value="10"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.deviceName" value="MK22DX256M5"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.doReset" value="true"/>
@@ -22,9 +22,10 @@
 <stringAttribute key="net.sourceforge.usbdm.gdb.interfaceType" value="T_ARM"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.loadImage" value="true"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.maskInterrupts" value="false"/>
-<intAttribute key="net.sourceforge.usbdm.gdb.nvmClockTrimLocation" value="0"/>
+<stringAttribute key="net.sourceforge.usbdm.gdb.nvmClockTrimLocation" value="0"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.pcRegisterValue" value="__HardReset"/>
 <intAttribute key="net.sourceforge.usbdm.gdb.port" value="1234"/>
+<stringAttribute key="net.sourceforge.usbdm.gdb.resetMethod" value="RESET_TARGETDEFAULT"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.restartDoResume" value="false"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.restartDoStopAtMain" value="true"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.restartPcRegisterValue" value="__HardReset"/>

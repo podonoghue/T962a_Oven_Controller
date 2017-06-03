@@ -74,11 +74,10 @@ protected:
             (uint8_t)(value<<4),
       };
       {
-         spi.lock();
-         spi.setCTAR0Value(spiCtarValue);
+         spi.startTransaction(spiCtarValue);
          spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
          spi.txRxBytes(sizeof(data), data, nullptr);
-         spi.unlock();
+         spi.endTransaction();
       }
       USBDM::waitUS(100);
    }
@@ -95,11 +94,10 @@ protected:
             (uint8_t)(value<<4),
       };
       {
-         spi.lock();
-         spi.setCTAR0Value(spiCtarValue);
+         spi.startTransaction(spiCtarValue);
          spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
          spi.txRxBytes(sizeof(data), data, nullptr);
-         spi.unlock();
+         spi.endTransaction();
       }
       USBDM::waitUS(100);
    }
@@ -112,16 +110,16 @@ public:
    void initialise() {
       USBDM::waitMS(200);
       {
-         spi.lock();
-         spi.setPcsPolarity(pinNum, false);
+         spi.startTransaction();
+         spi.setPcsPolarity(pinNum, USBDM::ActiveLow);
          spi.setSpeed(5000000);
-         spi.setMode(USBDM::SPI_MODE3);
+         spi.setMode(USBDM::SpiMode3);
          spi.setDelays(0.5*USBDM::us, 0.5*USBDM::us, 0.5*USBDM::us);
          spi.setFrameSize(8);
 
          // Record CTAR value in case SPI shared
          spiCtarValue = spi.getCTAR0Value();
-         spi.unlock();
+         spi.endTransaction();
       }
       writeCommand(0b00111000); // Function set(DL=1, RE=0)
       writeCommand(0b00001100); // On/Off(D=1 C=0, B=0)
@@ -137,6 +135,7 @@ public:
     * @param pinNum  Number of PCS to use
     */
    LCD_ST7920(USBDM::Spi &spi, int pinNum) : spi(spi), pinNum(pinNum) {
+      initialise();
    }
 
    /**

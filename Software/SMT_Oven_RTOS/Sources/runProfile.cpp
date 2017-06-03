@@ -293,6 +293,7 @@ bool startRunProfile(NvSolderProfile &profile) {
    state          = s_init;
 
    // Start Timer callback
+   timer.create();
    timer.start(1.0);
 
    return true;
@@ -304,6 +305,7 @@ bool startRunProfile(NvSolderProfile &profile) {
 void abortRunProfile() {
    // Stop timer callback
    timer.stop();
+   timer.destroy();
 
    // Stop PID controller
    pid.enable(false);

@@ -70,13 +70,6 @@ public:
 };
 
 void initialise() {
-   interactiveMutex = new CMSIS::Mutex;
-
-   lcd.initialise();
-   temperatureSensors.initialise();
-   caseTemperatureMonitor.initialise();
-   pid.initialise();
-   buttons.initialise();
    Buzzer::init();
    OvenFanLed::init();
    HeaterLed::init();
@@ -85,7 +78,6 @@ void initialise() {
 }
 
 int main() {
-//   PRINTF("Starting\n");
    initialise();
 
    USBDM::mapAllPins();
@@ -95,7 +87,6 @@ int main() {
       lcd.clear();
       lcd.printf("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
       lcd.putString(buff);
-//      PRINTF("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
    }
 
    USBDM::Usb0::initialise();
