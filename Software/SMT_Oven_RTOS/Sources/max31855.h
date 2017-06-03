@@ -15,8 +15,6 @@
 
 /**
  * Class representing an MAX31855 connected over SPI
- *
- * @tparam pinNum Pin number for PCSn signal
  */
 class Max31855 {
 public:
@@ -47,23 +45,6 @@ public:
    USBDM::Nonvolatile<bool> &enabled;
 
    /**
-    * Initialise the LCD
-    */
-   void initialise() {
-      spi.lock();
-      spi.setPcsPolarity(pinNum, false);
-
-      spi.setSpeed(2500000);
-      spi.setMode(USBDM::SPI_MODE0);
-      spi.setDelays(0.1*USBDM::us, 0.1*USBDM::us, 0.1*USBDM::us);
-      spi.setFrameSize(8);
-
-      // Record CTAR value in case SPI shared
-      spiCtarValue = spi.getCTAR0Value();
-      spi.unlock();
-   }
-
-   /**
     * Constructor
     *
     * @param spi     The SPI to use to communicate with MAX31855
@@ -73,8 +54,19 @@ public:
     */
    Max31855(USBDM::Spi &spi, int pinNum, USBDM::Nonvolatile<int> &offset, USBDM::Nonvolatile<bool> &enabled) :
       spi(spi), pinNum(pinNum), offset(offset), enabled(enabled) {
-//      initialise();
-   }
+
+      spi.startTransaction();
+      spi.setPcsPolarity(pinNum, USBDM::ActiveLow);
+
+      spi.setSpeed(2500000);
+      spi.setMode(USBDM::SpiMode0);
+      spi.setDelays(0.1*USBDM::us, 0.1*USBDM::us, 0.1*USBDM::us);
+      spi.setFrameSize(8);
+
+      // Record CTAR value in case SPI shared
+      spiCtarValue = spi.getCTAR0Value();
+      spi.endTransaction();
+      }
 
    /**
     * Convert status to string
@@ -133,11 +125,10 @@ public:
       uint8_t data[] = {
             0xFF, 0xFF, 0xFF, 0xFF,
       };
-      spi.lock();
-      spi.setCTAR0Value(spiCtarValue);
+      spi.startTransaction(spiCtarValue);
       spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
       spi.txRxBytes(sizeof(data), nullptr, data);
-      spi.unlock();
+      spi.endTransaction();
 
       // Temperature = sign-extended 14-bit value
       temperature = (((int16_t)((data[0]<<8)|data[1]))>>2)/4.0;
@@ -185,6 +176,7 @@ public:
       // Return error flag
       return status;
    }
+
    /**
     * Read enabled thermocouple
     *
@@ -217,9 +209,7 @@ public:
    /**
     * Get offset that is added to temperature reading
     *
-    * @return Get Offset value
-    *
-    * @note Offset as an integer
+    * @return Offset as an integer
     */
    int getOffset() {
       return offset;

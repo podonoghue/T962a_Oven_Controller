@@ -28,7 +28,7 @@ public:
  * @tparam outputFn     Output function - used to control the output variable
  */
 template<Pid::InFunction inputFn, Pid::OutFunction outputFn>
-class Pid_T : Pid {
+class Pid_T : private Pid, private CMSIS::TimerClass<osTimerPeriodic> {
 
 private:
    const double interval;     //! Interval for sampling
@@ -55,14 +55,6 @@ private:
    /** Used by static callback to locate class */
    static Pid_T *This;
 
-   /** Used to wrap the class method for passing to Timer callback */
-   static void callBack(const void *) {
-      This->update();
-   }
-
-   /** Used to wrap the class function for passing to Timer callback */
-   CMSIS::Timer<osTimerPeriodic> timer{callBack};
-
 public:
    /**
     * Constructor
@@ -78,13 +70,10 @@ public:
       interval(interval), outMin(outMin), outMax(outMax), enabled(false) {
       setTunings(Kp, Ki, Kd);
       This = this;
+      create();
    }
 
    ~Pid_T() {
-   }
-
-   void initialise() {
-//      timer.create();
    }
 
    /**
@@ -100,11 +89,11 @@ public:
             currentInput = inputFn();
             integral     = 0; //currentOutput;
             tickCount    = 0;
-            timer.start(interval);
+            start(interval);
          }
       }
       else {
-         timer.stop();
+         stop();
       }
       enabled = enable;
    }
@@ -228,7 +217,7 @@ private:
     *
     * Executed at \ref interval by Timer callback
     */
-   void update() {
+   void callback() override {
       if(!enabled) {
          return;
       }

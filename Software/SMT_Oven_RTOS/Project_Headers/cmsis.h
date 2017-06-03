@@ -33,7 +33,6 @@ struct osTimerControlBlock_t {
 /**
  * Wrapper for CMSIS Timer
  *
- * @tparam callback Timer callback function
  * @tparam timerType Type of timer e.g. osTimerPeriodic, osTimerOnce
  *
  * Example:
@@ -48,6 +47,7 @@ struct osTimerControlBlock_t {
  *    static auto cb2 = [] (const void *) {
  *       GREEN_LED::toggle();
  *    };
+ *
  *    static CMSIS::Timer<osTimerPeriodic> myTimer1(cb1);
  *    static CMSIS::Timer<osTimerPeriodic> myTimer2(cb2);
  *
@@ -70,7 +70,12 @@ private:
    const osTimerDef_t     os_timer_def;
 
 public:
-   Timer(void (*callback)(const void *)) :
+   /**
+    * Constructor
+    *
+    * @param callback Call-back function to execute by timer
+    */
+   constexpr Timer(void (*callback)(const void *)) :
       os_timer_def{callback, (void*)&os_timer_cb}
    {
    }
@@ -82,13 +87,12 @@ public:
    /**
     * Create timer
     *
-    * @param type     Type of timer i.e. osTimerOnce, osTimerPeriodic
-    * @param argument Pointer to data to pass to callback
+    * @param argument Pointer to data to pass to callback (should be persistent)
     *
     * @note Not usually required as done on first use
     */
-   void create(void *argument=nullptr, os_timer_type type=timerType) {
-      osTimerId timer_id __attribute__((unused)) = osTimerCreate(&os_timer_def, type, argument);
+   void create(void *argument=nullptr) {
+      osTimerId timer_id __attribute__((unused)) = osTimerCreate(&os_timer_def, timerType, argument);
       assert((void*)timer_id == (void*)&os_timer_cb);
    }
    /**
@@ -114,10 +118,6 @@ public:
     * @param millisec Interval in milliseconds
     */
    void start(int millisec) {
-      if (os_timer_cb.state == 0) {
-         // Lazy initialisation
-         create();
-      }
       USBDM::setAndCheckCmsisErrorCode(osTimerStart((osTimerId)&os_timer_cb, millisec));
    }
    /**
@@ -135,6 +135,94 @@ public:
     */
    inline osTimerId getId() {
       return (osTimerId)&os_timer_cb;
+   }
+};
+
+/**
+ * Wrapper for CMSIS Timer.
+ * This class incorporates the call-back function.
+ *
+ * @tparam timerType Type of timer e.g. osTimerPeriodic, osTimerOnce
+ *
+ * <b>Example declaration</b>
+ * @code
+ *  //
+ *  // Thread class incorporating thread function
+ *  //
+ *  class MyTimer : public CMSIS::TimerClass {
+ *
+ *  private:
+ *     // Name to use
+ *     const char *fName;
+ *
+ *     //
+ *     // Function executed as timer call-back
+ *     //
+ *     virtual void callback(void *) override {
+ *        printf(fName);
+ *     }
+ *
+ *  public:
+ *     //
+ *     // Constructor
+ *     //
+ *     // @param Name for timer function to report
+ *     //
+ *     MyThread(const char *name) : fName(name) {
+ *     }
+ *  };
+ * @endcode
+ *
+ * <b>Example instantiation and use</b>
+ * @code
+ *    //
+ *    // Create derived thread class instances
+ *    //
+ *    MyTimer myTimer1("Timer 1");
+ *    MyTimer myTimer2("Timer 2");
+ *
+ *    // Start timers
+ *    myTimer1.start(1000);
+ *    myTimer2.start(500);
+ *
+ * @endcode
+ */
+template<os_timer_type timerType=osTimerPeriodic>
+class TimerClass : Timer<timerType> {
+
+private:
+
+   /*
+    * Derived classes must override this function to implement the thread\n
+    * This would usually be an endless loop
+    *
+    * @param This class pointer
+    */
+   virtual void callback() = 0;
+
+   /**
+    * Shim to allow use of a static call-back
+    *
+    * @param arg Pointer to TimerClass instance
+    *
+    * Strictly should be a separate non-member function with C linkage.
+    */
+   static void shim(const void *arg) {
+      TimerClass *This = static_cast<TimerClass *>(const_cast<void *>(arg));
+      This->callback();
+   }
+
+public:
+   using Timer<timerType>::start;
+   using Timer<timerType>::stop;
+   using Timer<timerType>::getId;
+   using Timer<timerType>::destroy;
+
+   TimerClass() : Timer<timerType>(shim) {
+   }
+
+   void create() {
+      Timer<timerType>::create(this);
    }
 };
 
@@ -436,11 +524,10 @@ public:
     * @param stackSize        Stack size for thread or 0 to indicate default
     */
    Thread(
-         void (*threadFunction)(const void *),
+         void        (*threadFunction)(const void *),
          osPriority  priority=osPriorityNormal,
          uint32_t    stackSize=0) :
-            thread_def {threadFunction, priority, 1, stackSize }
-   {
+            thread_def {threadFunction, priority, 1, stackSize } {
    };
    /**
     * Delete thread
@@ -494,6 +581,7 @@ public:
    osStatus setPriority(osPriority priority) {
       return osThreadSetPriority(thread_id, priority);
    }
+
    /**
     * Pass control to the next thread that is in state READY.
     * If there is no other thread in the state READY, the current
@@ -507,7 +595,7 @@ public:
       return osThreadYield();
    }
    /**
-    * Set the specified Signal Flags
+    * Set the specified Signal Flags on the thread
     *
     * @param signals Specifies the signal flags of the thread that should be set.
     *
@@ -518,7 +606,7 @@ public:
       return osSignalSet(thread_id, signals);
    }
    /**
-    * Clear the specified Signal Flags
+    * Clear the specified Signal Flags on the thread
     *
     * @param signals Specifies the signal flags of the thread that shall be cleared.
     *
@@ -554,6 +642,133 @@ public:
     */
    osStatus terminate() {
       return osThreadTerminate(thread_id);
+   }
+
+#if (osFeature_Wait != 0)
+   /**
+    * Wait for any event of the type Signal, Message, Mail for a specified time peiod.
+    * While the system waits the thread that is calling this function is put into the state WAITING. When millisec is set to osWaitForever the function will wait for an infinite time until a event occurs.
+    *
+    * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait.
+    *
+    * @return Status with:
+    * @return osEventSignal:  Signal event occurred and is returned.
+    * @return osEventMessage: Message event occurred and is returned.
+    * @return osEventMail:    Mail event occurred and is returned.
+    * @return osEventTimeout: Time delay is executed.
+    * @return osErrorISR:     Cannot be called from interrupt service routines.
+    */
+   static osStatus wait(uint32_t millisec) {
+      return osWait(millisec);
+   }
+#endif
+
+   /**
+    * Wait for a specified time period in milliseconds.
+    *
+    * @param millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait.
+    *
+    * @return Status with:
+    * @return osEventTimeout:  The time delay is executed.
+    * @return osErrorISR:      Cannot be called from interrupt service routines.
+    */
+   static osStatus delay(uint32_t millisec) {
+      return osDelay(millisec);
+   }
+};
+
+/**
+ * Wrapper for CMSIS Thread.
+ * This class incorporates the thread function.
+ *
+ * <b>Example declaration</b>
+ * @code
+ *  //
+ *  // Thread class incorporating thread function
+ *  //
+ *  class MyThread : public CMSIS::ThreadClass {
+ *
+ *  private:
+ *     // Name to use
+ *     const char *fName;
+ *
+ *     //
+ *     // Function executed as thread
+ *     //
+ *     virtual void task(void *) override {
+ *        for(;;) {
+ *           printf(fName);
+ *           CMSIS::Thread::delay(300);
+ *        }
+ *     }
+ *
+ *  public:
+ *     //
+ *     // Constructor
+ *     //
+ *     // @param Name for thread function to report
+ *     //
+ *     MyThread(const char *name) : fName(name) {
+ *     }
+ *  };
+ * @endcode
+ *
+ * <b>Example instantiation and use</b>
+ * @code
+ *    //
+ *    // Create derived thread class instances
+ *    //
+ *    MyThread thread1("Th 1");
+ *    MyThread thread2("Th 2");
+ *
+ *    // Start threads
+ *    thread1.run();
+ *    thread2.run();
+ * @endcode
+ */
+class ThreadClass : Thread {
+
+private:
+   /*
+    * Derived classes must override this function to implement the thread\n
+    * This would usually be an endless loop
+    *
+    * @param This class pointer
+    */
+   virtual void task() = 0;
+
+   /**
+    * Shim to allow use of a static call-back
+    *
+    * @param arg Pointer to ThreadClass instance
+    *
+    * Strictly should be a separate non-member function with C linkage.
+    */
+   static void shim(const void *arg) {
+      ThreadClass *This = static_cast<ThreadClass *>(const_cast<void *>(arg));
+      This->task();
+   }
+
+public:
+   using Thread::getId;
+   using Thread::getMyId;
+   using Thread::getPriority;
+   using Thread::setPriority;
+   using Thread::yield;
+   using Thread::signalSet;
+   using Thread::signalClear;
+   using Thread::signalWait;
+   using Thread::terminate;
+   using Thread::delay;
+#if (osFeature_Wait != 0)
+   using Thread::wait;
+#endif
+
+   ThreadClass() : Thread(shim) {
+   }
+
+   void run() {
+     Thread::run(this);
    }
 };
 
@@ -930,7 +1145,7 @@ public:
 
    /**
     * Get a mail item from the mail queue.\n
-    * Fir use in ISRs
+    * For use in ISRs
     *
     * @return osOK: no mail is available in the queue
     * @return osEventMail: mail received, value.p contains the pointer to mail content.

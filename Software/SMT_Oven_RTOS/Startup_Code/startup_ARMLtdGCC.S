@@ -155,7 +155,7 @@ Reset_Handler:
 #endif
 
     // Make sure hook is provided for CMSIS (fix for KDS compiler)
-//    bl	  	software_init_hook
+    bl	  	software_init_hook
 
     b       __START
     .pool
