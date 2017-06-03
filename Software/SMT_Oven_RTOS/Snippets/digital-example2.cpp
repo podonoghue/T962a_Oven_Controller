@@ -1,11 +1,5 @@
 /**
- ============================================================================
- * @file digital-example1.cpp
- * @brief Basic digital input/output example
- *
- *  Created on: 10/1/2016
- *      Author: podonoghue
- ============================================================================
+ * @file digital-example2.cpp
  */
 #include <stdio.h>
 #include "system.h"

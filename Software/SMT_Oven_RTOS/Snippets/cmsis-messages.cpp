@@ -9,7 +9,6 @@
 #include "cmsis_os.h"                   // CMSIS RTX
 #include "hardware.h"                   // Hardware interface
 
-
 // Directly access USBDM routines
 using namespace USBDM;
 

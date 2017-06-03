@@ -21,8 +21,8 @@ using namespace USBDM;
 #define SET_HANDLERS_PROGRAMMATICALLY
 
 // Connection mapping - change as required
-using LED1 = USBDM::GpioA<2, USBDM::ActiveLow>;
-using LED2 = USBDM::GpioC<3, USBDM::ActiveLow>;
+using RED_LED   = USBDM::GpioB<0>;
+using GREEN_LED = USBDM::GpioB<1>;
 
 #ifndef SET_HANDLERS_PROGRAMMATICALLY
 /**
@@ -37,13 +37,13 @@ namespace USBDM {
 template<> void Pit_T<PitInfo>::irq0Handler() {
    // Clear interrupt flag
    PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF_MASK;
-   LED1::toggle();
+   RED_LED::toggle();
 }
 
 template<> void Pit_T<PitInfo>::irq1Handler() {
    // Clear interrupt flag
    PIT->CHANNEL[1].TFLG = PIT_TFLG_TIF_MASK;
-   LED2::toggle();
+   GREEN_LED::toggle();
 }
 
 } // end namespace USBDM
@@ -53,18 +53,22 @@ template<> void Pit_T<PitInfo>::irq1Handler() {
  * These handlers are set programmatically
  */
 void flashRed(void) {
-   LED1::toggle();
+   RED_LED::toggle();
 }
 
 void flashGreen(void) {
-   LED2::toggle();
+   GREEN_LED::toggle();
 }
 
 int main() {
-   LED1::setOutput(pcrValue(PullNone, DriveHigh));
-   LED2::setOutput(pcrValue(PullNone, DriveHigh));
+   RED_LED::setOutput();
+   GREEN_LED::setOutput();
 
-   Pit::enable();
+   // Turn off LED initially
+   RED_LED::set();
+   GREEN_LED::set();
+
+   Pit::configure();
 
 #ifdef SET_HANDLERS_PROGRAMMATICALLY
    // Set handlers programmatically
@@ -77,10 +81,6 @@ int main() {
 
    // Flash GREEN @ 0.5Hz
    Pit::configureChannel(1, ::SystemBusClock);
-
-   // Enable interrupts on the two channels
-   Pit::enableInterrupts(0);
-   Pit::enableInterrupts(1);
 
    // Check for errors so far
    checkError();

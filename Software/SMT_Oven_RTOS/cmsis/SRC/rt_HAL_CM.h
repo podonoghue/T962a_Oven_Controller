@@ -59,7 +59,7 @@
 
 #undef  __USE_EXCLUSIVE_ACCESS
 
-#if (defined (__CORTEX_M0) || defined (__CORTEX_M0PLUS))
+#if defined (__CORTEX_M0)
 #define __TARGET_ARCH_6S_M
 #endif
 

@@ -38,8 +38,6 @@
   #include "core_cm4.h"
 #elif defined (__CORTEX_M3)
   #include "core_cm3.h"
-#elif defined (__CORTEX_M0PLUS)
-  #include "core_cm0plus.h"
 #elif defined (__CORTEX_M0)
   #include "core_cm0.h"
 #else
@@ -204,17 +202,16 @@ typedef uint32_t __attribute__((vector_size(16))) ret128;
   SVC_ArgR(2,t3,a3)                                                            \
   SVC_ArgR(3,t4,a4)
 
-#if (defined (__CORTEX_M0) || defined (__CORTEX_M0PLUS))
-/* Changed from r7 to r6 - pgo */
+#if (defined (__CORTEX_M0))
 #define SVC_Call(f)                                                            \
   __asm volatile                                                               \
   (                                                                            \
-    "ldr r6,="#f"\n\t"                                                         \
-    "mov r12,r6\n\t"                                                           \
+    "ldr r7,="#f"\n\t"                                                         \
+    "mov r12,r7\n\t"                                                           \
     "svc 0"                                                                    \
     :               "=r" (__r0), "=r" (__r1), "=r" (__r2), "=r" (__r3)         \
     :                "r" (__r0),  "r" (__r1),  "r" (__r2),  "r" (__r3)         \
-    : "r6", "r12", "lr", "cc"                                                  \
+    : "r7", "r12", "lr", "cc"                                                  \
   );
 #else
 #define SVC_Call(f)                                                            \
