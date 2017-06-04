@@ -21,19 +21,6 @@
 /*********** $end(VectorsIncludeFiles)   *** Do not edit above this comment ***************/
 
 /*
- * Security information
- */
-typedef struct {
-    uint8_t  backdoorKey[8];
-    uint32_t fprot;
-    uint8_t  fsec;
-    uint8_t  fopt;
-    uint8_t  feprot;
-    uint8_t  fdprot;
-} SecurityInfo;
-
-
-/*
  * Vector table related
  */
 typedef void( *const intfunc )( void );
