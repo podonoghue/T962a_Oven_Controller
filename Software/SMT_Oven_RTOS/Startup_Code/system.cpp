@@ -108,7 +108,7 @@ void SystemInitLowLevel(void) {
 #endif
 
 #ifdef WDOG_UNLOCK_WDOGUNLOCK_MASK
-/* Unlocking Watchdog sequence words*/
+   /* Unlocking Watchdog sequence words*/
 #define WDOG_KEY1   (0xC520)
 #define WDOG_KEY2   (0xD928)
 
@@ -201,3 +201,19 @@ int enableInterrupts() {
    return 0;
 }
 
+#ifdef __cplusplus
+#include <stdlib.h>
+#include "hardware.h"
+
+/* Prevents the exception handling name demangling code getting pulled in */
+namespace __gnu_cxx {
+void __verbose_terminate_handler() {
+   abort();
+              USBDM::setAndCheckErrorCode(USBDM::E_TERMINATED);
+}
+}
+extern "C" __attribute__((__weak__)) void __cxa_pure_virtual(void);
+extern "C" __attribute__((__weak__)) void __cxa_pure_virtual(void) {
+   exit(1);
+}
+#endif
