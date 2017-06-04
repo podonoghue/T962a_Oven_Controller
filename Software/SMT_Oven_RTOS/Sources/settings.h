@@ -158,7 +158,7 @@ public:
     * @param[in] max          Maximum value
     * @param[in] delta        Change size for +/-
     * @param[in] defaultValue Default value for restore default
-    * @param[in] setting      Setting to manipulate
+    * @param[in] func         Action function
     */
    constexpr Setting_T(USBDM::Nonvolatile<T> &nvVariable, const char *desc, T min, T max, T delta, T defaultValue, void (*func)(const Setting *setting) ) :
       nvVariable(nvVariable), description(desc), min(min), max(max), delta(delta), defaultValue(defaultValue), func(func)

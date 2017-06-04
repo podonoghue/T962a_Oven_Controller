@@ -151,8 +151,8 @@ public:
    /**
     * Records a set of thermocouple values
     *
-    * @param[in] thermoCouple  Thermocouple temperature values to record
-    * @param[in] status        Status of thermocouple.
+    * @param[in] thermoCouples  Thermocouple temperature values to record
+    * @param[in] status         Status of thermocouple.
     */
    void setThermocouplePoint(TemperatureArray &thermoCouples, StatusArray &status) {
       for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {

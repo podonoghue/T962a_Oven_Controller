@@ -53,7 +53,7 @@ void setTextPrompt(void (*prompt)());
 /**
  * Control whether a text or plot display is used on LCD
  *
- * @param[in] value Either DisplayPlot or DisplayTable
+ * @param[in] mode Either DisplayPlot or DisplayTable
  */
 void setDisplayFormat(DisplayMode mode);
 
