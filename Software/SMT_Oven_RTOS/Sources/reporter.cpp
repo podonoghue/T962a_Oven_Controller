@@ -21,7 +21,7 @@ static void (*fTextPrompt)() = nullptr;
 static void (*fPlotPrompt)() = nullptr;
 
 /** Indicates whether plot or text report is shown on LCD */
-static bool usePlot = false;
+static DisplayMode usePlot = DisplayTable;
 
 /** Profile being used */
 static int fProfile;
@@ -29,7 +29,7 @@ static int fProfile;
 /**
  * Get state name as string
  *
- * @param state State to get name for
+ * @param[in] state State to get name for
  *
  * @return Pointer to static string
  */
@@ -70,8 +70,8 @@ static void writePlot() {
  * Record data point for logging.\n
  * Actual temperature information is obtained from the thermocouples.
  *
- * @param time  Time for report
- * @param state State for report
+ * @param[in] time  Time for report
+ * @param[in] state State for report
  */
 void addLogPoint(int time, State state) {
    DataPoint dataPoint;
@@ -125,11 +125,13 @@ static void writeThermocoupleStatus() {
  * Reports thermocouple status on LCD
  */
 void displayThermocoupleStatus() {
-   if (usePlot) {
-      writePlot();
-   }
-   else {
-      writeThermocoupleStatus();
+   switch(usePlot) {
+      case DisplayPlot:
+         writePlot();
+         break;
+      case DisplayTable:
+         writeThermocoupleStatus();
+         break;
    }
    lcd.refreshImage();
    lcd.setGraphicMode();
@@ -138,7 +140,7 @@ void displayThermocoupleStatus() {
 /**
  * Set prompt to print for text display
  *
- * @param prompt Prompt to print
+ * @param[in] prompt Call-back to obtain prompt to display
  */
 void setTextPrompt(void (*prompt)()) {
    fTextPrompt = prompt;
@@ -146,7 +148,7 @@ void setTextPrompt(void (*prompt)()) {
 /**
  * Set prompt to print in plot mode
  *
- * @param prompt Prompt to print
+ * @param[in] prompt Call-back to obtain prompt to display
  */
 void setPlotPrompt(void (*prompt)()) {
    fPlotPrompt = prompt;
@@ -155,20 +157,20 @@ void setPlotPrompt(void (*prompt)()) {
 /**
  * Control whether a text or plot display is used on LCD
  *
- * @param value True => Plot display, false => Text display
+ * @param[in] value Either DisplayPlot or DisplayTable
  */
-void setDisplayFormat(bool value) {
-   usePlot = value;
+void setDisplayFormat(DisplayMode mode) {
+   usePlot = mode;
 }
 
 /**
  * Set profile to use when plotting to LCD
  *
- * @param profile Profile to use
+ * @param[in] profileIndex Index of profile to use
  */
-void setProfile(int profile) {
-   fProfile = profile;
-   Draw::drawProfile(profile);
+void setProfile(int profileIndex) {
+   fProfile = profileIndex;
+   Draw::drawProfile(profileIndex);
 }
 
 }; // end namespace Reporter

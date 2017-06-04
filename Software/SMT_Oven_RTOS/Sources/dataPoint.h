@@ -9,9 +9,10 @@
 #define SOURCES_DATAPOINT_H_
 
 #include <math.h>
-#include <Max31855.h>
 #include <stdint.h>
+#include "Max31855.h"
 
+/** Mode of operation within profile */
 enum State {
    s_off,
    s_fail,
@@ -27,18 +28,25 @@ enum State {
 
 /**
  * Represents a data point for plotting etc.
+ *
+ * To save space 16-bit scaled integers are used internally to represent temperatures.
+ * These are scaled to floats on input/output.
  */
 class DataPoint {
 
 public:
    using ThermocoupleStatus = Max31855::ThermocoupleStatus;
+
    static constexpr unsigned NUM_THERMOCOUPLES = 4;
+
    using TemperatureArray = float[NUM_THERMOCOUPLES];
    using StatusArray      = ThermocoupleStatus[NUM_THERMOCOUPLES];
 
 private:
    /** Value used to scale float to scaled integer values => 2 decimal places */
    static constexpr float FIXED_POINT_SCALE    = 100.0;
+
+   /* Bit encoding for fState_status */
    static constexpr int   THERMO_STATUS_OFFSET = 4;
    static constexpr int   THERMO_STATUS_WIDTH  = 3;
    static constexpr int   THERMO_STATUS_MASK   = (1<<3)-1;
@@ -62,7 +70,7 @@ public:
    /**
     * Get recorded status of a thermocouple
     *
-    * @param index Index of thermocouple
+    * @param[in] index Index of thermocouple
     *
     * @return Status
     */
@@ -73,9 +81,8 @@ public:
    /**
     * Set recorded status of a thermocouple
     *
-    * @param index Index of thermocouple
-    *
-    * @param status Status to set
+    * @param[in] index Index of thermocouple
+    * @param[in] status Status to set
     */
    void setStatus(unsigned index, ThermocoupleStatus status) {
       fState_status =
@@ -86,8 +93,8 @@ public:
    /**
     * Get recorded thermocouple temperature
     *
-    * @param index         Index of thermocouple
-    * @param temperature   Temperature value
+    * @param[in]  index         Index of thermocouple
+    * @param[out] temperature   Temperature value
     *
     * @return Status of thermocouple
     */
@@ -99,8 +106,8 @@ public:
    /**
     * Set recorded thermocouple temperature
     *
-    * @param index       Index of thermocouple
-    * @param temperature Temperature to set
+    * @param[in] index       Index of thermocouple
+    * @param[in] temperature Temperature to set
     */
    void setTemperature(unsigned index, float temperature) {
       fThermocouples[index] = round(temperature*FIXED_POINT_SCALE);
@@ -133,7 +140,7 @@ public:
     * @return Maximum value as float
     */
    float maximum() const {
-      float max = fTargetTemp;
+      uint16_t max = fTargetTemp;
       for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
          if (fThermocouples[index]>max) {
             max = fThermocouples[index];
@@ -144,12 +151,12 @@ public:
    /**
     * Records a set of thermocouple values
     *
-    * @param thermoCouple  Thermocouple temperature values to record
-    * @param status        Status of thermocouple.
+    * @param[in] thermoCouple  Thermocouple temperature values to record
+    * @param[in] status        Status of thermocouple.
     */
-   void setThermocouplePoint(TemperatureArray thermoCouple, StatusArray status) {
+   void setThermocouplePoint(TemperatureArray &thermoCouples, StatusArray &status) {
       for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
-         setTemperature(index, thermoCouple[index]);
+         setTemperature(index, thermoCouples[index]);
          setStatus(index, status[index]);
       }
    }
@@ -162,7 +169,7 @@ public:
    void getThermocouplePoint(TemperatureArray &thermoCouples, StatusArray &statuses) const {
       for (unsigned index=0; index<NUM_THERMOCOUPLES; index++) {
          thermoCouples[index]   = fThermocouples[index]/FIXED_POINT_SCALE;
-         statuses[index] = getStatus(index);
+         statuses[index]        = getStatus(index);
       }
    }
    /**
@@ -190,9 +197,9 @@ public:
       return (State)(fState_status&STATE_MASK);
    }
    /**
-    * Recorded state
+    * Record state
     *
-    * @param state State e.g. s_soak
+    * @param[in] state State e.g. s_soak
     */
    void setState(State state) {
       fState_status = (fState_status&~STATE_MASK)|(state&STATE_MASK);
@@ -208,7 +215,7 @@ public:
    /**
     * Record heater value
     *
-    * @param percent Value for heater in percentage
+    * @param[in] percent Value for heater in percentage
     */
    void setHeater(uint8_t percent) {
       fHeater = percent;
@@ -224,7 +231,7 @@ public:
    /**
     * Record fan value
     *
-    * @param percent Value for heater in percentage
+    * @param[in] percent Value for heater in percentage
     */
    void setFan(uint8_t percent) {
       fFan = percent;

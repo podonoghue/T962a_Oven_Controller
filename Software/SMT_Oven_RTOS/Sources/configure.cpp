@@ -26,7 +26,7 @@ SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons{};
 /**
  * Set output controlling oven
  *
- * @param dutyCycle Controls the Heater/Fan
+ * @param[in] dutyCycle Controls the Heater/Fan
  */
 inline void outPutControl(float dutyCycle) {
    int heaterDutycycle;
@@ -65,7 +65,7 @@ Pid_T<getTemperature, outPutControl> pid{pidKp, pidKp, pidKp, pidInterval, -100,
 TemperatureSensors temperatureSensors{};
 
 /** Monitor for case temperature */
-CaseTemperatureMonitor<CaseFan> caseTemperatureMonitor{};
+CaseTemperatureMonitor<CaseFan> caseTemperatureMonitor{temperatureSensors};
 
 /**
  * Mutex to protect Interactive and Remote control

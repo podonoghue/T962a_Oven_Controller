@@ -23,7 +23,7 @@
  */
 template<typename CaseFan, int START_TEMP=35, int MAX_TEMP=45>
 class CaseTemperatureMonitor : private CMSIS::TimerClass<osTimerPeriodic> {
-   static TemperatureSensors &tempSensor;
+   TemperatureSensors &tempSensor;
 
    // Minimum speed to run the fan at
    static constexpr int MIN_FAN_SPEED = 10;
@@ -47,9 +47,9 @@ public:
    /*
     * Create case temperature monitor
     *
-    * @tparam Sensor Temperature sensor
+    * @param tempSensor Temperature sensor
     */
-   CaseTemperatureMonitor() {
+   CaseTemperatureMonitor(TemperatureSensors &tempSensor) : tempSensor(tempSensor) {
       CaseFan::enable();
       CaseFan::setPeriod(20*USBDM::ms);
       CaseFan::setDutyCycle(0);
@@ -60,8 +60,4 @@ public:
 
    }
 };
-
-template<typename CaseFan, int START_TEMP, int MAX_TEMP>
-TemperatureSensors &CaseTemperatureMonitor<CaseFan, START_TEMP, MAX_TEMP>::tempSensor = temperatureSensors;
-
 #endif /* SOURCES_CASETEMPERATUREMONITOR_CPP_ */

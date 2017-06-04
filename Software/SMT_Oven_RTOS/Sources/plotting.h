@@ -26,7 +26,7 @@ void reset();
  * Draw a profile to current plot data\n
  * This clears the plot data and then plots the given profile.
  *
- * @param index Index of profile to draw to plot
+ * @param[in] index Index of profile to draw to plot
  */
 void drawProfile(int index);
 
@@ -38,15 +38,15 @@ void update();
 /**
  * Add data point to plot
  *
- * @param time Time index of point
- * @param dataPoint Point to add
+ * @param[in] time Time index of point
+ * @param[in] dataPoint Point to add
  */
 void addDataPoint(int time, DataPoint dataPoint);
 
 /**
  * Get data point
  *
- * @param time Time index of point
+ * @param[in] time Time index of point
  *
  * @return dataPoint for time index
  */

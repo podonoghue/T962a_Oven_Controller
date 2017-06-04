@@ -8,8 +8,9 @@
 #ifndef SOURCES_TEMPERATUREPLOT_H_
 #define SOURCES_TEMPERATUREPLOT_H_
 
-#include <dataPoint.h>
 #include <math.h>
+#include <string.h>
+#include <dataPoint.h>
 #include <Max31855.h>
 #include <algorithm>    // std::max
 

@@ -205,7 +205,7 @@ bool EditProfile::doit() {
  * Allows editing of a Solder profile.\n
  * After editing the user is prompted to save the profile.
  *
- * @param nvProfile The profile to edit
+ * @param[in,out] nvProfile The profile to edit
  */
 void EditProfile::run(NvSolderProfile &nvProfile) {
 

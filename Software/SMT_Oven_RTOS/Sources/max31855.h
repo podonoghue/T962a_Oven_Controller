@@ -9,8 +9,7 @@
 #ifndef SOURCES_MAX31855_H_
 #define SOURCES_MAX31855_H_
 
-#include "cmsis.h"
-#include "settings.h"
+#include "flash.h"
 #include "spi.h"
 
 /**
@@ -27,10 +26,10 @@ public:
       TH_DISABLED=0b111,   // Available but disabled (Temperature reading will still be valid)
    };
 
-public:
+protected:
 
-   /** SPI CTAR value */
-   uint32_t spiCtarValue = 0;
+   /** SPI configuration value */
+   uint32_t spiConfig = 0;
 
    /** SPI used for LCD */
    USBDM::Spi &spi;
@@ -44,34 +43,37 @@ public:
    /** Used to disable sensor */
    USBDM::Nonvolatile<bool> &enabled;
 
+public:
    /**
     * Constructor
     *
-    * @param spi     The SPI to use to communicate with MAX31855
-    * @param pinNum  Number of PCS to use
-    * @param offset  Offset to add to reading from probe
-    * @param enabled Reference to non-volatile variable enabling thermocouple
+    * @param[in] spi     The SPI to use to communicate with MAX31855
+    * @param[in] pinNum  Number of PCS to use
+    * @param[in] offset  Offset to add to reading from probe
+    * @param[in] enabled Reference to non-volatile variable enabling thermocouple
     */
    Max31855(USBDM::Spi &spi, int pinNum, USBDM::Nonvolatile<int> &offset, USBDM::Nonvolatile<bool> &enabled) :
       spi(spi), pinNum(pinNum), offset(offset), enabled(enabled) {
 
-      spi.startTransaction();
       spi.setPcsPolarity(pinNum, USBDM::ActiveLow);
 
+      spi.startTransaction();
+
+      // Configure SPI
       spi.setSpeed(2500000);
       spi.setMode(USBDM::SpiMode0);
       spi.setDelays(0.1*USBDM::us, 0.1*USBDM::us, 0.1*USBDM::us);
       spi.setFrameSize(8);
 
-      // Record CTAR value in case SPI shared
-      spiCtarValue = spi.getCTAR0Value();
+      // Record configuration in case SPI is shared
+      spiConfig = spi.getCTAR0Value();
       spi.endTransaction();
       }
 
    /**
     * Convert status to string
     *
-    * @param status 3-bit status value from thermocouple
+    * @param[in] status 3-bit status value from thermocouple
     *
     * @return Short string representing status
     */
@@ -89,7 +91,7 @@ public:
    /**
     * Enables/disables the sensor
     *
-    * @param enable True to enable sensor
+    * @param[in] enable True to enable sensor
     *
     * @note This is a non-volatile setting
     */
@@ -115,17 +117,18 @@ public:
    /**
     * Read thermocouple
     *
-    * @param temperature   Temperature reading of external probe (.25 degree resolution)
-    * @param coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
+    * @param[out] temperature   Temperature reading of external probe (.25 degree resolution)
+    * @param[out] coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
     *
     * @return status flag
+    *
     * @note Temperature and cold-junction may be valid even if the thermocouple is disabled (TH_DISABLED).
     */
    ThermocoupleStatus getReading(float &temperature, float &coldReference) {
       uint8_t data[] = {
             0xFF, 0xFF, 0xFF, 0xFF,
       };
-      spi.startTransaction(spiCtarValue);
+      spi.startTransaction(spiConfig);
       spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
       spi.txRxBytes(sizeof(data), nullptr, data);
       spi.endTransaction();
@@ -180,8 +183,8 @@ public:
    /**
     * Read enabled thermocouple
     *
-    * @param temperature   Temperature reading of external probe (.25 degree resolution)
-    * @param coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
+    * @param[out] temperature   Temperature reading of external probe (.25 degree resolution)
+    * @param[out] coldReference Temperature reading of internal cold-junction reference (.0625 degree resolution)
     *
     * @return Status of sensor
     * @note Temperature will be zero if the thermocouple is disabled or unusable.
@@ -198,7 +201,7 @@ public:
    /**
     * Set offset added to temperature reading
     *
-    * @param off offset to set
+    * @param[in] off offset to set
     *
     * @note This is a non-volatile setting
     */

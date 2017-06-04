@@ -50,8 +50,8 @@ void draw() {
 /**
  * Copy a profile with confirmation dialogue
  *
- * @param sourceIndex      Index of source profile
- * @param destinationIndex Index of destination profile
+ * @param[in] sourceIndex      Index of source profile
+ * @param[in] destinationIndex Index of destination profile
  *
  * @return true  => Profile copied
  * @return false => Profile not copied (illegal/cancelled)
@@ -78,7 +78,7 @@ bool copyProfile(unsigned sourceIndex, unsigned destinationIndex) {
 /**
  * Run Copy Profile Dialogue
  *
- * @param index Index of source profile to copy
+ * @param[in] index Index of source profile to copy
  */
 void run(int index) {
    sourceProfileIndex      = index;

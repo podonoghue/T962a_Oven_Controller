@@ -67,6 +67,9 @@ private:
    static char buff[STRING_LENGTH];
 
 public:
+   /**
+    * Constructor
+    */
    ProfileSetting_T(
          T &value,
          const char *description,
@@ -89,7 +92,7 @@ public:
    /**
     * Set value
     *
-    * @param newValue Value to set
+    * @param[in] newValue Value to set
     *
     * @return true if value actually changed
     */
@@ -148,6 +151,11 @@ private:
    unsigned letterPosition;
 
 public:
+   /**
+    * Constructor
+    *
+    * @param name Name being edited
+    */
    ProfileNameSetting(char *name) : name(name) {
       reset();
    }

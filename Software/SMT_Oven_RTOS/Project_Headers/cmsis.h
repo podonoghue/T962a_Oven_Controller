@@ -220,6 +220,8 @@ public:
 
    TimerClass() : Timer<timerType>(shim) {
    }
+   virtual ~TimerClass() {
+   }
 
    void create() {
       Timer<timerType>::create(this);
@@ -765,6 +767,8 @@ public:
 #endif
 
    ThreadClass() : Thread(shim) {
+   }
+   virtual ~ThreadClass() {
    }
 
    void run() {

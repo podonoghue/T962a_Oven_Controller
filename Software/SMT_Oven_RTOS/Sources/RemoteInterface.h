@@ -54,15 +54,15 @@ protected:
    /**
     * Writes thermocouple status to log
     *
-    * @param time  Time of log entry to send
-    * @param lastEntry Indicates this is the last entry so append "\n\r"
+    * @param[in] time  Time of log entry to send
+    * @param[in] lastEntry Indicates this is the last entry so append "\n\r"
     */
    static void logThermocoupleStatus(int time, bool lastEntry=false);
 
    /**
     * Try to lock the Interactive mutex so that the remote session has ownership
     *
-    * @param response Buffer to use for response if needed.
+    * @param[out] response Buffer to use for response if needed.
     *
     * @return true  => success
     * @return false => failed (A fail response has been sent to the remote and response has been consumed)
@@ -72,7 +72,7 @@ protected:
    /**
     * Handle command
     *
-    * @param cmd Command to process
+    * @param[in] cmd Command to process
     */
    static bool doCommand(Command *cmd);
 
@@ -100,7 +100,7 @@ public:
    /**
     * Used to free response buffer
     *
-    * @param response Buffer to free
+    * @param[in,out] response Buffer to free
     */
    static void freeResponseBuffer(RemoteInterface::Response *&response) {
       RemoteInterface::responseQueue.free(response);
@@ -120,7 +120,7 @@ public:
    /**
     * Set response over CDC
     *
-    * @param response Response text to send
+    * @param[in] response Response text to send
     *
     * @return true Success
     */
@@ -135,8 +135,8 @@ public:
     * Process data received from host\n
     * The data is collected into a command and then added to command queue
     *
-    * @param size Amount of data
-    * @param buff Buffer for data
+    * @param[in] size Amount of data
+    * @param[in] buff Buffer containing data
     *
     * @note the Data is volatile and is processed or saved immediately.
     */

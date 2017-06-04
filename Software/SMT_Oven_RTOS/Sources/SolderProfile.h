@@ -52,7 +52,7 @@ public:
     *
     * This adds a wait for the Flash to be updated after each element is assigned
     *
-    * @param other Profile to copy from
+    * @param[in] other Profile to copy from
     */
    void operator=(const NvSolderProfile &other );
 
@@ -102,7 +102,7 @@ public:
     *
     * This adds a wait for the Flash to be updated after each element is assigned
     *
-    * @param other Profile to copy from
+    * @param[in] other Profile to copy from
     */
    void operator=(const SolderProfile &other );
 
@@ -111,7 +111,7 @@ public:
     *
     * This adds a wait for the Flash to be updated after each element is assigned
     *
-    * @param other Profile to copy from
+    * @param[in] other Profile to copy from
     */
    void operator=(const NvSolderProfile &other ) ;
 
@@ -136,7 +136,7 @@ extern const SolderProfile defaultProfile;
 /** Maximum number of profiles supported in NV memory */
 constexpr unsigned MAX_PROFILES = 10;
 
-/** The actual profile in nonvolatile memory */
+/** The actual profiles in nonvolatile memory */
 extern NvSolderProfile profiles[MAX_PROFILES];
 
 #endif /* SOURCES_SOLDERPROFILE_H_ */

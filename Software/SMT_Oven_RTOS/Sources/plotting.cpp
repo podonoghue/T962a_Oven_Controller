@@ -73,8 +73,8 @@ static void calculateScales() {
 /**
  * Plot a temperature point into LCD buffer.
  *
- * @param time        Time for horizontal axis [0s..MAX_PROFILE_TIME] s
- * @param temperature Temperature to plot [MIN_TEMP..MAX_TEMP] C
+ * @param[in] time        Time for horizontal axis [0s..MAX_PROFILE_TIME] s
+ * @param[in] temperature Temperature to plot [MIN_TEMP..MAX_TEMP] C
  */
 static void plotTemperatureOnLCD(int time, int temperature) {
    // Limit plot range
@@ -104,7 +104,7 @@ static void plotProfilePointsOnLCD() {
 /**
  * Draw the axis for the plot into LCD buffer
  *
- * @param profileIndex Index of profile (to get name of profile to print)
+ * @param[in] profileIndex Index of profile (to get name of profile to print)
  */
 static void drawAxis(int profileIndex) {
    lcd.setInversion(false);
@@ -247,7 +247,7 @@ public:
    /**
     * Plot the entire profile to the current plot
     *
-    * @param profile Profile to use
+    * @param[in] profile Profile to use
     */
    ProfilePlotter(const NvSolderProfile &profile) : state(s_preheat), time(0), setpoint(25.0) {
       while (state != s_off) {
@@ -260,7 +260,7 @@ public:
 /**
  * Plot the entire profile to the current plot
  *
- * @param profileIndex Index of profile to use
+ * @param[in] profileIndex Index of profile to use
  */
 static void plotProfile(int profileIndex) {
    ProfilePlotter plotter(profiles[profileIndex]);
@@ -279,7 +279,7 @@ static int profileIndex = 0;
  * Draw a profile to current plot data\n
  * This clears the plot data and then plots the given profile.
  *
- * @param index Index of profile to draw to plot
+ * @param[in] index Index of profile to draw to plot
  */
 void drawProfile(int index) {
    profileIndex = index;
@@ -299,8 +299,8 @@ void update() {
 /**
  * Add data point to plot
  *
- * @param time Time index of point
- * @param dataPoint Point to add
+ * @param[in] time Time index of point
+ * @param[in] dataPoint Point to add
  */
 void addDataPoint(int time, DataPoint dataPoint) {
    temperaturePlot.addDataPoint(time, dataPoint);
@@ -309,7 +309,7 @@ void addDataPoint(int time, DataPoint dataPoint) {
 /**
  * Get data point
  *
- * @param time Time index of point
+ * @param[in] time Time index of point
  *
  * @return dataPoint for time index
  */

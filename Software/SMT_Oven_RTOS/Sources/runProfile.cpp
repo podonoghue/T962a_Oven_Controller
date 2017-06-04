@@ -46,7 +46,7 @@ void monitor() {
    // Used to report thermocouple status
    Reporter::reset();
    Reporter::setTextPrompt(prompt);
-   Reporter::setDisplayFormat(false);
+   Reporter::setDisplayFormat(Reporter::DisplayTable);
 
    // Time in monitor sequence
    int   time  = 0;
@@ -95,7 +95,7 @@ static float ambient;
 static State state = s_off;
 
 /*
- * Call-back from the timer to step through the profile statemachine
+ * Call-back from the timer to step through the profile state-machine
  */
 static void handler(const void *) {
 
@@ -274,9 +274,10 @@ CMSIS::Timer<osTimerPeriodic> timer{handler};
  * - Set initial state
  * - Start timer
  *
- * @param profile Profile to run
+ * @param[in] profile Profile to run
  *
  * @return true  Successfully started
+ *
  * @return false Failed
  */
 bool startRunProfile(NvSolderProfile &profile) {
@@ -390,7 +391,7 @@ void runProfile() {
       lcd.setInversion(false);
    };
 
-   bool plotDisplay = false;
+   Reporter::DisplayMode plotDisplay = Reporter::DisplayTable;
 
    Reporter::reset();
    Reporter::setTextPrompt(textPrompt);
@@ -418,14 +419,14 @@ void runProfile() {
          break;
       }
       if (key == SwitchValue::SW_F4) {
-         plotDisplay = !plotDisplay;
+         plotDisplay = Reporter::toggle(plotDisplay);
          Reporter::setDisplayFormat(plotDisplay);
       }
    }
 
    abortRunProfile();
 
-   Reporter::setDisplayFormat(false);
+   Reporter::setDisplayFormat(Reporter::DisplayTable);
 
    // Sound buzzer
    Buzzer::play();

@@ -10,6 +10,9 @@
 
 namespace CopyProfile {
 
+/**
+ * Run copy profile menu
+ */
 void run(int index);
 
 }; // end namespace CopyProfile

@@ -12,7 +12,7 @@
 /**
  * Assignment from NvSolderProfile
  *
- * @param other Profile to copy from
+ * @param[in] other Profile to copy from
  */
 void SolderProfile::operator=(const NvSolderProfile &other ) {
    for (unsigned i=0; i<sizeof(description); i++) {
@@ -33,7 +33,7 @@ void SolderProfile::operator=(const NvSolderProfile &other ) {
 /**
  * Assignment from SolderProfile
  *
- * @param other Profile to copy from
+ * @param[in] other Profile to copy from
  */
 void SolderProfile::operator=(const SolderProfile &other ) {
    for (unsigned i=0; i<sizeof(description); i++) {

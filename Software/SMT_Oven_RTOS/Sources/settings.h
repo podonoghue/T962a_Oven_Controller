@@ -67,6 +67,8 @@ protected:
 
    /**
     * Gets pointer to static buffer
+    *
+    * @return Buffer pointer
     */
    static char *getBuff() {
       static char buff[BUF_SIZE];
@@ -145,8 +147,19 @@ protected:
 
 public:
 
-   ~Setting_T() = default;
+   virtual ~Setting_T() = default;
 
+   /**
+    * Constructor
+    *
+    * @param[in] nvVariable   Non-volatile variable to manipulate
+    * @param[in] desc         Description of setting
+    * @param[in] min          Minimum value
+    * @param[in] max          Maximum value
+    * @param[in] delta        Change size for +/-
+    * @param[in] defaultValue Default value for restore default
+    * @param[in] setting      Setting to manipulate
+    */
    constexpr Setting_T(USBDM::Nonvolatile<T> &nvVariable, const char *desc, T min, T max, T delta, T defaultValue, void (*func)(const Setting *setting) ) :
       nvVariable(nvVariable), description(desc), min(min), max(max), delta(delta), defaultValue(defaultValue), func(func)
    {}
@@ -166,7 +179,7 @@ public:
    /**
     * Set value of variable
     *
-    * @param value Value to set
+    * @param[in] value Value to set
     *
     * @note limits are applied
     */
@@ -262,22 +275,22 @@ public:
    /**
     * Test Fan operation
     *
-    * @param setting The current setting
+    * @param[in] setting The current setting
     */
    static void testFan(const Setting *setting);
 
    /**
     * Test Beeper
     *
-    * @param setting The current setting
+    * @param[in] setting The current setting
     */
    static void testBeep(const Setting *setting);
 
    /**
     * Display testing screen
     *
-    * @param title   Title string to display
-    * @param params  Parameter values to display
+    * @param[in] title   Title string to display
+    * @param[in] params  Parameter values to display
     */
    static void testingScreen(const char *title, const char *params);
 };

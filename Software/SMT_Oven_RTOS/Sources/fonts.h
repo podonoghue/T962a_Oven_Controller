@@ -16,18 +16,28 @@
  */
 namespace USBDM {
 
-struct Fonts {
-public:
-   /**
-    * Font sizes
-    */
-   typedef enum {FontSmall, FontMedium, FontLarge} FontSize;
+/**
+ * Represents a simple font
+ */
+class Font {
 
-   static const uint8_t FONT6x8[97][8];
-   static const uint8_t FONT8x8[97][8];
-   static const uint8_t FONT8x16[97][16];
+public:
+   static constexpr uint8_t BASE_CHAR = ' '; // First character in character set
+
+   const uint8_t width;          // Width of the character in pixels
+   const uint8_t height;         // Height of the character in pixels
+   const uint8_t bytesPerChar;   // Bytes used for each character in data table
+
+   const uint8_t *const data;    // Data describing the character pixels (index starts at BASE_CHAR)
 };
 
-} // End namespace USBDM
+/** Small 6x8 font */
+extern Font smallFont;
+/** Medium 8x8 font */
+extern Font mediumFont;
+/** Large 8x16 font */
+extern Font largeFont;
+
+}; // end namespace USBDM
 
 #endif /* INCLUDE_USBDM_FONTS_H */

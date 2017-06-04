@@ -26,6 +26,21 @@
 #include "settings.h"
 #include "runProfile.h"
 
+/** PCS # for SPI connected to LCD and Thermocouples */
+static constexpr int lcd_cs_num = 4;
+static constexpr int t1_cs_num  = 2;
+static constexpr int t2_cs_num  = 3;
+static constexpr int t3_cs_num  = 1;
+static constexpr int t4_cs_num  = 0;
+
+/**
+ * SPI used for LCD and Thermocouples
+ */
+extern USBDM::Spi0 spi;
+
+#include "TemperatureSensors.h"
+#include "CaseTemperatureMonitor.h"
+
 /** Function buttons */
 using F1Button = USBDM::GpioB<3, USBDM::ActiveLow>;
 using F2Button = USBDM::GpioB<2, USBDM::ActiveLow>;
@@ -34,13 +49,6 @@ using F4Button = USBDM::GpioB<0, USBDM::ActiveLow>;
 
 /** Select button */
 using SButton  = USBDM::GpioB<16, USBDM::ActiveLow>;
-
-/** PCS # for SPI connected to LCD and Thermocouples */
-static constexpr int lcd_cs_num = 4;
-static constexpr int t1_cs_num  = 2;
-static constexpr int t2_cs_num  = 3;
-static constexpr int t3_cs_num  = 1;
-static constexpr int t4_cs_num  = 0;
 
 /** Case fan PWM output */
 using CaseFan  = USBDM::Ftm0Channel<2>;
@@ -51,71 +59,44 @@ using Spare    = USBDM::Ftm0Channel<3>;
 /**
  * Oven fan LED - Wrapper for GPIO
  */
-class OvenFanLed : public USBDM::GpioC<6> {
+class OvenFanLed : public USBDM::GpioC<6, USBDM::ActiveHigh> {
 public:
-   /**
-    * Turn on LED
-    */
-   static void on() {
-      high();
-   }
-   /**
-    * Turn off LED
-    */
-   static void off() {
-      low();
-   }
    /**
     * Initialise LED
     */
    static void init() {
-     setOutput();
+      using namespace USBDM;
+      setOutput(pcrValue(PullNone, DriveLow));
    }
 };
 /**
  * Oven heater LED - Wrapper for GPIO
  */
-class HeaterLed : public USBDM::GpioD<7> {
+class HeaterLed : public USBDM::GpioD<7, USBDM::ActiveHigh> {
 public:
-   /**
-    * Turn on LED
-    */
-   static void on() {
-      high();
-   }
-   /**
-    * Turn off LED
-    */
-   static void off() {
-      low();
-   }
    /**
     * Initialise LED
     */
    static void init() {
-     setOutput();
+      using namespace USBDM;
+      setOutput(pcrValue(PullNone, DriveLow));
    }
 };
 
 /**
  * Oven fan GPIO
  */
-using OvenFan    = USBDM::GpioC<1>;
+using OvenFan    = USBDM::GpioC<1, USBDM::ActiveHigh>;
 
 /**
  * Oven Heater GPIO
  */
-using Heater     = USBDM::GpioC<2>;
+using Heater     = USBDM::GpioC<2, USBDM::ActiveHigh>;
 
 /**
  * Main cycle comparator used for Zero-crossing PWM
  */
 using Vmains     = USBDM::Cmp0;
-
-/**
- * SPI used for LCD and Thermocouples
- */
-extern USBDM::Spi0 spi;
 
 /**
  * LCD
@@ -134,13 +115,14 @@ constexpr float pidInterval = 0.25f;
 /**
  * Buzzer
  */
-class Buzzer : private USBDM::GpioC<5> {
+class Buzzer : private USBDM::GpioC<5, USBDM::ActiveHigh> {
 public:
    /**
     * Initialise buzzer
     */
    static void init() {
-      Buzzer::setOutput();
+      using namespace USBDM;
+      setOutput(pcrValue(PullNone, DriveLow));
    }
    /**
     * Sound buzzer with abort on button press.\n
@@ -151,31 +133,30 @@ public:
       static auto btnTest = []() {
          return buttons.getButton(0) != SwitchValue::SW_NONE;
       };
-      high();
+      // Play buzzer for time or until button press
+      on();
       USBDM::wait(beepTime, btnTest);
-      low();
+      off();
    }
 };
 
 /**
- * Set heater drive level
- */
-extern void outPutControl(float dutyCycle);
-
-/**
  * Thermocouples
  */
-#include <TemperatureSensors.h>
 extern TemperatureSensors temperatureSensors;
 
 /**
  * Monitor case temperature
  */
-#include <CaseTemperatureMonitor.h>
 extern CaseTemperatureMonitor<CaseFan> caseTemperatureMonitor;
 
 /**
- * Get oven temperature
+ * Set heater drive level (for PID)
+ */
+extern void outPutControl(float dutyCycle);
+
+/**
+ * Get oven temperature (for PID)
  * Averages multiple thermocouple inputs
  *
  * @return Averaged oven temperature

@@ -17,9 +17,9 @@ enum MessageBoxResult    {MSG_IS_OK, MSG_IS_CANCEL, MSG_IS_YES, MSG_IS_NO};
 /**
  * Writes a full screen message to LCD
  *
- * @param title      Title for screen
- * @param message    Message to display
- * @param selection  Key selection to display at bottom of screen
+ * @param[in] title      Title for screen
+ * @param[in] message    Message to display
+ * @param[in] selection  Key selection to display at bottom of screen
  *
  * @note Waits for valid key press before returning.
  *
