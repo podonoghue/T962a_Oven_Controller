@@ -14,10 +14,10 @@
 #include "hardware.h"
 
 /*********** $start(VectorsIncludeFiles) *** Do not edit after this comment ****************/
-#include "uart.h"
-#include "usb.h"
-#include "pit.h"
 #include "cmp.h"
+#include "usb.h"
+#include "uart.h"
+#include "pit.h"
 /*********** $end(VectorsIncludeFiles)   *** Do not edit above this comment ***************/
 
 /*

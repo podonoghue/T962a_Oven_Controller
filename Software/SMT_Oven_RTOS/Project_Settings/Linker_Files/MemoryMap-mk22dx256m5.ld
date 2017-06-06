@@ -56,10 +56,10 @@ MEMORY
   gpioBitband    (rw)  : ORIGIN = 0x42000000, LENGTH = 0x02000000
   peripherals    (rw)  : ORIGIN = 0xE0000000, LENGTH = 0x00100000
 /*
- *  <o>  ROM    address <constant>
- *  <o1> ROM    size    <constant>
+ *  <o>  FLASH  address <constant>
+ *  <o1> FLASH  size    <constant>
  */
-  rom            (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
+  flash          (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
 /*
  *  <o>  RAM    address <constant>
  *  <o1> RAM    size    <constant>
