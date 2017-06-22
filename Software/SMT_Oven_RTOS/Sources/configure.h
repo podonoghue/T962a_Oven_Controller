@@ -66,7 +66,7 @@ public:
     */
    static void init() {
       using namespace USBDM;
-      setOutput(pcrValue(PullNone, DriveLow));
+      setOutput(pcrValue(PinPullNone, PinDriveStrengthLow));
    }
 };
 /**
@@ -79,7 +79,7 @@ public:
     */
    static void init() {
       using namespace USBDM;
-      setOutput(pcrValue(PullNone, DriveLow));
+      setOutput(pcrValue(PinPullNone, PinDriveStrengthLow));
    }
 };
 
@@ -122,7 +122,7 @@ public:
     */
    static void init() {
       using namespace USBDM;
-      setOutput(pcrValue(PullNone, DriveLow));
+      setOutput(pcrValue(PinPullNone, PinDriveStrengthLow));
    }
    /**
     * Sound buzzer with abort on button press.\n

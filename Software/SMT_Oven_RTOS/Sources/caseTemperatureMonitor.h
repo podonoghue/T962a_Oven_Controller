@@ -22,7 +22,7 @@
  * @tparam MAX_TEMP     Temperature at which the fan is to be 100% on
  */
 template<typename CaseFan, int START_TEMP=35, int MAX_TEMP=45>
-class CaseTemperatureMonitor : private CMSIS::TimerClass<osTimerPeriodic> {
+class CaseTemperatureMonitor : private CMSIS::TimerClass {
    TemperatureSensors &tempSensor;
 
    // Minimum speed to run the fan at
@@ -54,10 +54,8 @@ public:
       CaseFan::setPeriod(20*USBDM::ms);
       CaseFan::setDutyCycle(0);
 
-      create();
       // Check every 5 seconds
       start(5000 /* ms */);
-
    }
 };
 #endif /* SOURCES_CASETEMPERATUREMONITOR_CPP_ */

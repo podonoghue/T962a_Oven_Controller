@@ -86,7 +86,9 @@ public:
    using Pcr = Pcr_T<clockMask, pcrAddress, bitNum, GPIO_DEFAULT_PCR>;
 
    static constexpr volatile GPIO_Type *gpio = reinterpret_cast<volatile GPIO_Type *>(gpioAddress);
-   static constexpr uint32_t MASK = (1<<bitNum);
+
+   static constexpr uint32_t MASK   = (1<<bitNum);
+   static constexpr uint32_t BITNUM = bitNum;
 
    /**
     * Set PCR
@@ -290,8 +292,8 @@ public:
     *
     * @param mode Interrupt/DMA mode
     */
-   static void setIrq(InterruptMode mode) {
-      Pcr::setIrq(mode);
+   static void setIrq(PinIrq pinIrq) {
+      Pcr::setIrq(pinIrq);
    }
 
    /**
@@ -304,28 +306,28 @@ public:
    /**
     * Set pull device on pin
     *
-    * @param mode Pull control value (PullNone, PullUp, PullDown)
+    * @param mode Pull control value (PinPullNone, PinPullUp, PinPullDown)
     */
-   static void setPullDevice(PullMode mode) {
-      Pcr::setPullDevice(mode);
+   static void setPullDevice(PinPull pinPull) {
+      Pcr::setPullDevice(pinPull);
    }
 
    /**
     * Set drive strength on pin
     *
-    *  @param strength Drive strength to set (DriveLow, DriveHigh)
+    *  @param strength Drive strength to set (PinDriveLow, PinDriveHigh)
     */
-   static void setDriveStrength(DriveStrength strength) {
-      Pcr::setDriveStrength(strength);
+   static void setDriveStrength(PinDriveStrength pinDriveStrength) {
+      Pcr::setDriveStrength(pinDriveStrength);
    }
 
    /**
     * Set drive mode on pin
     *
-    *  @param mode Drive mode (PushPull, OpenDrain)
+    *  @param mode Drive mode (PinPushPull, PinOpenDrain)
     */
-   static void setDriveMode(DriveMode mode) {
-      Pcr::setDriveMode(mode);
+   static void setDriveMode(PinDriveMode pinDriveMode) {
+      Pcr::setDriveMode(pinDriveMode);
    }
 
    /**
@@ -366,7 +368,11 @@ public:
  */
 template<class Info, const uint32_t bitNum, Polarity polarity>
 class  Gpio_T : public GpioBase_T<Info::clockMask, Info::pcrAddress, Info::gpioAddress, bitNum, polarity> {
+
    static_assert((bitNum<32), "Illegal signal");
+
+public:
+   static constexpr bool irqHandlerInstalled = Info::irqHandlerInstalled;
 };
 
 /**

@@ -39,22 +39,22 @@ __sram_u_size = 0;
  */
 MEMORY
 {
-/*
- *  <o>  flexRAM    address <constant>
- *  <o1> flexRAM    size    <constant>
- */
-  flexRAM        (rw)  : ORIGIN = 0x14000000, LENGTH = 0x00001000
-/*
- *  <o>  flexNVM    address <constant>
- *  <o1> flexNVM    size    <constant>
- */
-  flexNVM        (rx)  : ORIGIN = 0x10000000, LENGTH = 0x00010000
   bitband        (rw)  : ORIGIN = 0x22000000, LENGTH = 0x02000000
   aips0          (rw)  : ORIGIN = 0x40000000, LENGTH = 0x00080000
   aips1          (rw)  : ORIGIN = 0x40080000, LENGTH = 0x0007F000
   gpio           (rw)  : ORIGIN = 0x400FF000, LENGTH = 0x00001000
   gpioBitband    (rw)  : ORIGIN = 0x42000000, LENGTH = 0x02000000
   peripherals    (rw)  : ORIGIN = 0xE0000000, LENGTH = 0x00100000
+/*
+ *  <o>  Flex RAM address <constant>
+ *  <o1> Flex RAM size    <constant>
+ */
+  flexRAM        (rw)  : ORIGIN = 0x14000000, LENGTH = 0x00001000
+/*
+ *  <o>  Flex NVM address <constant>
+ *  <o1> Flex NVM size    <constant>
+ */
+  flexNVM        (rx)  : ORIGIN = 0x10000000, LENGTH = 0x00010000
 /*
  *  <o>  FLASH  address <constant>
  *  <o1> FLASH  size    <constant>

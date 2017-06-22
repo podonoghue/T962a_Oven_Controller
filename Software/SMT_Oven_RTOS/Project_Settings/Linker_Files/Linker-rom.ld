@@ -217,19 +217,19 @@ M_VECTOR_RAM_SIZE = DEFINED(__ram_vector_table__) ? (__VECTOR_TABLE_END - __VECT
       . = . + __heap_size__;
    } > ram
 
+   /* FlexRAM region for non-volatile variables */
+   .flexRAM (NOLOAD) :
+   {
+      . = ALIGN(4);
+      KEEP(*(.flexRAM))
+   } > flexRAM
+
    /* flexNVM flash region */
    .flexNVM (NOLOAD) :
    {
       . = ALIGN(4);
       KEEP(*(.flexNVM))
    } > flexNVM
-
-   /* FlexRAM region for non-volatile variables */
-   .flexRAM :
-   {
-      . = ALIGN(4);
-      KEEP(*(.flexRAM))
-   } > flexRAM
 
 
    /* STACK space - between HEAP and end of RAM (or bitband_bytes) */

@@ -104,7 +104,7 @@ public:
  * F1..F4 have auto-repeat function
  */
 template<typename f1, typename f2, typename f3, typename f4, typename sel>
-class SwitchDebouncer : private CMSIS::TimerClass<osTimerPeriodic> {
+class SwitchDebouncer : private CMSIS::TimerClass {
 
 private:
    /*
@@ -190,14 +190,14 @@ public:
     * Create the switch monitor
     */
    SwitchDebouncer() {
-      f1::setInput();
+      using namespace USBDM;
+      f1::setInput(pcrValue(PinPullUp, PinDriveStrengthHigh, PinDriveModePushPull, PinIrqNone));
       f2::setInput();
       f3::setInput();
       f4::setInput();
       sel::setInput();
 
       keyQueue.create();
-      create();
       start(TICK_INTERVAL);
    }
 

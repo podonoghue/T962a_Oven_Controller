@@ -28,7 +28,7 @@ public:
  * @tparam outputFn     Output function - used to control the output variable
  */
 template<Pid::InFunction inputFn, Pid::OutFunction outputFn>
-class Pid_T : private Pid, private CMSIS::TimerClass<osTimerPeriodic> {
+class Pid_T : private Pid, private CMSIS::TimerClass {
 
 private:
    const double interval;     //! Interval for sampling
@@ -65,7 +65,6 @@ public:
    Pid_T(double Kp, double Ki, double Kd, double interval, double outMin, double outMax) :
       interval(interval), outMin(outMin), outMax(outMax), enabled(false) {
       setTunings(Kp, Ki, Kd);
-      create();
    }
 
    /**

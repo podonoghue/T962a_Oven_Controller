@@ -265,7 +265,7 @@ static void handler(const void *) {
 };
 
 /** Timer used to run a profile */
-CMSIS::Timer<osTimerPeriodic> timer{handler};
+CMSIS::Timer timer{handler};
 
 /**
  * Start running a profile.

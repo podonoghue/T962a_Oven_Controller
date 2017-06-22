@@ -2188,19 +2188,7 @@ public:
    //! IRQ numbers for hardware
    static constexpr IRQn_Type irqNums[]  = {LLWU_IRQn};
 
-   // Template:llwu_pe3_filt2_rst
-
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
-
-   //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
-
-   // LLWU Pin Enable registers
-   static constexpr uint8_t pe1 = 0;
-   static constexpr uint8_t pe2 = 0; 
-   static constexpr uint8_t pe3 = 0; 
-   static constexpr uint8_t pe4 = 0;
+   // Template:llwu_pe4_filt2_rst
 
    // Module wake ups
    static constexpr uint8_t me =  
@@ -2212,6 +2200,31 @@ public:
       LLWU_ME_WUME5(0) |  // RTC Alarm
       LLWU_ME_WUME6(0) |  //
       LLWU_ME_WUME7(0);   // RTC Seconds
+
+   // LLWU Pin Enable registers
+   static constexpr uint8_t pe1 = 
+      LLWU_PE1_WUPE0(0)|   // LLWUP 0
+      LLWU_PE1_WUPE1(0)|   // LLWUP 1
+      LLWU_PE1_WUPE2(0)|   // LLWUP 2
+      LLWU_PE1_WUPE3(0);   // LLWUP 3 
+
+   static constexpr uint8_t pe2 = 
+      LLWU_PE2_WUPE4(0)|   // LLWUP 4
+      LLWU_PE2_WUPE5(0)|   // LLWUP 5
+      LLWU_PE2_WUPE6(0)|   // LLWUP 6
+      LLWU_PE2_WUPE7(0);   // LLWUP 7 
+
+   static constexpr uint8_t pe3 = 
+      LLWU_PE3_WUPE8(0)|   // LLWUP 8
+      LLWU_PE3_WUPE9(0)|   // LLWUP 9
+      LLWU_PE3_WUPE10(0)|  // LLWUP 10
+      LLWU_PE3_WUPE11(0);  // LLWUP 11 
+
+   static constexpr uint8_t pe4 = 
+      LLWU_PE4_WUPE12(0)|  // LLWUP 12
+      LLWU_PE4_WUPE13(0)|  // LLWUP 13
+      LLWU_PE4_WUPE14(0)|  // LLWUP 14
+      LLWU_PE4_WUPE15(0);  // LLWUP 15 
 
    // Pin Filter 1 register
    static constexpr uint8_t filt1 = 
@@ -2225,8 +2238,14 @@ public:
 
    // LLWU Reset Enable register
    static constexpr uint8_t rst =
-      LLWU_RST_LLRSTE(true) |  // Low-Leakage Mode RESET Enable
-      LLWU_RST_RSTFILT(false);  // Digital Filter On RESET Pin
+      LLWU_RST_LLRSTE(1) |  // Low-Leakage Mode RESET Enable
+      LLWU_RST_RSTFILT(0);  // Digital Filter On RESET Pin
+
+   //! Callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = false;
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  0;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 16;
