@@ -1,5 +1,5 @@
 /**
- * @file     adc.h
+ * @file     adc.h (180.ARM_Peripherals/Project_Headers/adc.h)
  * @brief    ADC routines
  *
  * @version  V4.12.1.80
@@ -55,7 +55,8 @@ namespace USBDM {
 /**
  * Default PCR value for pins used as GPIO (including multiplexor value)
  */
-static constexpr PcrValue ADC_DEFAULT_PCR = pcrValue(PinPullNone, PinDriveStrengthLow, PinDriveModePushPull, PinIrqNone, PinFilterNone, PinMuxAnalogue);
+static constexpr PcrValue ADC_DEFAULT_PCR = pcrValue(
+      PinPullNone, PinDriveStrengthLow, PinDriveModePushPull, PinIrqNone, PinFilterNone, PinSlewRateFast, PinMuxAnalogue);
 
 /**
  * ADC Resolutions for use with AnalogueIO::setMode()
@@ -166,7 +167,7 @@ public:
    /**
     * Set conversion mode
     *
-    * @param resolution Resolution for converter e.g. AdcResolution_16bit_se
+    * @param adcResolution Resolution for converter e.g. AdcResolution_16bit_se
     *
     * @note This affects all channels on the ADC
     */
@@ -177,7 +178,7 @@ public:
    /**
     * Set averaging mode
     *
-    * @param mode Mode for averaging e.g. AdcAveraging_4 etc
+    * @param adcAveraging Mode for averaging e.g. AdcAveraging_4 etc
     *
     * @note This affects all channels on the ADC
     */

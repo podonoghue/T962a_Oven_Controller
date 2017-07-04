@@ -31,8 +31,8 @@ using Switch =   USBDM::GpioB<0>;
 using Led    =   USBDM::GpioB<1>;
 
 int main(void) {
-   Led::setOutput();
-   Switch::setInput();
+   Led::setOutput(PinDriveStrengthHigh);
+   Switch::setInput(PinPullUp);
 
    for(;;) {
       Led::write(!Switch::read());
