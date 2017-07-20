@@ -30,7 +30,6 @@
    <item key="$signal$PTA3_muxSetting"                     value="mux7" />
    <item key="$signal$PTA3_pcrSetting"                     value="8000" />
    <item key="$signal$PTA4_descriptionSetting"             value="EZP_CSb" />
-   <item key="$signal$PTA4_pcrSetting"                     value="8000" />
    <item key="$signal$PTB0_descriptionSetting"             value="SW_F4b" />
    <item key="$signal$PTB0_muxSetting"                     value="mux1" />
    <item key="$signal$PTB0_pcrSetting"                     value="8003" />
@@ -38,6 +37,7 @@
    <item key="$signal$PTB16_muxSetting"                    value="mux1" />
    <item key="$signal$PTB16_pcrSetting"                    value="8003" />
    <item key="$signal$PTB17_descriptionSetting"            value="TP1 (Debug UART_Tx)" />
+   <item key="$signal$PTB17_muxSetting"                    value="mux1" />
    <item key="$signal$PTB17_pcrSetting"                    value="8000" />
    <item key="$signal$PTB1_descriptionSetting"             value="SW_F3b" />
    <item key="$signal$PTB1_muxSetting"                     value="mux1" />
@@ -122,12 +122,13 @@
    <item key="/ADC0/adc_cfg2_adhsc"                        value="false" />
    <item key="/ADC0/adc_cfg2_adlsts"                       value="0" />
    <item key="/ADC0/adc_sc2_adtrg"                         value="false" />
-   <item key="/ADC0/adc_sc2_compare"                       value="0b000" />
+   <item key="/ADC0/adc_sc2_compare"                       value="0" />
    <item key="/ADC0/adc_sc2_dmaen"                         value="false" />
    <item key="/ADC0/adc_sc2_refsel"                        value="0" />
-   <item key="/ADC0/clockFrequency"                        value="5200000.0" />
+   <item key="/ADC0/high_comparison_value"                 value="0" />
    <item key="/ADC0/irqHandlerInstalled"                   value="false" />
    <item key="/ADC0/irqLevel"                              value="0" />
+   <item key="/ADC0/low_comparison_value"                  value="0" />
    <item key="/CMP0/cmp_cr0_filter_cnt"                    value="7" />
    <item key="/CMP0/cmp_cr0_hystctr"                       value="3" />
    <item key="/CMP0/cmp_cr1_cos"                           value="false" />
@@ -166,34 +167,55 @@
    <item key="/CMP1/irqLevel"                              value="0" />
    <item key="/Console/console_device"                     value="USBDM::Uart0" />
    <item key="/Console/defaultBaudRate"                    value="115200" />
+   <item key="/DMA0/NumChannels"                           value="16" />
+   <item key="/DMA0/irqHandlerInstalled"                   value="false" />
+   <item key="/DMA0/irqLevel"                              value="0" />
+   <item key="/DMAMUX0/dma_chcfg0"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg1"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg10"                        value="0" />
+   <item key="/DMAMUX0/dma_chcfg11"                        value="0" />
+   <item key="/DMAMUX0/dma_chcfg12"                        value="0" />
+   <item key="/DMAMUX0/dma_chcfg13"                        value="0" />
+   <item key="/DMAMUX0/dma_chcfg14"                        value="0" />
+   <item key="/DMAMUX0/dma_chcfg15"                        value="0" />
+   <item key="/DMAMUX0/dma_chcfg2"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg3"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg4"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg5"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg6"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg7"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg8"                         value="0" />
+   <item key="/DMAMUX0/dma_chcfg9"                         value="0" />
    <item key="/FTFL/EepromSize"                            value="eeprom2KBytes" />
    <item key="/FTFL/FlashPartition"                        value="partition_flash0K_eeprom64K" />
    <item key="/FTFL/FlexNVM_Partition"                     value="partition_A4_B4_8ths" />
+   <item key="/FTFL/dflash_phrase_size"                    value="4" />
+   <item key="/FTFL/dflash_sector_size"                    value="2048" />
    <item key="/FTFL/peripheral_file"                       value="ftfl_64k_flexrom" />
-   <item key="/FTM0/clockFrequency"                        value="375000.0" />
-   <item key="/FTM0/clockPeriod"                           value="2.666666666666667E-6" />
+   <item key="/FTFL/pflash_phrase_size"                    value="4" />
+   <item key="/FTFL/pflash_sector_size"                    value="2048" />
    <item key="/FTM0/ftmExternalClock"                      value="0" />
+   <item key="/FTM0/ftm_exttrig_inittrigen"                value="false" />
+   <item key="/FTM0/ftm_exttrig_trig"                      value="0" />
+   <item key="/FTM0/ftm_mod"                               value="10000" />
    <item key="/FTM0/ftm_sc_clks"                           value="1" />
    <item key="/FTM0/ftm_sc_cpwms"                          value="false" />
    <item key="/FTM0/ftm_sc_ps"                             value="7" />
    <item key="/FTM0/ftm_sc_toie"                           value="false" />
    <item key="/FTM0/irqHandlerInstalled"                   value="false" />
    <item key="/FTM0/irqLevel"                              value="0" />
-   <item key="/FTM0/maximumPeriod"                         value="0.17476266666666668" />
    <item key="/FTM0/minimumResolution"                     value="50" />
-   <item key="/FTM0/period"                                value="1000" />
-   <item key="/FTM1/clockFrequency"                        value="4.8E7" />
-   <item key="/FTM1/clockPeriod"                           value="2.0833333333333335E-8" />
    <item key="/FTM1/ftmExternalClock"                      value="0" />
+   <item key="/FTM1/ftm_exttrig_inittrigen"                value="false" />
+   <item key="/FTM1/ftm_exttrig_trig"                      value="0" />
+   <item key="/FTM1/ftm_mod"                               value="10000" />
    <item key="/FTM1/ftm_sc_clks"                           value="1" />
    <item key="/FTM1/ftm_sc_cpwms"                          value="false" />
    <item key="/FTM1/ftm_sc_ps"                             value="0" />
    <item key="/FTM1/ftm_sc_toie"                           value="false" />
    <item key="/FTM1/irqHandlerInstalled"                   value="false" />
    <item key="/FTM1/irqLevel"                              value="0" />
-   <item key="/FTM1/maximumPeriod"                         value="0.0013653333333333334" />
    <item key="/FTM1/minimumResolution"                     value="100" />
-   <item key="/FTM1/period"                                value="10000" />
    <item key="/Flash/FlashType"                            value="ftfl" />
    <item key="/GPIOA/irqHandlerInstalled"                  value="false" />
    <item key="/GPIOA/irqLevel"                             value="0" />
@@ -221,16 +243,27 @@
    <item key="/LLWU/llwu_me_wume4"                         value="false" />
    <item key="/LLWU/llwu_me_wume5"                         value="false" />
    <item key="/LLWU/llwu_me_wume7"                         value="false" />
-   <item key="/LLWU/llwu_pins"                             value="" />
+   <item key="/LLWU/llwu_pe1_wupe0"                        value="0" />
+   <item key="/LLWU/llwu_pe1_wupe1"                        value="0" />
+   <item key="/LLWU/llwu_pe1_wupe2"                        value="0" />
+   <item key="/LLWU/llwu_pe1_wupe3"                        value="0" />
+   <item key="/LLWU/llwu_pe2_wupe4"                        value="0" />
+   <item key="/LLWU/llwu_pe2_wupe5"                        value="0" />
+   <item key="/LLWU/llwu_pe2_wupe6"                        value="0" />
+   <item key="/LLWU/llwu_pe2_wupe7"                        value="0" />
+   <item key="/LLWU/llwu_pe3_wupe10"                       value="0" />
+   <item key="/LLWU/llwu_pe3_wupe11"                       value="0" />
+   <item key="/LLWU/llwu_pe3_wupe8"                        value="0" />
+   <item key="/LLWU/llwu_pe3_wupe9"                        value="0" />
+   <item key="/LLWU/llwu_pe4_wupe12"                       value="0" />
+   <item key="/LLWU/llwu_pe4_wupe13"                       value="0" />
+   <item key="/LLWU/llwu_pe4_wupe14"                       value="0" />
+   <item key="/LLWU/llwu_pe4_wupe15"                       value="0" />
    <item key="/LLWU/llwu_rst_llrste"                       value="true" />
    <item key="/LLWU/llwu_rst_rstfilt"                      value="false" />
-   <item key="/LPTMR0/clockFrequency"                      value="2000000.0" />
-   <item key="/LPTMR0/clockPeriod"                         value="5.0E-7" />
    <item key="/LPTMR0/irqHandlerInstalled"                 value="false" />
    <item key="/LPTMR0/irqLevel"                            value="0" />
    <item key="/LPTMR0/lptmr_cmr"                           value="0" />
-   <item key="/LPTMR0/lptmr_cmrFrequency"                  value="0" />
-   <item key="/LPTMR0/lptmr_cmrPeriod"                     value="0.0" />
    <item key="/LPTMR0/lptmr_csr_tfc"                       value="false" />
    <item key="/LPTMR0/lptmr_csr_tie"                       value="false" />
    <item key="/LPTMR0/lptmr_csr_tms"                       value="false" />
@@ -239,7 +272,6 @@
    <item key="/LPTMR0/lptmr_psr_pbyp"                      value="false" />
    <item key="/LPTMR0/lptmr_psr_pcs"                       value="0" />
    <item key="/LPTMR0/lptmr_psr_prescaler"                 value="0" />
-   <item key="/LPTMR0/maximumPeriod"                       value="0.032768" />
    <item key="/MCG/ERRATA_E2448"                           value="false" />
    <item key="/MCG/LowPower"                               value="false" />
    <item key="/MCG/McgInfoSize"                            value="1" />
@@ -291,12 +323,39 @@
    <item key="/OSC0/osc_cr_erefsten"                       value="false" />
    <item key="/OSC0/osc_cr_scp"                            value="2" />
    <item key="/OSC0/osc_input_freq"                        value="8000000" />
-   <item key="/OSC0/oscclk_clock"                          value="8000000" />
    <item key="/OSC0/range"                                 value="1" />
    <item key="/OSC0/range_out"                             value="1" />
    <item key="/OSC0/system_oscerclk_clock"                 value="8000000" />
    <item key="/PDB0/irqHandlerInstalled"                   value="false" />
    <item key="/PDB0/irqLevel"                              value="0" />
+   <item key="/PDB0/pdb_ch0_c1_bb"                         value="0" />
+   <item key="/PDB0/pdb_ch0_c1_en"                         value="0" />
+   <item key="/PDB0/pdb_ch0_c1_tos"                        value="0" />
+   <item key="/PDB0/pdb_ch0_dly0"                          value="0" />
+   <item key="/PDB0/pdb_ch0_dly1"                          value="0" />
+   <item key="/PDB0/pdb_ch1_c1_bb"                         value="0" />
+   <item key="/PDB0/pdb_ch1_c1_en"                         value="0" />
+   <item key="/PDB0/pdb_ch1_c1_tos"                        value="0" />
+   <item key="/PDB0/pdb_ch1_dly0"                          value="0" />
+   <item key="/PDB0/pdb_ch1_dly1"                          value="0" />
+   <item key="/PDB0/pdb_idly"                              value="0" />
+   <item key="/PDB0/pdb_int0_int"                          value="0" />
+   <item key="/PDB0/pdb_int0c_ext"                         value="false" />
+   <item key="/PDB0/pdb_int0c_toe"                         value="false" />
+   <item key="/PDB0/pdb_mod"                               value="65535" />
+   <item key="/PDB0/pdb_po0_dly_dly1"                      value="0" />
+   <item key="/PDB0/pdb_po0_dly_dly2"                      value="0" />
+   <item key="/PDB0/pdb_po1_dly_dly1"                      value="0" />
+   <item key="/PDB0/pdb_po1_dly_dly2"                      value="0" />
+   <item key="/PDB0/pdb_poen"                              value="0" />
+   <item key="/PDB0/pdb_sc_cont"                           value="false" />
+   <item key="/PDB0/pdb_sc_dmaen"                          value="false" />
+   <item key="/PDB0/pdb_sc_ldmod"                          value="0" />
+   <item key="/PDB0/pdb_sc_mult"                           value="0" />
+   <item key="/PDB0/pdb_sc_pdbeie"                         value="false" />
+   <item key="/PDB0/pdb_sc_pdbie"                          value="false" />
+   <item key="/PDB0/pdb_sc_prescaler"                      value="0" />
+   <item key="/PDB0/pdb_sc_trgsel"                         value="0" />
    <item key="/PIT/irqHandlerInstalled"                    value="true" />
    <item key="/PIT/irqLevel"                               value="0" />
    <item key="/PIT/pit_ldval"                              value="10000" />
@@ -312,7 +371,34 @@
    <item key="/RTC/rtc_cr_sup"                             value="false" />
    <item key="/RTC/rtc_cr_um"                              value="false" />
    <item key="/RTC/rtc_cr_wpe"                             value="false" />
+   <item key="/RTC/rtc_day"                                value="1" />
+   <item key="/RTC/rtc_hour"                               value="12" />
    <item key="/RTC/rtc_input_freq"                         value="32768" />
+   <item key="/RTC/rtc_lr_crl"                             value="true" />
+   <item key="/RTC/rtc_lr_lrl"                             value="true" />
+   <item key="/RTC/rtc_lr_srl"                             value="true" />
+   <item key="/RTC/rtc_lr_tcl"                             value="true" />
+   <item key="/RTC/rtc_minute"                             value="0" />
+   <item key="/RTC/rtc_month"                              value="181" />
+   <item key="/RTC/rtc_rar_crr"                            value="true" />
+   <item key="/RTC/rtc_rar_ierr"                           value="true" />
+   <item key="/RTC/rtc_rar_lrr"                            value="true" />
+   <item key="/RTC/rtc_rar_srr"                            value="true" />
+   <item key="/RTC/rtc_rar_tarr"                           value="true" />
+   <item key="/RTC/rtc_rar_tcrr"                           value="true" />
+   <item key="/RTC/rtc_rar_tprr"                           value="true" />
+   <item key="/RTC/rtc_rar_tsrr"                           value="true" />
+   <item key="/RTC/rtc_tcr_cir"                            value="0" />
+   <item key="/RTC/rtc_tcr_tcr"                            value="0" />
+   <item key="/RTC/rtc_war_crw"                            value="true" />
+   <item key="/RTC/rtc_war_ierw"                           value="true" />
+   <item key="/RTC/rtc_war_lrw"                            value="true" />
+   <item key="/RTC/rtc_war_srw"                            value="true" />
+   <item key="/RTC/rtc_war_tarw"                           value="true" />
+   <item key="/RTC/rtc_war_tcrw"                           value="true" />
+   <item key="/RTC/rtc_war_tprw"                           value="true" />
+   <item key="/RTC/rtc_war_tsrw"                           value="true" />
+   <item key="/RTC/rtc_year"                               value="2017" />
    <item key="/RTC/rtcclk_clock"                           value="32768" />
    <item key="/RTC/rtcclk_gated_clock"                     value="0" />
    <item key="/SIM/busFreq"                                value="50MHz" />

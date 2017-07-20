@@ -614,10 +614,18 @@ public:
 
    //! Default value for ADCx_SC2 register
    static constexpr uint32_t sc2  =
+       ADC_SC2_ACFE(0)|
+       ADC_SC2_ACFGT(0)|
+       ADC_SC2_ACREN(0)|
        ADC_SC2_REFSEL(0)|
        ADC_SC2_DMAEN(0)|
-       ADC_SC2_ACREN(0b000)|
        ADC_SC2_ADTRG(0);
+
+   //! Default value for ADCx_CV1 register
+   static constexpr uint32_t cv1  = 0;
+
+   //! Default value for ADCx_CV2 register
+   static constexpr uint32_t cv2  = 0;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 23;
@@ -992,6 +1000,8 @@ public:
    //! IRQ numbers for hardware
    static constexpr IRQn_Type irqNums[]  = {CMT_IRQn};
 
+   // Template:cmt_0
+
    //! Number of signals available in info table
    static constexpr int numSignals  = 1;
 
@@ -1126,13 +1136,13 @@ public:
  * @}
  */
 /**
- * @addtogroup DMA_TODO_Group DMA, (Incomplete)
- * @brief Abstraction for (Incomplete)
+ * @addtogroup DMA_Group DMA, Direct Memory Access (DMA)
+ * @brief Abstraction for Direct Memory Access (DMA)
  * @{
  */
 #define USBDM_DMA0_IS_DEFINED 
 /**
- * Peripheral information for DMA, (Incomplete).
+ * Peripheral information for DMA, Direct Memory Access (DMA).
  * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
@@ -1149,12 +1159,26 @@ public:
    static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC7));
 
    //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 0;
+   static constexpr uint32_t irqCount  = 4;
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = {DMA0_IRQn, DMA1_IRQn, DMA2_IRQn, DMA3_IRQn};
+
+   // Template:dma0_16ch
+
+   //! Callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = false;
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  0;
+
+   // Number of DMA channels implemented
+   static constexpr unsigned NumChannels = 16;
 
 };
 
 /** 
- * End group DMA_TODO_Group
+ * End group DMA_Group
  * @}
  */
 /**
@@ -1169,6 +1193,54 @@ public:
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
+/** 
+ * DMA channel numbers 
+ */
+enum DmaSlot {
+   DmaSlot_Disabled                    = 0,
+   DmaSlot_UART0_Receive               = 2,
+   DmaSlot_UART0_Transmit              = 3,
+   DmaSlot_UART1_Receive               = 4,
+   DmaSlot_UART1_Transmit              = 5,
+   DmaSlot_UART2_Receive               = 6,
+   DmaSlot_UART2_Transmit              = 7,
+   DmaSlot_I2S0_Receive                = 14,
+   DmaSlot_I2S0_Transmit               = 15,
+   DmaSlot_SPI0_Receive                = 16,
+   DmaSlot_SPI0_Transmit               = 17,
+   DmaSlot_I2C0                        = 22,
+   DmaSlot_FTM0_Ch_0                   = 24,
+   DmaSlot_FTM0_Ch_1                   = 25,
+   DmaSlot_FTM0_Ch_2                   = 26,
+   DmaSlot_FTM0_Ch_3                   = 27,
+   DmaSlot_FTM0_Ch_4                   = 28,
+   DmaSlot_FTM0_Ch_5                   = 29,
+   DmaSlot_FTM0_Ch_6                   = 30,
+   DmaSlot_FTM0_Ch_7                   = 31,
+   DmaSlot_FTM1_Ch_0                   = 32,
+   DmaSlot_FTM1_Ch_1                   = 33,
+   DmaSlot_ADC0                        = 40,
+   DmaSlot_CMP0                        = 42,
+   DmaSlot_CMP1                        = 43,
+   DmaSlot_CMT                         = 47,
+   DmaSlot_PDB                         = 48,
+   DmaSlot_PortA                       = 49,
+   DmaSlot_PortB                       = 50,
+   DmaSlot_PortC                       = 51,
+   DmaSlot_PortD                       = 52,
+   DmaSlot_PortE                       = 53,
+   DmaSlot_AlwaysEnabled0              = 54,
+   DmaSlot_AlwaysEnabled1              = 55,
+   DmaSlot_AlwaysEnabled2              = 56,
+   DmaSlot_AlwaysEnabled3              = 57,
+   DmaSlot_AlwaysEnabled4              = 48,
+   DmaSlot_AlwaysEnabled5              = 59,
+   DmaSlot_AlwaysEnabled6              = 60,
+   DmaSlot_AlwaysEnabled7              = 61,
+   DmaSlot_AlwaysEnabled8              = 62,
+   DmaSlot_AlwaysEnabled9              = 63,
+};
+
 class Dmamux0Info {
 public:
    //! Hardware base pointer
@@ -1183,51 +1255,27 @@ public:
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
 
-   /* DMA channel numbers */
-   enum DmaChannels {
-      DMA0_SLOT_Disabled                            = 0,
-      DMA0_SLOT_UART0_Receive                       = 2,
-      DMA0_SLOT_UART0_Transmit                      = 3,
-      DMA0_SLOT_UART1_Receive                       = 4,
-      DMA0_SLOT_UART1_Transmit                      = 5,
-      DMA0_SLOT_UART2_Receive                       = 6,
-      DMA0_SLOT_UART2_Transmit                      = 7,
-      DMA0_SLOT_I2S0_Receive                        = 14,
-      DMA0_SLOT_I2S0_Transmit                       = 15,
-      DMA0_SLOT_SPI0_Receive                        = 16,
-      DMA0_SLOT_SPI0_Transmit                       = 17,
-      DMA0_SLOT_I2C0                                = 22,
-      DMA0_SLOT_FTM0_Ch_0                           = 24,
-      DMA0_SLOT_FTM0_Ch_1                           = 25,
-      DMA0_SLOT_FTM0_Ch_2                           = 26,
-      DMA0_SLOT_FTM0_Ch_3                           = 27,
-      DMA0_SLOT_FTM0_Ch_4                           = 28,
-      DMA0_SLOT_FTM0_Ch_5                           = 29,
-      DMA0_SLOT_FTM0_Ch_6                           = 30,
-      DMA0_SLOT_FTM0_Ch_7                           = 31,
-      DMA0_SLOT_FTM1_Ch_0                           = 32,
-      DMA0_SLOT_FTM1_Ch_1                           = 33,
-      DMA0_SLOT_ADC0                                = 40,
-      DMA0_SLOT_CMP0                                = 42,
-      DMA0_SLOT_CMP1                                = 43,
-      DMA0_SLOT_CMT                                 = 47,
-      DMA0_SLOT_PDB                                 = 48,
-      DMA0_SLOT_PortA                               = 49,
-      DMA0_SLOT_PortB                               = 50,
-      DMA0_SLOT_PortC                               = 51,
-      DMA0_SLOT_PortD                               = 52,
-      DMA0_SLOT_PortE                               = 53,
-      DMA0_SLOT_AlwaysEnabled0                      = 54,
-      DMA0_SLOT_AlwaysEnabled1                      = 55,
-      DMA0_SLOT_AlwaysEnabled2                      = 56,
-      DMA0_SLOT_AlwaysEnabled3                      = 57,
-      DMA0_SLOT_AlwaysEnabled4                      = 48,
-      DMA0_SLOT_AlwaysEnabled5                      = 59,
-      DMA0_SLOT_AlwaysEnabled6                      = 60,
-      DMA0_SLOT_AlwaysEnabled7                      = 61,
-      DMA0_SLOT_AlwaysEnabled8                      = 62,
-      DMA0_SLOT_AlwaysEnabled9                      = 63,
-   };
+   // Template:dmamux0_16ch_trig
+
+   // Number of DMA channels implemented
+   static constexpr unsigned NumChannels = 16;
+
+   static constexpr uint8_t chcfg0_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg1_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg2_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg3_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg4_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg5_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg6_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg7_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg8_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg9_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg10_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg11_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg12_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg13_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg14_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg15_source = DMAMUX_CHCFG_SOURCE(0);
 };
 
 /** 
@@ -1262,6 +1310,8 @@ public:
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
+
+   // Template:ewm_2
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 2;
@@ -1497,7 +1547,7 @@ public:
    static constexpr uint32_t ftmExternalClock =  0;
 
    //! Default Timer Period
-   static constexpr uint32_t period = 1000;
+   static constexpr uint32_t mod = FTM_MOD_MOD(10000);
 
    //! Default value for SC register
    static constexpr uint32_t sc  = 
@@ -1505,6 +1555,11 @@ public:
        FTM_SC_CLKS(1)|  // Clock Mode Selection
        FTM_SC_TOIE(0)|  // Timer Overflow Interrupt Enable
        FTM_SC_PS(7);    // Prescale Factor Selection 
+
+   //! Default value for EXTTRIG) register
+   static constexpr uint32_t exttrig  = 
+       0|                              // External Trigger Enable
+       FTM_EXTTRIG_INITTRIGEN(0);    // Initialization Trigger Enable 
 
    //! Callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = false;
@@ -1656,7 +1711,7 @@ public:
    static constexpr uint32_t ftmExternalClock =  0;
 
    //! Default Timer Period
-   static constexpr uint32_t period = 10000;
+   static constexpr uint32_t mod = FTM_MOD_MOD(10000);
 
    //! Default value for SC register
    static constexpr uint32_t sc  = 
@@ -1664,6 +1719,11 @@ public:
        FTM_SC_CLKS(1)|  // Clock Mode Selection
        FTM_SC_TOIE(0)|  // Timer Overflow Interrupt Enable
        FTM_SC_PS(0);    // Prescale Factor Selection 
+
+   //! Default value for EXTTRIG) register
+   static constexpr uint32_t exttrig  = 
+       0|                              // External Trigger Enable
+       FTM_EXTTRIG_INITTRIGEN(0);    // Initialization Trigger Enable 
 
    //! Callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = false;
@@ -2124,6 +2184,8 @@ public:
    //! IRQ numbers for hardware
    static constexpr IRQn_Type irqNums[]  = {I2S0_Tx_IRQn, I2S0_Rx_IRQn};
 
+   // Template:i2s0_1ch
+
    //! Number of signals available in info table
    static constexpr int numSignals  = 8;
 
@@ -2468,6 +2530,91 @@ public:
 
    // Template:pdb0_2ch_2trig_1dac_2po
 
+   static constexpr uint32_t pdb_sc = 
+      PDB_SC_MULT(0) |      // Multiplication Factor Select for Prescaler
+      PDB_SC_PDBIE(0) |     // Interrupt Enable
+      PDB_SC_TRGSEL(0) |    // Trigger Input Source Select
+      PDB_SC_PRESCALER(0) | // Prescaler Divider Select
+      PDB_SC_DMAEN(0) |     // DMA Enable
+      PDB_SC_CONT(0) |     // Continuous Mode Enable
+      PDB_SC_PDBEIE(0) |    // Sequence Error Interrupt Enable
+      PDB_SC_LDMOD(0);      // Load Mode Select
+
+   static constexpr uint32_t pdb_mod = 
+      PDB_MOD_MOD(65535);  // PDB Modulus
+
+   static constexpr uint32_t pdb_idly = 
+      PDB_IDLY_IDLY(0);  // Counter Modulus
+
+   struct PdbChannel {
+      uint32_t c1;
+      uint32_t dly0;
+      uint32_t dly1;
+   };
+
+   // Number of PDB channels
+   static constexpr size_t numChannels = 2;
+
+   // Default values for channel registers
+   static constexpr PdbChannel pdb_ch[numChannels] = {
+   {                   // Channel[0] Control Register 1
+      PDB_C1_BB(0) |   // Pre-Trigger Back-to-Back Operation Enable
+      PDB_C1_TOS(0) |  // Pre-Trigger Output Select
+      PDB_C1_EN(0),    // Pre-Trigger Enable
+      PDB_DLY_DLY(0),  // Channel[0] pre-trigger delay 0
+      PDB_DLY_DLY(0),  // Channel[0] pre-trigger delay 1
+   },
+   {                   // Channel[1] Control Register 1
+      PDB_C1_BB(0) |   // Channel Pre-Trigger Back-to-Back Operation Enable
+      PDB_C1_TOS(0) |  // Channel Pre-Trigger Output Select
+      PDB_C1_EN(0),    // Channel Pre-Trigger Enable
+      PDB_DLY_DLY(0),  // Channel[1] pre-trigger delay 0
+      PDB_DLY_DLY(0),  // Channel[1] pre-trigger delay 1
+   },
+   };
+
+   struct PdbDac {
+      uint32_t dacintc;
+      uint32_t dacint;
+   };
+
+   // Number of DACs
+   static constexpr size_t numDacs = 1;
+
+   // Default values for DAC registers
+   static constexpr PdbDac pdb_dac[numDacs] = {
+   {                    // DAC[0] Interval register
+      PDB_INTC_EXT(0) | // DAC External Trigger Input Enable
+      PDB_INTC_TOE(0),  // DAC Interval Trigger Enable
+      PDB_INT_INT(0),   // DAC Interval
+   },
+   };
+
+   static constexpr uint32_t pdb_poen = 
+      PDB_POEN_POEN(0);   // Pulse-Out Enable
+
+   // Number of PDB pulse outputs
+   static constexpr size_t numPulseOutputs = 2;
+
+   static constexpr uint32_t pdb_podly[numPulseOutputs] = {
+      // Pulse Output[0] Delays {
+      PDB_PODLY_DLY1(0) |  // Delay 1
+      PDB_PODLY_DLY2(0),   // Delay 2
+
+      // Pulse Output[1] Delays
+      PDB_PODLY_DLY1(0) |  // Delay 1
+      PDB_PODLY_DLY2(0),   // Delay 2
+   }; 
+
+   /**
+     * Get PDB clock frequency
+     *
+     * @return Frequency as a uint32_t in Hz
+     */
+   static __attribute__((always_inline)) uint32_t getInputClockFrequency() {
+      return SystemBusClock;
+   }
+
    //! Callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = false;
 
@@ -2542,24 +2689,22 @@ public:
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
 
-   static constexpr uint16_t pit_ldval = 10000;
+   //! Default value for PIT->SC register
+   static constexpr uint32_t pit_ldval  = 10000;
+
+   //! PIT operation in debug mode
+   static constexpr uint32_t mcr = 
+      PIT_MCR_FRZ(1) |  // Freeze in debug mode
+      PIT_MCR_MDIS(0);  // Disable
 
    /**
     * Get clock frequency
     *
     * @return Input clock frequency as a uint32_t in Hz
     */
-   static uint32_t getClockFrequency() {
+   static __attribute__((always_inline)) uint32_t getClockFrequency() {
       return SystemBusClock;
    }
-
-   //! Default value for PIT->SC register
-   static constexpr uint32_t loadValue  = 
-      10000;
-
-   //! PIT operation in debug mode
-   static constexpr uint32_t mcr = 
-      PIT_MCR_FRZ(1);
 
 };
 
@@ -3137,6 +3282,8 @@ public:
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
 
+   // Template:usbdcd_v1_1
+
 };
 
 /** 
@@ -3271,6 +3418,7 @@ using gpio_p28             = const USBDM::GpioB<1>;
 using gpio_p29             = const USBDM::GpioB<2>;
 using gpio_p30             = const USBDM::GpioB<3>;
 using gpio_p31             = const USBDM::GpioB<16>;
+using gpio_p32             = const USBDM::GpioB<17>;
 using gpio_p34             = const USBDM::GpioC<1>;
 using gpio_p35             = const USBDM::GpioC<2>;
 using gpio_p38             = const USBDM::GpioC<5>;
@@ -3314,7 +3462,7 @@ extern void mapAllPins();
  *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2b       
  *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1b       
  *  PTB16                    | GPIOB_16                                    | p31                       | SW_Sb       
- *  PTB17                    | -                                           | p32                       | TP1 (Debug UART_Tx)       
+ *  PTB17                    | GPIOB_17                                    | p32                       | TP1 (Debug UART_Tx)       
  *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CSb       
  *  PTC1                     | GPIOC_1/LLWU_P6                             | p34                       | OvenFan       
  *  PTC2                     | GPIOC_2                                     | p35                       | Heater       
@@ -3384,7 +3532,7 @@ extern void mapAllPins();
  *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2b       
  *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1b       
  *  PTB16                    | GPIOB_16                                    | p31                       | SW_Sb       
- *  PTB17                    | -                                           | p32                       | TP1 (Debug UART_Tx)       
+ *  PTB17                    | GPIOB_17                                    | p32                       | TP1 (Debug UART_Tx)       
  *  PTC0                     | SPI0_PCS4                                   | p33                       | LCD_CSb       
  *  PTC1                     | GPIOC_1/LLWU_P6                             | p34                       | OvenFan       
  *  PTC2                     | GPIOC_2                                     | p35                       | Heater       
@@ -3407,7 +3555,7 @@ extern void mapAllPins();
  *
  *    Pin Name               |   Functions                                 |  Location                 |  Description  
  *  ------------------------ | --------------------------------------------|---------------------------| ------------- 
- *  PTB17                    | -                                           | p32                       | TP1 (Debug UART_Tx)       
+ *  PTA4                     | -                                           | p21                       | EZP_CSb       
  *  ADC0_DM0                 | ADC0_DM0/ADC0_SE19                          | p8                        | N/C       
  *  ADC0_DP0                 | ADC0_DP0/ADC0_SE0                           | p7                        | N/C       
  *  PTC7                     | CMP0_IN1                                    | p40                       | Vmains       
@@ -3420,6 +3568,7 @@ extern void mapAllPins();
  *  PTB2                     | GPIOB_2                                     | p29                       | SW_F2b       
  *  PTB3                     | GPIOB_3                                     | p30                       | SW_F1b       
  *  PTB16                    | GPIOB_16                                    | p31                       | SW_Sb       
+ *  PTB17                    | GPIOB_17                                    | p32                       | TP1 (Debug UART_Tx)       
  *  PTC1                     | GPIOC_1/LLWU_P6                             | p34                       | OvenFan       
  *  PTC2                     | GPIOC_2                                     | p35                       | Heater       
  *  PTC5                     | GPIOC_5/LLWU_P9                             | p38                       | Buzzer       

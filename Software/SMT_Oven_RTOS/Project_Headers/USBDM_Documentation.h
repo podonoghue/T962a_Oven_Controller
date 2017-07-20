@@ -1,25 +1,76 @@
 /**
- * @file     USBDM_Documentation.h
+ * @file     USBDM_Documentation.h (180.ARM_Peripherals/Project_Headers/USBDM_Documentation.h)
  * @brief    USBDM Documentation
  */
  
  /**
-
  @mainpage USBDM Overview
 
  The classes in the USBDM namespace provide C++ wrappers for the microcontroller hardware. \n
 
 \tableofcontents
 Table of Contents
- - \ref PinSummary  \n
- - \ref GPIOExamples \n
  - \ref ADCExamples \n
+ - \ref DMAExamples \n
  - \ref FTMExamples \n
+ - \ref GPIOExamples \n
+ - \ref LPTMRExamples \n
+ - \ref PDBExamples \n
+ - \ref PinSummary  \n
  - \ref PITExamples \n
+
+@page DMAExamples  Direct Memory Access Controller (DMAC)
+
+Convenience template for DMAC. Uses the following classes:\n
+<ul>
+<li>USBDM::DmaTcd \n
+<li>USBDM::DmaMux_T < DmaMuxInfo > \n
+<li>USBDM::Dma_T < DmaInfo > \n
+</ul>
+
+This template is an interface for the Direct Memory Access Controller hardware. \n
+
+It provides:\n
+- Definitions for channel mappings
+- Methods to configure the DMAC and DMAMUX
+
+This is a template class with static methods.\n
+<em>It cannot be instantiated.</em>
+
+<b>Examples</b>\n
+ - @ref dma-memory-example.cpp
+
+ @page GPIOExamples  General Purpose Input Output
+
+@page LPTMRExamples  Low Power Timer
+
+Convenience template for LPTMR. Uses the following classes:\n
+<ul>
+<li>USBDM::Lptmr_T < Info > \n
+</ul>
+
+This template is an interface for the Low Power Timer hardware. \n
+
+It provides:\n
+- Static pin mapping in conjunction with the configuration settings.
+
+This is a template class with static methods.\n
+<em>It cannot be instantiated.</em>
+
+<b>Examples</b>\n
+ - @ref lptmr-example.cpp
  
  @page GPIOExamples  General Purpose Input Output
 
-Convenience template for GPIO pins. Based on USBDM::GpioBase_T  \n
+Convenience template for GPIO pins. Uses the following classes:\n
+<ul>
+<li>USBDM::GpioBase_T <clockMask, pcrAddress, gpioAddress, bitNum, polarity> \n
+<li>USBDM::Gpio_T <Info, bitNum, polarity>\n
+<li>USBDM::GpioA <bitNum, polarity>, USBDM::GpioB <bitNum, polarity> etc.\n
+<li>USBDM::Field_T <Info, left, right>\n
+<li>USBDM::GpioAField <left, right>, USBDM::GpioBField <left, right> etc.\n
+</ul>
+
 This template is an interface for the general purpose I/O pin hardware. \n
 
 It provides:\n
@@ -30,79 +81,102 @@ It provides:\n
 - Polling input value
 - Polarity (\ref USBDM::ActiveHigh or \ref USBDM::ActiveLow) is selected when instantiated
 
- <b>Usage</b>
+This is a template class with static methods.\n
+<em>It cannot be instantiated.</em>
+
+<b>Examples</b>\n
+ - @ref digital-example1.cpp
+ - @ref digital-example2.cpp
+
+<b>Usage</b>
  @code
+   // Open USBDM namespace.
+   // This allows access to USBDM classes and methods without the USBDM:: prefix.
    using namespace USBDM;
 
    // Temporary for input values
    bool x;
 
-   // Instantiate for bit 3 of GpioC as active-high signal
-   GpioC<3, ActiveHigh> GpioC3;
+   // Use pin 3 of PORTC as active-high GPIO i.e. PTC3
+   using Gpio = GpioC<3, ActiveHigh>;
 
    // Set as digital output
-   GpioC3.setOutput();
-   // Or for more detailed control
-   GpioC3.setOutput(pcrValue(PinPullUp, PinDriveHigh, PinOpenCollector));
+   Gpio::setOutput();
+   // or for more detailed control
+   Gpio::setOutput(PinDriveStrength_High, PinDriveMode_OpenDrain);
 
-   // Set pin (polarity is applied)
-   GpioC3.set();
+   // Set pin to active level (polarity is applied)
+   Gpio::setActive();
+   // or
+   Gpio::on();
 
-   // Clear pin (polarity is applied)
-   GpioC3.clear();
+   // Clear pin to inactive level (polarity is applied)
+   Gpio::setInactive();
+   // or
+   Gpio::off();
 
    // Set pin to a high level (polarity is ignored)
-   GpioC3.high();
+   Gpio::set();
+   // or
+   Gpio::high();
 
    // Set pin to a low level (polarity is ignored)
-   GpioC3.low();
+   Gpio::clear();
+   // or
+   Gpio::low();
 
    // Toggle pin
-   GpioC3.toggle();
+   Gpio::toggle();
 
    // Set pin to boolean value (polarity is applied)
-   GpioC3.write(true);
+   Gpio::write(true);
 
    // Set pin to boolean value (polarity is applied)
-   GpioC3.write(false);
+   Gpio::write(false);
 
    // Enable pull-up
-   GpioC3.setPullDevice(PinPullUp);
+   // This will only have effect when pin is an input
+   Gpio::setPullDevice(PinPull_Up);
 
    // Set drive strength
-   GpioC3.setDriveStrength(PinDriveHigh);
+   Gpio::setDriveStrength(PinDriveStrength_High);
 
    // Set open-drain
-   GpioC3.setDriveMode(PinOpenDrain);
+   Gpio::setDriveMode(PinDriveMode_OpenDrain);
 
    // Read pin as boolean value (polarity is applied)
-   // This may be useful if the pin is open-drain
-   x = GpioC3.read();
+   x = Gpio::read();
 
    // Read _state_ of pin drive as boolean value (polarity is applied)
-   // This may be useful if the pin is open-drain
-   GpioC3.setDriveMode(PinOpenDrain);
-   GpioC3.high();
-   if (GpioC3.readState() != GpioC3.read()) {
+   // This may differ from the value on the pin
+   // May be useful if the pin is open-drain
+   Gpio::setDriveMode(PinOpenDrain);
+   Gpio::high();
+   if (Gpio::readState() != Gpio::read()) {
       printf("Open-drain pin is being held low\n");
    }
 
-   // Dynamically set pin as input
-   GpioC3.setIn();
+   // Dynamically change pin to input
+   Gpio::setIn();
 
    // Read pin as boolean value (polarity is applied)
-   x = GpioC3.read();
+   x = Gpio::read();
 
    // Read pin as boolean value (polarity is ignored)
-   x = GpioC3.isHigh();
+   x = Gpio::isHigh();
 
    // Read pin as boolean value (polarity is ignored)
-   x = GpioC3.isLow();
+   x = Gpio::isLow();
  @endcode
 
 @page ADCExamples Analogue-to-Digital
 
-Convenience template for ADC inputs. Based on USBDM::AdcBase_T  \n
+Convenience template for ADC inputs. Use the following classes:\n
+<ul>
+<li>USBDM::AdcBase_T\n
+<li>USBDM::AdcChannel_T\n
+<li>USBDM::AdcDiffChannel_T\n
+</ul>
 This template is an interface for the ADC input pins. \n
 
 It provides:\n
@@ -112,37 +186,50 @@ It provides:\n
 - Clock and conversion speed are done through the configuration.
 - Interrupt driven operation is also supported through a callback if enabled in the configuration.
 
- <b>Usage</b>
+This is a template class with static methods.\n
+<em>It cannot be instantiated.</em>
+
+<b>Examples</b>\n
+ - @ref analogue-comparison-example.cpp
+ - @ref analogue-diff-example.cpp
+ - @ref analogue-interrupt-example.cpp
+ - @ref analogue-joystick-example.cpp
+
+ <b>Usage - Single-ended measurement</b>
  @code
+   // Open USBDM namespace.
+   // This allows access to USBDM classes and methods without the USBDM:: prefix.
    using namespace USBDM;
 
-   // Instantiate an ADC input (for ADC0 channel 6)
-   using Adc0_ch6 = USBDM::Adc0Channel<6>;
+   // Use ADC0 channel 6 as ADC input (ADC_IN6)
+   using AdcChannel = USBDM::Adc0Channel<6>;
 
    // Set ADC resolution to 16 bits
-   Adc0_ch6::setResolution(resolution_16bit_se);
+   AdcChannel::setResolution(AdcResolution_16bit_se);
 
    // Set ADC averaging to 4 samples
-   Adc0_ch6::setAveraging(averaging_4);
+   AdcChannel::setAveraging(AdcAveraging_4);
 
    // Read ADC value
-   uint32_t value = Adc0_ch6::readAnalogue();
+   uint32_t value = AdcChannel::readAnalogue();
 
    printf("ADC measurement = %lu\n", value);
  @endcode
 
- <b>Usage</b>
+ <b>Usage - Differential measurement</b>
  @code
+   // Open USBDM namespace.
+   // This allows access to USBDM classes and methods without the USBDM:: prefix.
    using namespace USBDM;
 
-   // Instantiate an ADC input for differential channel 0 (ADC_DM0, ADC_DP0)
+   // Use channel 0 as ADC differential input (ADC_DM0, ADC_DP0)
    using Adc1_diff0 = USBDM::Adc0DiffChannel<0>;
 
    // Set ADC resolution to 11 bits differential
-   Adc1_diff0::setResolution(resolution_11bit_diff);
+   Adc1_diff0::setResolution(AdcResolution_11bit_diff);
 
    // Set ADC averaging to 4 samples
-   Adc1_diff0::setAveraging(averaging_4);
+   Adc1_diff0::setAveraging(AdcAveraging_4);
 
    // Read signed differential ADC value
    int32_t value = Adc1_diff0::readAnalogue();
@@ -162,16 +249,27 @@ It provides:\n
 - Static pin mapping in conjunction with the configuration settings.
 - Setting the FTM period in ticks or seconds
 - Setting the channel duty cycle in percentage
-- Interrupt driven operation is also supported through a callback if enabled in the configuration.
+- Interrupt driven operation is also supported through a callback if <b>enabled in the configuration</b>.
+
+This is a template class with static methods.\n
+<em>It cannot be instantiated.</em>
+
+<b>Examples</b>\n
+ - @ref ftm-ic-example.cpp
+ - @ref ftm-oc-example.cpp
+ - @ref ftm-pwm-example.cpp
+ - @ref ftm-quadrature-example.cpp
+ - @ref ftm-servo-example.cpp
 
  <b>Usage - PWM</b>
 @code
+   // Open USBDM namespace.
+   // This allows access to USBDM classes and methods without the USBDM:: prefix.
    using namespace USBDM;
 
-   // Initialise the timer with initial period in ticks and alignment
-   // The tick rate is determined by the configuration
+   // Initialise the timer with initial alignment
    // This affects all channels of the FTM
-   Ftm0::configure(200, USBDM::ftm_leftAlign);
+   Ftm0::configure(FtmMode_LeftAlign);
 
    // Set timer period in ticks
    // This affects all channels of the FTM
@@ -184,23 +282,25 @@ It provides:\n
    Ftm0::setPeriod(125*us);
 
    // Use FTM0 channel 3
-   using Ftm0Channel3 = Ftm0Channel<3> ;
+   using PwmOutput = Ftm0Channel<3> ;
 
    // Set channel to generate PWM with active-high pulses
-   Ftm0Channel3::enable(ftm_pwmHighTruePulses);
+   PwmOutput::enable(ftm_pwmHighTruePulses);
 
    // Set duty cycle as percentage
-   Ftm0Channel3::setDutyCycle(34);
+   PwmOutput::setDutyCycle(34);
 
    // Set duty cycle as percentage (float)
-   Ftm0Channel3::setDutyCycle(12.25f);
+   PwmOutput::setDutyCycle(12.25*percent);
 
    // Set high time in microseconds (float)
-   Ftm0Channel3::setHighTime(63*us);
+   PwmOutput::setHighTime(63*us);
 @endcode
 
  <b>Usage - Quadrature Encoder</b>
 @code
+   // Open USBDM namespace.
+   // This allows access to USBDM classes and methods without the USBDM:: prefix.
    using namespace USBDM;
 
    // Use FTM1 as the quadrature encoder
@@ -214,7 +314,7 @@ It provides:\n
    QuadEncoder::enableFilter(15);
 
    // Reset position to zero
-   // Movement will be relative to this value
+   // Movement will be relative to this position
    QuadEncoder::resetPosition();
 
    // Set up callback for quadrature overflow or underflow
@@ -230,7 +330,7 @@ It provides:\n
 
 @page PITExamples Programmable Interrupt Timer Module
 
-Convenience template for PIT hardware USBDM::Pit_T.
+Convenience template for PIT hardware. Based on USBDM::Pit_T.\n
 
 It provides:\n
 - Static pin mapping in conjunction with the configuration settings.
@@ -238,15 +338,25 @@ It provides:\n
 - Accurate busy-wait delays using a timer channel
 - Interrupt driven operation is also supported through a callback if enabled in the configuration.
 
- <b>Usage - PIT busy-wait</b>
+This is a template class with static methods.\n
+<em>It cannot be instantiated.</em>
+
+<b>Examples</b>\n
+ - @ref pit-example1.cpp
+ - @ref pit-example2.cpp
+ - @ref pit-example3.cpp
+
+<b>Usage - PIT busy-wait</b>
 @code
+   // Open USBDM namespace.
+   // This allows access to USBDM classes and methods without the USBDM:: prefix.
    using namespace USBDM;
 
    // LED is assumed active-low
-   using LED = USBDM::GpioA<2, USBDM::ActiveLow>;
+   using Led = GpioA<2, ActiveLow>;
 
    // Use high drive for LED
-   LED::setOutput(pcrValue(PinPullNone, PinDriveHigh));
+   Led::setOutput(pcrValue(PinPull_None, PinDrive_High));
 
    // Enable PIT
    Pit::enable();
@@ -255,20 +365,70 @@ It provides:\n
    checkError();
 
    for(;;) {
-      LED::toggle();
+      Led::toggle();
 
       // Delay in milliseconds using channel 0
       Pit::delay(0, 1000*ms);
    }
 @endcode
 
+@page PDBExamples Programmable Delay Block Module
+
+Convenience template for PDB hardware. Based on USBDM::PdbBase_T.\n
+
+It provides:\n
+- PDB configuration
+
+This is a template class with static methods.\n
+<em>It cannot be instantiated.</em>
+
+<b>Examples</b>\n
+ - @ref pdb-example.cpp
+
+<b>Usage - PDB Software Trigger</b>
+@code
+   // Open USBDM namespace.
+   // This allows access to USBDM classes and methods without the USBDM:: prefix.
+   using namespace USBDM;
+
+   Pdb::enable();
+   // Trigger from FTM
+   Pdb::setTriggerSource(PdbTrigger_Software);
+   // Set callback
+   Pdb::setCallback(pdbCallback);
+   // Interrupt during sequence
+   Pdb::enableSequenceInterrupts();
+   // Set period a bit longer than FTM period
+   Pdb::setPeriod(PERIOD);
+   // Generate interrupt near end of sequence
+   Pdb::setInterruptDelay(PERIOD-5*ms);
+   // Take ADC samples before and after sample edge
+   Pdb::setPretriggers(0, PdbPretrigger0_Delayed, HIGH_TIME-SAMPLE_DELAY, PdbPretrigger1_Delayed, HIGH_TIME+SAMPLE_DELAY);
+   // Update registers
+   Pdb::triggerRegisterLoad(PdbLoadMode_immediate);
+
+   Pdb::enableNvicInterrupts();
+
+   Pdb::softwareTrigger();
+@endcode
+
+@page Notes Notes
+  - enable()      Enables clock and configures pins (if present)
+  - configure()   As above, enable() + initialises according to Configure.usbdmProject\n
+                  May have defaulted parameters to do custom configuration.
+  - disable()     Disables the peripheral
+
+@example analogue-comparison-example.cpp
 @example analogue-diff-example.cpp
 @example analogue-interrupt-example.cpp
 @example analogue-joystick-example.cpp
 @example cmp.cpp
 @example digital-example1.cpp
 @example digital-example2.cpp
+@example dma-memory-example.cpp
 @example flash_programming_example.cpp
+@example ftm-ic-example.cpp
+@example ftm-oc-example.cpp
 @example ftm-pwm-example.cpp
 @example ftm-quadrature-example.cpp
 @example ftm-servo-example.cpp
@@ -295,6 +455,8 @@ It provides:\n
 @example pca9685.h
 @example pit-example1.cpp
 @example pit-example2.cpp
+@example pit-example3.cpp
+@example pdb-example.cpp
 @example rtc-example.cpp
 @example test-mcg.cpp
 @example tsi-mk-example.cpp

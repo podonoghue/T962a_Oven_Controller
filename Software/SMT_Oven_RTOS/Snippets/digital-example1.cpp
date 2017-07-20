@@ -19,8 +19,8 @@ using namespace USBDM;
  */
 
 // Connection mapping - change as required
-using RED_LED   = USBDM::GpioB<0>;
-using GREEN_LED = USBDM::GpioB<1>;
+using RED_LED   = USBDM::GpioB<0,ActiveLow>;
+using GREEN_LED = USBDM::GpioB<1,ActiveLow>;
 
 int main() {
    RED_LED::setOutput();

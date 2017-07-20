@@ -17,21 +17,24 @@
  */
 namespace USBDM {
 
-static constexpr float ns = 1E-9; //!< Scale factor for nanoseconds
-static constexpr float us = 1E-6; //!< Scale factor for microseconds
-static constexpr float ms = 1E-3; //!< Scale factor for milliseconds
+static constexpr float ns      = 1E-9f; //!< Scale factor for nanoseconds
+static constexpr float us      = 1E-6f; //!< Scale factor for microseconds
+static constexpr float ms      = 1E-3f; //!< Scale factor for milliseconds
+static constexpr float seconds = 1.0f;  //!< Scale factor for seconds
+static constexpr float percent = 1.0f;  //!< Scale factor for percentage as float
 
 enum ErrorCode {
-   E_NO_ERROR = 0,      // No error
-   E_ERROR,             // General error
-   E_TOO_SMALL,         // Value too small
-   E_TOO_LARGE,         // Value too large
-   E_ILLEGAL_PARAM,     // Parameter has illegal value
-   E_NO_HANDLER,        // No handler installed
-   E_FLASH_INIT_FAILED, // Flash initialisation failed
-   E_TERMINATED,        // The program has terminated
+   E_NO_ERROR = 0,      //!< No error
+   E_ERROR,             //!< General error
+   E_TOO_SMALL,         //!< Value too small
+   E_TOO_LARGE,         //!< Value too large
+   E_ILLEGAL_PARAM,     //!< Parameter has illegal value
+   E_NO_HANDLER,        //!< No handler installed
+   E_FLASH_INIT_FAILED, //!< Flash initialisation failed
+   E_TERMINATED,        //!< The program has terminated
+   E_CALIBRATE_FAIL,    //!< Failed ADC calibration
 
-   E_CMSIS_ERR_OFFSET = 1<<20,
+   E_CMSIS_ERR_OFFSET = 1<<20, //!< Offset added to CMSIS error codes
 };
 
 /** Last error set by USBDM code */
@@ -47,7 +50,7 @@ ErrorCode getError();
 /**
  * Get error message from error code or last error if not provided
  *
- * @param  err Error code
+ * @param[in]   err Error code
  *
  * @return Pointer to static string
  */
@@ -70,7 +73,7 @@ extern ErrorCode checkError();
 /**
  * Set error code
  *
- * @param err Error code to set
+ * @param[in]  err Error code to set
  *
  * @return Error code
  */
@@ -82,7 +85,7 @@ inline static ErrorCode setErrorCode(ErrorCode err) {
 /**
  * Set error code and check for error
  *
- * @param err Error code to set
+ * @param[in]  err Error code to set
  *
  * @return Error code
  */
@@ -96,7 +99,7 @@ inline static ErrorCode setAndCheckErrorCode(ErrorCode err) {
 /**
  * Set error code
  *
- * @param err Error code to set
+ * @param[in]  err Error code to set
  *
  * @return Error code
  */
@@ -112,7 +115,7 @@ inline static ErrorCode setCmsisErrorCode(int err) {
 /**
  * Set error code and check for error
  *
- * @param err Error code to set
+ * @param[in]  err Error code to set
  *
  * @return Error code
  */

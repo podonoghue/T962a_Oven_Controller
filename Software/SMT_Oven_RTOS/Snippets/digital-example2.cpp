@@ -27,12 +27,12 @@ using namespace USBDM;
  */
 
 // Connection mapping - change as required
-using Switch =   USBDM::GpioB<0>;
-using Led    =   USBDM::GpioB<1>;
+using Switch =   USBDM::GpioB<0,ActiveLow>;
+using Led    =   USBDM::GpioB<1,ActiveLow>;
 
 int main(void) {
-   Led::setOutput(PinDriveStrengthHigh);
-   Switch::setInput(PinPullUp);
+   Led::setOutput(PinDriveStrength_High);
+   Switch::setInput(PinPull_Up);
 
    for(;;) {
       Led::write(!Switch::read());

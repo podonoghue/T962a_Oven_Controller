@@ -22,7 +22,7 @@ namespace USBDM {
 /**
  * Type definition for LLWU interrupt call back
  *
- *  @param timeSinceEpoch - Time since the epoch in seconds
+ *  @param[in]  timeSinceEpoch - Time since the epoch in seconds
  */
 typedef void (*LLWUCallbackFunction)();
 
@@ -33,11 +33,21 @@ protected:
    static constexpr volatile LLWU_Type *llwu = Info::llwu;
 
 public:
+
+   /**
+    * Basic enable of LLWU\n
+    * Includes configuring all pins
+    */
+   static void enable() {
+      // Configure pins
+      Info::initPCRs();
+   }
+
    /**
     * Initialise LLWU to default settings\n
     * Configures all LLWU pins
     */
-   static void enable() {
+   static void configure() {
 
       // Configure pins
       Info::initPCRs();
@@ -60,7 +70,7 @@ public:
    /**
     * Enable/disable interrupts in NVIC
     *
-    * @param enable true to enable, false to disable
+    * @param[in]  enable true to enable, false to disable
     */
    static void enableNvicInterrupts(bool enable=true) {
 
@@ -104,7 +114,7 @@ public:
    /**
     * Set Callback function
     *
-    *   @param theCallback - Callback function to be executed on LLWU interrupt
+    *   @param[in]  theCallback - Callback function to be executed on LLWU interrupt
     */
    static void setCallback(LLWUCallbackFunction theCallback) {
       callback = theCallback;

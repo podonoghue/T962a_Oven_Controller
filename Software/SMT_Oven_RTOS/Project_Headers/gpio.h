@@ -31,11 +31,6 @@
 
 namespace USBDM {
 
-enum Polarity {
-   ActiveLow=false,
-   ActiveHigh=true
-};
-
 /**
  * @addtogroup GPIO_Group GPIO, Digital Input/Output
  * @{
@@ -81,8 +76,16 @@ enum Polarity {
  * @tparam bitNum          Bit number within PORT/GPIO
  * @tparam polarity        Either USBDM::ActiveHigh or USBDM::ActiveLow
  */
-template<uint32_t clockMask, uint32_t pcrAddress, uint32_t gpioAddress, uint32_t bitNum, Polarity polarity>
+template<uint32_t clockMask, uint32_t pcrAddress, uint32_t gpioAddress, int bitNum, Polarity polarity>
 class GpioBase_T {
+
+private:
+   /**
+    * This class is not intended to be instantiated
+    */
+   GpioBase_T() = delete;
+   GpioBase_T(const GpioBase_T&) = delete;
+   GpioBase_T(GpioBase_T&&) = delete;
 
 public:
    /** PCR associated with this GPIO pin */
@@ -92,7 +95,7 @@ public:
    static constexpr volatile GPIO_Type *gpio = reinterpret_cast<volatile GPIO_Type *>(gpioAddress);
 
    /** Bit number of accessed bit in port */
-   static constexpr uint32_t BITNUM = bitNum;
+   static constexpr int BITNUM = bitNum;
 
    /** Mask for bit within port */
    static constexpr uint32_t MASK   = (1<<bitNum);
@@ -103,27 +106,27 @@ public:
     * @param[in] pcrValue PCR value to use in configuring pin (excluding MUX value). See pcrValue()
     */
    static __attribute__((always_inline)) void setPCR(PcrValue pcrValue=GPIO_DEFAULT_PCR) {
-      Pcr::setPCR((pcrValue&~PORT_PCR_MUX_MASK)|PinMuxGpio);
+      Pcr::setPCR((pcrValue&~PORT_PCR_MUX_MASK)|PinMux_Gpio);
    }
    /**
     * Set Pin Control Register (PCR) value
     *
-    * @param[in] pinPull          One of PinPullNone, PinPullUp, PinPullDown (defaults to PinPullNone)
-    * @param[in] pinDriveStrength One of PinDriveStrengthLow, PinDriveStrengthHigh (defaults to PinDriveLow)
-    * @param[in] pinDriveMode     One of PinDriveModePushPull, PinDriveModeOpenDrain (defaults to PinPushPull)
-    * @param[in] pinIrq           One of PinIrqNone, etc (defaults to PinIrqNone)
-    * @param[in] pinFilter        One of PinFilterNone, PinFilterEnabled (defaults to PinFilterNone)
-    * @param[in] pinSlewRate      One of PinSlewRateSlow, PinSlewRateFast (defaults to PinSlewRateFast)
+    * @param[in] pinPull          One of PinPull_None, PinPull_Up, PinPull_Down (defaults to PinPull_None)
+    * @param[in] pinDriveStrength One of PinDriveStrength_Low, PinDriveStrength_High (defaults to PinDriveLow)
+    * @param[in] pinDriveMode     One of PinDriveMode_PushPull, PinDriveMode_OpenDrain (defaults to PinPushPull)
+    * @param[in] pinIrq           One of PinIrq_None, etc (defaults to PinIrq_None)
+    * @param[in] pinFilter        One of PinFilter_None, PinFilter_Passive (defaults to PinFilter_None)
+    * @param[in] pinSlewRate      One of PinSlewRate_Slow, PinSlewRate_Fast (defaults to PinSlewRate_Fast)
     */
    static __attribute__((always_inline)) void setPCR(
          PinPull           pinPull,
-         PinDriveStrength  pinDriveStrength  = PinDriveStrengthLow,
-         PinDriveMode      pinDriveMode      = PinDriveModePushPull,
-         PinIrq            pinIrq            = PinIrqNone,
-         PinFilter         pinFilter         = PinFilterNone,
-         PinSlewRate       pinSlewRate       = PinSlewRateFast
+         PinDriveStrength  pinDriveStrength  = PinDriveStrength_Low,
+         PinDriveMode      pinDriveMode      = PinDriveMode_PushPull,
+         PinIrq            pinIrq            = PinIrq_None,
+         PinFilter         pinFilter         = PinFilter_None,
+         PinSlewRate       pinSlewRate       = PinSlewRate_Fast
          ) {
-      Pcr::setPCR(pinPull|pinDriveStrength|pinDriveMode|pinIrq|pinFilter|pinSlewRate|PinMuxGpio);
+      Pcr::setPCR(pinPull|pinDriveStrength|pinDriveMode|pinIrq|pinFilter|pinSlewRate|PinMux_Gpio);
    }
    /**
     * Set pin as digital output
@@ -153,7 +156,8 @@ public:
       setInactive();
       // Make pin an output
       setOut();
-      Pcr::setPCR((pcrValue&~PORT_PCR_MUX_MASK)|PinMuxGpio);
+      // Configure pin
+      Pcr::setPCR((pcrValue&~PORT_PCR_MUX_MASK)|PinMux_Gpio);
    }
    /**
     * @brief
@@ -164,16 +168,21 @@ public:
     * @note Resets the pin value to the inactive state
     * @note Use setOut() for a lightweight change of direction without affecting other pin settings.
     *
-    * @param[in] pinDriveStrength One of PinDriveStrengthLow, PinDriveStrengthHigh
-    * @param[in] pinDriveMode     One of PinDriveModePushPull, PinDriveModeOpenDrain (defaults to PinPushPull)
-    * @param[in] pinSlewRate      One of PinSlewRateSlow, PinSlewRateFast (defaults to PinSlewRateFast)
+    * @param[in] pinDriveStrength One of PinDriveStrength_Low, PinDriveStrength_High
+    * @param[in] pinDriveMode     One of PinDriveMode_PushPull, PinDriveMode_OpenDrain (defaults to PinPushPull)
+    * @param[in] pinSlewRate      One of PinSlewRate_Slow, PinSlewRate_Fast (defaults to PinSlewRate_Fast)
     */
    static __attribute__((always_inline)) void setOutput(
          PinDriveStrength  pinDriveStrength,
-         PinDriveMode      pinDriveMode      = PinDriveModePushPull,
-         PinSlewRate       pinSlewRate       = PinSlewRateFast
+         PinDriveMode      pinDriveMode      = PinDriveMode_PushPull,
+         PinSlewRate       pinSlewRate       = PinSlewRate_Fast
          ) {
-      setOutput(pinDriveStrength|pinDriveMode|pinSlewRate);
+      // Set initial level before enabling pin drive
+      setInactive();
+      // Make pin an output
+      setOut();
+      // Configure pin
+      Pcr::setPCR(pinDriveStrength|pinDriveMode|pinSlewRate|PinMux_Gpio);
    }
    /**
     * Set pin as digital input
@@ -201,7 +210,7 @@ public:
    static __attribute__((always_inline)) void setInput(PcrValue pcrValue=GPIO_DEFAULT_PCR) {
       // Make pin an input
       setIn();
-      Pcr::setPCR((pcrValue&~PORT_PCR_MUX_MASK)|PinMuxGpio);
+      Pcr::setPCR((pcrValue&~PORT_PCR_MUX_MASK)|PinMux_Gpio);
    }
    /**
     * @brief
@@ -211,16 +220,18 @@ public:
     * @note Reset the Pin Control Register value (PCR value).
     * @note Use setIn() for a lightweight change of direction without affecting other pin settings.
     *
-    * @param[in] pinPull          One of PinPullNone, PinPullUp, PinPullDown
-    * @param[in] pinIrq           One of PinIrqNone, etc (defaults to PinIrqNone)
-    * @param[in] pinFilter        One of PinFilterNone, PinFilterEnabled (defaults to PinFilterNone)
+    * @param[in] pinPull          One of PinPull_None, PinPull_Up, PinPull_Down
+    * @param[in] pinIrq           One of PinIrq_None, etc (defaults to PinIrq_None)
+    * @param[in] pinFilter        One of PinFilter_None, PinFilter_Passive (defaults to PinFilter_None)
     */
    static __attribute__((always_inline)) void setInput(
          PinPull           pinPull,
-         PinIrq            pinIrq            = PinIrqNone,
-         PinFilter         pinFilter         = PinFilterNone
+         PinIrq            pinIrq            = PinIrq_None,
+         PinFilter         pinFilter         = PinFilter_None
          ) {
-      setInput(pinPull|pinIrq|pinFilter);
+      // Make pin an input
+      setIn();
+      Pcr::setPCR(pinPull|pinIrq|pinFilter|PinMux_Gpio);
    }
    /**
     * Set pin. Pin will be high if configured as an output.
@@ -400,7 +411,7 @@ public:
    /**
     * Set pull device on pin
     *
-    * @param[in] pinPull Pin pull control value (PinPullNone, PinPullUp, PinPullDown)
+    * @param[in] pinPull Pin pull control value (PinPull_None, PinPull_Up, PinPull_Down)
     */
    static __attribute__((always_inline)) void setPullDevice(PinPull pinPull) {
       Pcr::setPullDevice(pinPull);
@@ -427,7 +438,7 @@ public:
    /**
     * Set slew rate on pin
     *
-    *  @param[in] pinSlewRate Slew rate. Either PinSlewRateSlow or PinSlewRateFast
+    *  @param[in] pinSlewRate Slew rate. Either PinSlewRate_Slow or PinSlewRate_Fast
     */
    static __attribute__((always_inline)) void setSlewRate(PinSlewRate  pinSlewRate) {
       Pcr::setSlewRate(pinSlewRate);
@@ -436,7 +447,7 @@ public:
    /**
     * Set filter on pin
     *
-    *  @param[in] pinFilter Pin filter option. Either PinFilterNone or PinFilterEnabled
+    *  @param[in] pinFilter Pin filter option. Either PinFilter_None or PinFilter_Passive
     */
    static __attribute__((always_inline)) void setFilter(PinFilter pinFilter) {
       Pcr::setFilter(pinFilter);
@@ -464,7 +475,8 @@ public:
     *
     * @note There is a single callback function for all pins on this port.
     *
-    * @param[in] callback The function to call on pin interrupt
+    * @param[in] callback The function to call on pin interrupt. \n
+    *                     nullptr to indicate none
     */
    static __attribute__((always_inline)) void setCallback(PinCallbackFunction callback) {
       Pcr::setCallback(callback);
@@ -479,10 +491,10 @@ public:
  * @tparam bitNum        Bit number within PORT/GPIO
  * @tparam polarity      Either USBDM::ActiveHigh or USBDM::ActiveLow
  */
-template<class Info, const uint32_t bitNum, Polarity polarity>
+template<class Info, const int bitNum, Polarity polarity>
 class  Gpio_T : public GpioBase_T<Info::clockMask, Info::pcrAddress, Info::gpioAddress, bitNum, polarity> {
 
-   static_assert((bitNum<32), "Illegal signal");
+   static_assert(((bitNum>=0)&&(bitNum<=31)), "Illegal bit number");
 
 public:
    static constexpr bool irqHandlerInstalled = Info::irqHandlerInstalled;
@@ -560,29 +572,29 @@ public:
 
       // Include the if's as I expect one branch to be removed by optimization unless the field spans the boundary
       if ((MASK&0xFFFFUL) != 0) {
-         port->GPCLR = PORT_GPCLR_GPWE(MASK)|(pcrValue&~PORT_PCR_MUX_MASK)|PinMuxGpio;
+         port->GPCLR = PORT_GPCLR_GPWE(MASK)|(pcrValue&~PORT_PCR_MUX_MASK)|PinMux_Gpio;
       }
       if ((MASK&~0xFFFFUL) != 0) {
-         port->GPCHR = PORT_GPCHR_GPWE(MASK>>16)|(pcrValue&~PORT_PCR_MUX_MASK)|PinMuxGpio;
+         port->GPCHR = PORT_GPCHR_GPWE(MASK>>16)|(pcrValue&~PORT_PCR_MUX_MASK)|PinMux_Gpio;
       }
    }
    /**
     * Utility function to set multiple PCRs using GPCLR & GPCHR
     *
-    * @param[in] pinPull          One of PinPullNone, PinPullUp, PinPullDown (defaults to PinPullNone)
-    * @param[in] pinDriveStrength One of PinDriveStrengthLow, PinDriveStrengthHigh (defaults to PinDriveLow)
-    * @param[in] pinDriveMode     One of PinDriveModePushPull, PinDriveModeOpenDrain (defaults to PinPushPull)
-    * @param[in] pinIrq           One of PinIrqNone, etc (defaults to PinIrqNone)
-    * @param[in] pinFilter        One of PinFilterNone, PinFilterEnabled (defaults to PinFilterNone)
-    * @param[in] pinSlewRate      One of PinSlewRateSlow, PinSlewRateFast (defaults to PinSlewRateFast)
+    * @param[in] pinPull          One of PinPull_None, PinPull_Up, PinPull_Down (defaults to PinPull_None)
+    * @param[in] pinDriveStrength One of PinDriveStrength_Low, PinDriveStrength_High (defaults to PinDriveLow)
+    * @param[in] pinDriveMode     One of PinDriveMode_PushPull, PinDriveMode_OpenDrain (defaults to PinPushPull)
+    * @param[in] pinIrq           One of PinIrq_None, etc (defaults to PinIrq_None)
+    * @param[in] pinFilter        One of PinFilter_None, PinFilter_Passive (defaults to PinFilter_None)
+    * @param[in] pinSlewRate      One of PinSlewRate_Slow, PinSlewRate_Fast (defaults to PinSlewRate_Fast)
     */
    static __attribute__((always_inline)) void setPCRs(
-         PinPull           pinPull           = PinPullNone,
-         PinDriveStrength  pinDriveStrength  = PinDriveStrengthLow,
-         PinDriveMode      pinDriveMode      = PinDriveModePushPull,
-         PinIrq            pinIrq            = PinIrqNone,
-         PinFilter         pinFilter         = PinFilterNone,
-         PinSlewRate       pinSlewRate       = PinSlewRateFast
+         PinPull           pinPull           = PinPull_None,
+         PinDriveStrength  pinDriveStrength  = PinDriveStrength_Low,
+         PinDriveMode      pinDriveMode      = PinDriveMode_PushPull,
+         PinIrq            pinIrq            = PinIrq_None,
+         PinFilter         pinFilter         = PinFilter_None,
+         PinSlewRate       pinSlewRate       = PinSlewRate_Fast
          ) {
       setPCRs(pinPull|pinDriveStrength|pinDriveMode|pinIrq|pinFilter|pinSlewRate);
    }
@@ -606,14 +618,14 @@ public:
     * @note This will also reset the Pin Control Register value (PCR value).
     * @note Use setDirection() for a lightweight change of direction without affecting other pin settings.
     *
-    * @param[in] pinDriveStrength One of PinDriveStrengthLow, PinDriveStrengthHigh (defaults to PinDriveLow)
-    * @param[in] pinDriveMode     One of PinDriveModePushPull, PinDriveModeOpenDrain (defaults to PinPushPull)
-    * @param[in] pinSlewRate      One of PinSlewRateSlow, PinSlewRateFast (defaults to PinSlewRateFast)
+    * @param[in] pinDriveStrength One of PinDriveStrength_Low, PinDriveStrength_High (defaults to PinDriveLow)
+    * @param[in] pinDriveMode     One of PinDriveMode_PushPull, PinDriveMode_OpenDrain (defaults to PinPushPull)
+    * @param[in] pinSlewRate      One of PinSlewRate_Slow, PinSlewRate_Fast (defaults to PinSlewRate_Fast)
     */
    static __attribute__((always_inline)) void setOutput(
          PinDriveStrength  pinDriveStrength,
-         PinDriveMode      pinDriveMode      = PinDriveModePushPull,
-         PinSlewRate       pinSlewRate       = PinSlewRateFast
+         PinDriveMode      pinDriveMode      = PinDriveMode_PushPull,
+         PinSlewRate       pinSlewRate       = PinSlewRate_Fast
          ) {
       setOutput(pinDriveStrength|pinDriveMode|pinSlewRate);
    }
@@ -634,14 +646,14 @@ public:
     * Sets all pins as digital inputs.
     * Configures all Pin Control Register (PCR) values
     *
-    * @param[in] pinPull          One of PinPullNone, PinPullUp, PinPullDown (defaults to PinPullNone)
-    * @param[in] pinIrq           One of PinIrqNone, etc (defaults to PinIrqNone)
-    * @param[in] pinFilter        One of PinFilterNone, PinFilterEnabled (defaults to PinFilterNone)
+    * @param[in] pinPull          One of PinPull_None, PinPull_Up, PinPull_Down (defaults to PinPull_None)
+    * @param[in] pinIrq           One of PinIrq_None, etc (defaults to PinIrq_None)
+    * @param[in] pinFilter        One of PinFilter_None, PinFilter_Passive (defaults to PinFilter_None)
     */
    static __attribute__((always_inline)) void setInput(
          PinPull           pinPull,
-         PinIrq            pinIrq            = PinIrqNone,
-         PinFilter         pinFilter         = PinFilterNone
+         PinIrq            pinIrq            = PinIrq_None,
+         PinFilter         pinFilter         = PinFilter_None
          ) {
       setInput(pinPull|pinIrq|pinFilter);
    }
@@ -734,7 +746,7 @@ public:
  * @tparam bitNum        Bit number in the port
  * @tparam polarity      Either USBDM::ActiveHigh or USBDM::ActiveLow
  */
-template<uint8_t bitNum, Polarity polarity=ActiveHigh> class GpioA : public Gpio_T<GpioAInfo, bitNum, polarity> {};
+template<int bitNum, Polarity polarity=ActiveHigh> class GpioA : public Gpio_T<GpioAInfo, bitNum, polarity> {};
 using PortA = PcrBase_T<GpioAInfo::pcrAddress>;
 
 /**
@@ -814,7 +826,7 @@ template<int left, int right> class GpioAField : public Field_T<GpioAInfo, left,
  * @tparam bitNum        Bit number in the port
  * @tparam polarity      Either USBDM::ActiveHigh or USBDM::ActiveLow
  */
-template<uint8_t bitNum, Polarity polarity=ActiveHigh> class GpioB : public Gpio_T<GpioBInfo, bitNum, polarity> {};
+template<int bitNum, Polarity polarity=ActiveHigh> class GpioB : public Gpio_T<GpioBInfo, bitNum, polarity> {};
 using PortB = PcrBase_T<GpioBInfo::pcrAddress>;
 
 /**
@@ -894,7 +906,7 @@ template<int left, int right> class GpioBField : public Field_T<GpioBInfo, left,
  * @tparam bitNum        Bit number in the port
  * @tparam polarity      Either USBDM::ActiveHigh or USBDM::ActiveLow
  */
-template<uint8_t bitNum, Polarity polarity=ActiveHigh> class GpioC : public Gpio_T<GpioCInfo, bitNum, polarity> {};
+template<int bitNum, Polarity polarity=ActiveHigh> class GpioC : public Gpio_T<GpioCInfo, bitNum, polarity> {};
 using PortC = PcrBase_T<GpioCInfo::pcrAddress>;
 
 /**
@@ -974,7 +986,7 @@ template<int left, int right> class GpioCField : public Field_T<GpioCInfo, left,
  * @tparam bitNum        Bit number in the port
  * @tparam polarity      Either USBDM::ActiveHigh or USBDM::ActiveLow
  */
-template<uint8_t bitNum, Polarity polarity=ActiveHigh> class GpioD : public Gpio_T<GpioDInfo, bitNum, polarity> {};
+template<int bitNum, Polarity polarity=ActiveHigh> class GpioD : public Gpio_T<GpioDInfo, bitNum, polarity> {};
 using PortD = PcrBase_T<GpioDInfo::pcrAddress>;
 
 /**
@@ -1054,7 +1066,7 @@ template<int left, int right> class GpioDField : public Field_T<GpioDInfo, left,
  * @tparam bitNum        Bit number in the port
  * @tparam polarity      Either USBDM::ActiveHigh or USBDM::ActiveLow
  */
-template<uint8_t bitNum, Polarity polarity=ActiveHigh> class GpioE : public Gpio_T<GpioEInfo, bitNum, polarity> {};
+template<int bitNum, Polarity polarity=ActiveHigh> class GpioE : public Gpio_T<GpioEInfo, bitNum, polarity> {};
 using PortE = PcrBase_T<GpioEInfo::pcrAddress>;
 
 /**
