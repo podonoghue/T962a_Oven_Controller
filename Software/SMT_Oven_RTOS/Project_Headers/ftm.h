@@ -152,29 +152,26 @@ enum FtmChannelDma {
 /**
  * Type definition for FTM timer overflow interrupt call back
  */
-typedef void (*FTMCallbackFunction)();
+typedef void (*FtmCallbackFunction)();
 /**
  * Type definition for FTM channel interrupt call back
  *
  * @param[in] status Flags indicating interrupt source channel(s)
  */
-typedef void (*FTMChannelCallbackFunction)(uint8_t status);
+typedef void (*FtmChannelCallbackFunction)(uint8_t status);
 
 /**
  * Base class representing an FTM
  *
  * Example
  * @code
- * // Instantiate the tmr (for FTM0)
- * const USBDM::FtmBase_T<FTM0_Info)> Ftm0;
- *
- * // Enable before 1st use
- * Ftm0::enable();
+ * // Using FTM0
+ * using Ftm0 = USBDM::FtmBase_T<FTM0_Info)>;
  *
  * // Initialise PWM with initial alignment and default clock source
  * Ftm0::configure(FtmMode_LeftAlign);
  *
- * // Change timer period
+ * // Set timer period
  * Ftm0::setPeriod(500);
  * @endcode
  *
@@ -209,8 +206,7 @@ public:
    static constexpr volatile uint32_t *clockReg = Info::clockReg;
 
    /**
-    * Basic enable of peripheral\n
-    * Includes configuring all pins
+    * Enables clock to peripheral and configures all pins
     */
    static void __attribute__((always_inline)) enable() {
       // Configure pins
@@ -222,10 +218,10 @@ public:
    }
    
    /**
-    * Enable with default settings\n
+    * Configure with settings from Configure.usbdmProject.\n
     * Includes configuring all pins
     */
-   static void configure() {
+   static void defaultConfigure() {
       enable();
 
       // Common registers
@@ -242,10 +238,10 @@ public:
    }
 
    /**
-    * Configure Timer operation\n
-    * Used to change configuration after enabling interface
+    * Enables clock to peripheral and configures all pins
+    * Configures main operating settings for timer
     *
-    * @param[in] ftmMode        Mode of operation see USBDM::FtmMode
+    * @param[in] ftmMode        Mode of operation
     * @param[in] ftmClockSource Clock source for timer
     * @param[in] ftmPrescale    Clock prescaler. Used to divide clock source before use
     */
@@ -254,6 +250,7 @@ public:
          FtmClockSource ftmClockSource = FtmClockSource_System,
          FtmPrescale    ftmPrescale    = FtmPrescale_128) {
 
+      enable();
       tmr->SC = ftmMode|ftmClockSource|ftmPrescale;
    }
 
@@ -331,10 +328,10 @@ public:
    /**
     * Set modulo of counter
     *
-    * @param[in] period Period in ticks (<65535)
+    * @param[in] modulo Modulo value in ticks (<65535)
     */
-   void __attribute__((always_inline)) setMod(uint16_t mod) {
-      tmr->MOD = mod;
+   void __attribute__((always_inline)) setMod(uint16_t modulo) {
+      tmr->MOD = modulo;
    }
 
    /**
@@ -465,7 +462,7 @@ public:
       ErrorCode rc = setPeriod(period);
       // Set actual period to maximum ticks in any case
       // This is the usual value for IC or OC set-up
-      setPeriodInTicks(0);
+      setPeriodInTicks(0x10000);
       return rc;
    }
    /**
@@ -849,11 +846,11 @@ class FtmIrq_T : public FtmBase_T<Info> {
 
 protected:
    /** Callback function for TOI ISR */
-   static FTMCallbackFunction toiCallback;
+   static FtmCallbackFunction toiCallback;
    /** Callback function for Channel ISR */
-   static FTMChannelCallbackFunction callback;
+   static FtmChannelCallbackFunction callback;
    /** Callback function for Channel Fault */
-   static FTMCallbackFunction faultCallback;
+   static FtmCallbackFunction faultCallback;
 
 public:
    /**
@@ -885,7 +882,7 @@ public:
     * @param[in] theCallback Callback function to execute on overflow interrupt.\n
     *                        nullptr to indicate none
     */
-   static __attribute__((always_inline)) void setTimerOverflowCallback(FTMCallbackFunction theCallback) {
+   static __attribute__((always_inline)) void setTimerOverflowCallback(FtmCallbackFunction theCallback) {
       if (theCallback == nullptr) {
          toiCallback = FtmIrq_T<Info>::unhandledCallback;
          return;
@@ -899,7 +896,7 @@ public:
     * @param[in] theCallback Callback function to execute on channel interrupt.\n
     *                        nullptr to indicate none
     */
-   static __attribute__((always_inline)) void setChannelCallback(FTMChannelCallbackFunction theCallback) {
+   static __attribute__((always_inline)) void setChannelCallback(FtmChannelCallbackFunction theCallback) {
       if (theCallback == nullptr) {
          callback = FtmBase_T<Info>::unhandledCallback;
          return;
@@ -913,7 +910,7 @@ public:
     * @param[in] theCallback Callback function to execute on fault interrupt.\n
     *                        nullptr to indicate none
     */
-   static __attribute__((always_inline)) void setFaultCallback(FTMCallbackFunction theCallback) {
+   static __attribute__((always_inline)) void setFaultCallback(FtmCallbackFunction theCallback) {
       if (theCallback == nullptr) {
          faultCallback = FtmBase_T<Info>::unhandledCallback;
          return;
@@ -922,9 +919,9 @@ public:
    }
 };
 
-template<class Info> FTMCallbackFunction           FtmIrq_T<Info>::toiCallback   = FtmBase_T<Info>::unhandledCallback;
-template<class Info> FTMChannelCallbackFunction    FtmIrq_T<Info>::callback      = FtmBase_T<Info>::unhandledCallback;
-template<class Info> FTMCallbackFunction           FtmIrq_T<Info>::faultCallback = FtmBase_T<Info>::unhandledCallback;
+template<class Info> FtmCallbackFunction           FtmIrq_T<Info>::toiCallback   = FtmBase_T<Info>::unhandledCallback;
+template<class Info> FtmChannelCallbackFunction    FtmIrq_T<Info>::callback      = FtmBase_T<Info>::unhandledCallback;
+template<class Info> FtmCallbackFunction           FtmIrq_T<Info>::faultCallback = FtmBase_T<Info>::unhandledCallback;
 
 /**
  * Template class representing a timer channel
@@ -935,14 +932,13 @@ template<class Info> FTMCallbackFunction           FtmIrq_T<Info>::faultCallback
  * using Tmr0_ch6 = USBDM::FtmChannel<FTM0Info, 6>;
  *
  * // Enable and initialise Base FTM with initial alignment
- * Tmr0_ch6::Ftm::enable();
  * Tmr0_ch6::Ftm::configure(FtmMode_LeftAlign);
  *
- * // Enable channel as PWM
- * Tmr0_ch6::enable(FtmChMode_PwmHighTruePulses);
+ * // Change timer period (in ticks) (affects ALL channels of timer)
+ * Tmr0_ch6.Ftm::setPeriod(500);
  *
- * // Change period (in ticks)
- * Tmr0_ch6.setPeriod(500);
+ * // Configure channel as PWM
+ * Tmr0_ch6::configure(FtmChMode_PwmHighTruePulses);
  *
  * // Change duty cycle (in percent)
  * Tmr0_ch6.setDutyCycle(45);
@@ -991,9 +987,8 @@ public:
    static constexpr uint32_t CHANNEL_MASK = 1<<channel;
 
    /**
-    * Configure channel and set mode\n
-    * Enables owning FTM if not already enabled\n
-    * Also see enable()
+    * Configure channel and sets mode\n
+    * Configures owning FTM with default settings from Configure.usbdmProject if not already enabled.
     *
     * @param[in] ftmChMode      Mode of operation for FTM e.g.FtmChMode_PwmHighTruePulses
     * @param[in] ftmChannelIrq  Whether to enable the interrupt function on this channel
@@ -1003,34 +998,39 @@ public:
     * @note This method has the side-effect of clearing the register update synchronisation i.e. 
     *       pending CnV register updates are discarded.
     */
-   static void configure(
+   static void defaultConfigure(
          FtmChMode      ftmChMode     = FtmChMode_PwmHighTruePulses,
          FtmChannelIrq  ftmChannelIrq = FtmChannelIrq_Disable,
          FtmChannelDma  ftmChannelDma = FtmChannelDma_Disable) {
             
       if (!Ftm::isEnabled()) {
          // Enable parent FTM if needed
-         Ftm::configure();
+         Ftm::defaultConfigure();
       }
       Ftm::tmr->CONTROLS[channel].CnSC = ftmChMode|ftmChannelIrq|ftmChannelDma;
    }
 
    /**
-    * Enable channel and set mode\n
+    * Configure channel and sets channel mode\n
     * Doesn't affect shared settings of owning Timer
     *
-    * @param[in] ftmChMode      Mode of operation for FTM e.g.FtmChMode_PwmHighTruePulses
+    * @param[in] ftmChMode      Mode of operation for channel
     * @param[in] ftmChannelIrq  Whether to enable the interrupt function on this channel
     * @param[in] ftmChannelDma  Whether to enable the DMA function on this channel
     *
     * @note This method has the side-effect of clearing the register update synchronisation i.e.
     *       pending CnV register updates are discarded.
     */
-   static __attribute__((always_inline)) void enable(
+   static __attribute__((always_inline)) void configure(
          FtmChMode      ftmChMode     = FtmChMode_PwmHighTruePulses,
          FtmChannelIrq  ftmChannelIrq = FtmChannelIrq_Disable,
          FtmChannelDma  ftmChannelDma = FtmChannelDma_Disable) {
-            
+
+#ifdef DEBUG_BUILD
+      // Check that owning FTM has been enabled
+      assert(Ftm::isEnabled());
+#endif
+
       Ftm::tmr->CONTROLS[channel].CnSC = ftmChMode|ftmChannelIrq|ftmChannelDma;
    }
 
@@ -1070,7 +1070,7 @@ public:
    }
 
    /**
-    * Enable/disable FTM interrupts in NVIC
+    * Enable/disable interrupts in NVIC
     *
     * @param[in] enable true to enable, false to disable
     */
@@ -1226,11 +1226,14 @@ public:
  * // Instantiate the timer channel (for FTM0 channel 6)
  * using Tmr0_ch6 = USBDM::Ftm0Channel<6>;
  *
- * // Initialise PWM with initial period and alignment
- * Tmr0_ch6.setMode(200, USBDM::FtmMode_LeftAlign);
+ * // Enable and initialise Base FTM with initial alignment
+ * Tmr0_ch6::Ftm::configure(FtmMode_LeftAlign);
  *
- * // Change period (in ticks)
- * Tmr0_ch6.setPeriod(500);
+ * // Change timer period (in ticks) (affects ALL channels of timer)
+ * Tmr0_ch6.Ftm::setPeriod(500);
+ *
+ * // Configure channel as PWM
+ * Tmr0_ch6::configure(FtmChMode_PwmHighTruePulses);
  *
  * // Change duty cycle (in percent)
  * Tmr0_ch6.setDutyCycle(45);

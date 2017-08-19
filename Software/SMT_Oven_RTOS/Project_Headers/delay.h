@@ -1,5 +1,5 @@
 /**
- * @file delay.h
+ * @file delay.h (100.ARM_DeviceOptions/Project_Headers/delay.h)
  * @brief Simple busy-waiting delay routines using SYST counter
  *
  *  Created on: 5 Oct 2015
@@ -34,22 +34,22 @@ static constexpr uint32_t TIMER_MASK = ((1UL<<24)-1UL);
 /**
  * Convert milliseconds to timer ticks
  *
- * @param ms Time in milliseconds
+ * @param[in]  ms Time in milliseconds
  *
  * @return Time value in timer ticks
  */
-static inline int64_t convertMSToTicks(uint32_t ms) {
+static __attribute__((always_inline)) inline int64_t convertMSToTicks(uint32_t ms) {
    return ((uint64_t)ms * SystemCoreClock) / 1000;
 }
 
 /**
  * Convert timer ticks to milliseconds
  *
- * @param ticks Time in ticks
+ * @param[in]  ticks Time in ticks
  *
  * @return Time value in milliseconds
  */
-static inline int64_t convertTicksToMS(uint32_t ticks) {
+static __attribute__((always_inline)) inline int64_t convertTicksToMS(uint32_t ticks) {
    return ((uint64_t)ticks * 1000 / SystemCoreClock);
 }
 
@@ -58,7 +58,7 @@ static inline int64_t convertTicksToMS(uint32_t ticks) {
  *
  * Note this is only required if getTicks() is used by itself
  */
-static inline void enableTimer() {
+static __attribute__((always_inline)) inline void enableTimer() {
    // Reload with maximum value 2^24
    SysTick->LOAD = -1;
 
@@ -75,7 +75,7 @@ static inline void enableTimer() {
  *
  * @return Number of ticks
  */
-static inline uint32_t getTicks() {
+static __attribute__((always_inline)) inline uint32_t getTicks() {
    return SysTick->VAL;
 }
 #endif
@@ -83,7 +83,7 @@ static inline uint32_t getTicks() {
 /**
  * Simple delay routine
  *
- * @param usToWait How many microseconds to busy-wait
+ * @param[in]  usToWait How many microseconds to busy-wait
  *
  * @note Limited to 2^32 us (4,294 s)
  * @note Uses busy-waiting
@@ -93,7 +93,7 @@ void waitUS(uint32_t usToWait);
 /**
  * Simple delay routine
  *
- * @param msToWait How many milliseconds to busy-wait
+ * @param[in]  msToWait How many milliseconds to busy-wait
  *
  * @note Limited to 2^32 ms (71,582 minutes)
  * @note Uses busy-waiting
@@ -103,7 +103,7 @@ void waitMS(uint32_t msToWait);
 /**
  * Simple delay routine
  *
- * @param seconds How many seconds to busy-wait
+ * @param[in]  seconds How many seconds to busy-wait
  *
  * @note Limited to 2^32 ms (71,582 minutes)
  * @note Uses busy-waiting
@@ -115,8 +115,8 @@ void wait(float seconds);
 /**
  * Routine to wait for a condition with timeout
  *
- * @param usToWait How many microseconds to busy-wait
- * @param testFn   Function indicating if waited for condition has occurred
+ * @param[in]  usToWait How many microseconds to busy-wait
+ * @param[in]  testFn   Function indicating if waited for condition has occurred
  *
  * @return Indicate if event occurred. true=>event, false=>no event
  */
@@ -125,8 +125,8 @@ bool waitUS(uint32_t usToWait, bool testFn(void));
 /**
  * Routine to wait for a condition with timeout
  *
- * @param msToWait How many milliseconds to busy-wait
- * @param testFn   Function indicating if waited for condition has occurred
+ * @param[in]  msToWait How many milliseconds to busy-wait
+ * @param[in]  testFn   Function indicating if waited for condition has occurred
  *
  * @return Indicate if event occurred. true=>event, false=>no event
  */
@@ -135,8 +135,8 @@ bool waitMS(uint32_t msToWait, bool testFn(void));
 /**
  * Routine to wait for a condition with timeout
  *
- * @param seconds  How many seconds to busy-wait
- * @param testFn   Polling function indicating if waited for condition has occurred
+ * @param[in]  seconds  How many seconds to busy-wait
+ * @param[in]  testFn   Polling function indicating if waited for condition has occurred
  *
  * @return Indicate if event occurred: true=>event, false=>no event
  */

@@ -41,6 +41,13 @@ enum UartInterrupt {
    UartInterrupt_IdleDetect      = UART_C2_ILIE(1),  //!< Interrupt request on Idle detection
 };
 
+enum Radix {
+   Radix_2  = 2,
+   Radix_8  = 8,
+   Radix_10 = 10,
+   Radix_16 = 16,
+};
+
 /**
  * Enumeration selecting direct memory access sources
  */
@@ -125,7 +132,89 @@ protected:
     */
    virtual void setBaudRate(unsigned baudrate) = 0;
 
+   /**
+    * Current radix for << operator
+    */
+   Radix fRadix = Radix_10;
+
 public:
+   /**
+    * Converts an unsigned long to a string
+    *
+    * @param[in] value Unsigned long to convert
+    * @param[in] ptr   Buffer to write result (at least 12 characters)
+    * @param[in] radix Radix for conversion [2..16]
+    *
+    * @return Pointer to '\0' null character at end of converted number\n
+    *         May be used for incrementally writing to a buffer.
+    */
+   static char *ultoa(unsigned long value, char *ptr, int radix=10) {
+#ifdef DEBUG_BUILD
+      if (ptr == nullptr) {
+         __BKPT();
+      }
+      if ((radix<2)||(radix>16)) {
+         __BKPT();
+      }
+#endif
+      // Save origin for reversal
+      char *optr = ptr;
+      // Convert backwards
+      do {
+         *ptr++ = "0123456789ABCDEF"[value % radix];
+         value /= radix;
+      } while (value != 0);
+      // Terminate (and leave ptr at last digit!)
+      char *rptr = ptr;
+      *ptr = '\0';
+      // Reverse digits
+      while (optr < ptr) {
+         char t = *optr;
+         *optr++ = *--ptr;
+         *ptr = t;
+      }
+      return rptr;
+   }
+
+   /**
+    * Converts a long to a string
+    *
+    * @param[in] value Long to convert
+    * @param[in] ptr   Buffer to write result (at least 12 characters)
+    * @param[in] radix Radix for conversion [2..16]
+    *
+    * @return Pointer to '\0' null character at end of converted number\n
+    *         May be used for incrementally writing to a buffer.
+    */
+   static char *ltoa(long value, char *ptr, int radix=10) {
+      if (value<0) {
+         *ptr++ = '-';
+         value = -value;
+      }
+      return ultoa(value, ptr, radix);
+   }
+
+   /**
+    * Copies a C string including terminating '\0' character
+    *
+    * @param[out] dst  Where to copy string
+    * @param[in]  src  Source to copy from
+    *
+    * @return Pointer to '\0' null character at end of converted number\n
+    *         May be used for incrementally writing to a buffer.
+    */
+   static char *strcpy(char *dst, const char *src) {
+#ifdef DEBUG_BUILD
+      if (dst == nullptr) {
+         __BKPT();
+      }
+#endif
+      do {
+         *dst++ = *src;
+      } while (*src++ != '\0');
+      return dst-1;
+   }
+
    /**
     * Transmit message
     *
@@ -149,10 +238,20 @@ public:
          *data++ = readChar();
       }
    }
-   /*
+   /**
+    * Check if character is available from UART
+    *
+    * @return true  Character available i.e. readChar() will not block
+    * @return false No character available
+    */
+   bool isCharAvailable() {
+      return (uart->S1 & UART_S1_RDRF_MASK) != 0;
+   }
+
+   /**
     * Receives a single character over the UART (blocking)
     *
-    * @return - character received
+    * @return Character received
     */
    int readChar(void) {
       uint8_t status;
@@ -175,90 +274,287 @@ public:
     *
     * @param[in]  ch - character to send
     */
-   void write(char ch) {
+   Uart &write(char ch) {
       while ((uart->S1 & UART_S1_TDRE_MASK) == 0) {
          // Wait for Tx buffer empty
          __asm__("nop");
       }
       uart->D = ch;
+      if (ch=='\n') {
+         write('\r');
+      }
+      return *this;
+   }
+   /**
+    * Transmit a character with newline
+    *
+    * @param[in]  ch - character to send
+    */
+   Uart &writeln(char ch) {
+      write(ch);
+      return write('\n');
    }
    /**
     * Transmit a C string
     *
     * @param[in]  str String to print
     */
-   void write(const char *str) {
+   Uart &write(const char *str) {
       while (*str != '\0') {
          write(*str++);
       }
+      return *this;
    }
    /**
-    * Transmit a unsigned
+    * Transmit a C string with new line
     *
-    * @param[in]  value Unsigned to print
+    * @param[in]  str String to print
     */
-   void write(unsigned value) {
-      char buff[20];
-      snprintf(buff, sizeof(buff), "%u", value);
-      write(buff);
+   Uart INLINE_RELEASE &writeln(const char *str) {
+      write(str);
+      return write('\n');
    }
    /**
-    * Transmit a integer
-    *
-    * @param[in]  value Integer to print
-    */
-   void write(int value) {
-      char buff[20];
-      snprintf(buff, sizeof(buff), "%d", value);
-      write(buff);
-   }
-   /**
-    * Transmit an unsigned long
+    * Transmit an unsigned long integer
     *
     * @param[in]  value Unsigned long to print
+    * @param[in]  radix Radix for conversion [2..16]
     */
-   void write(unsigned long value) {
-      char buff[20];
-      snprintf(buff, sizeof(buff), "%lu", value);
-      write(buff);
+   Uart &write(unsigned long value, int radix=10) {
+      static char buff[35];
+      ultoa(value, buff, radix);
+      return write(buff);
    }
    /**
-    * Transmit a long
+    * Transmit an unsigned long integer with newline
+    *
+    * @param[in]  value Unsigned long to print
+    * @param[in]  radix Radix for conversion [2..16]
+    */
+   Uart INLINE_RELEASE &writeln(unsigned long value, int radix=10) {
+      write(value, radix);
+      return write('\n');
+   }
+   /**
+    * Transmit a long integer
     *
     * @param[in]  value Long to print
+    * @param[in]  radix Radix for conversion [2..16]
     */
-   void write(long value) {
-      char buff[20];
-      snprintf(buff, sizeof(buff), "%ld", value);
-      write(buff);
+   Uart &write(long value, int radix=10) {
+      if (value<0) {
+         write('-');
+         value = -value;
+      }
+      return write((unsigned long) value, radix);
    }
    /**
-    * Transmit a float
+    * Transmit a long integer with newline
     *
-    * To use this function it is necessary to enable floating point printing
-    * in the linker options (Support %f format in printf -u _print_float)).
-    *
-    * @param[in]  value Float to print
+    * @param[in]  value Long to print
+    * @param[in]  radix Radix for conversion [2..16]
     */
-   void write(float value) {
-      char buff[20];
-      snprintf(buff, sizeof(buff), "%f", value);
-      write(buff);
+   Uart &writeln(long value, int radix=10) {
+      write(value, radix);
+      return write('\n');
+   }
+
+   /**
+    * Transmit an unsigned integer
+    *
+    * @param[in]  value Unsigned to print
+    * @param[in]  radix Radix for conversion [2..16]
+    */
+   Uart INLINE_RELEASE &write(unsigned value, int radix=10) {
+      return write((unsigned long)value, radix);
+   }
+   /**
+    * Transmit an unsigned integer with newline
+    *
+    * @param[in]  value Unsigned to print
+    * @param[in]  radix Radix for conversion [2..16]
+    */
+   Uart INLINE_RELEASE &writeln(unsigned value, int radix=10) {
+      return writeln((unsigned long)value, radix);
+   }
+   /**
+    * Transmit an integer
+    *
+    * @param[in]  value Integer to print
+    * @param[in]  radix Radix for conversion [2..16]
+    */
+   Uart INLINE_RELEASE &write(int value, int radix=10) {
+      return write((long)value, radix);
+   }
+   /**
+    * Transmit an integer with newline
+    *
+    * @param[in]  value Integer to print
+    * @param[in]  radix Radix for conversion [2..16]
+    */
+   Uart INLINE_RELEASE  &writeln(int value, int radix=10) {
+      return writeln((long)value, radix);
    }
    /**
     * Transmit a double
     *
-    * To use this function it is necessary to enable floating point printing
-    * in the linker options (Support %f format in printf -u _print_float)).
-    *
     * @param[in]  value Double to print
+    *
+    * @note Uses snprintf() which is large.
+    * @note To use this function it is necessary to enable floating point printing\n
+    *       in the linker options (Support %f format in printf -u _print_float)).
     */
-   void write(double value) {
+   Uart &write(double value) {
       char buff[20];
       snprintf(buff, sizeof(buff), "%f", value);
-      write(buff);
+      return write(buff);
    }
-   /*
+   /**
+    * Transmit a double with newline
+    *
+    * @param[in]  value Double to print
+    *
+    * @note Uses snprintf() which is large.
+    * @note To use this function it is necessary to enable floating point printing\n
+    *       in the linker options (Support %f format in printf -u _print_float).
+    */
+   Uart &writeln(double value) {
+      write(value);
+      return write('\n');
+   }
+   /**
+    * Transmit a float
+    *
+    * @param[in]  value Float to print
+    *
+    * @note Uses snprintf() which is large.
+    * @note To use this function it is necessary to enable floating point printing\n
+    *       in the linker options (Support %f format in printf -u _print_float).
+    */
+   Uart INLINE_RELEASE &write(float value) {
+      return write((double)value);
+   }
+   /**
+    * Transmit a float with newline
+    *
+    * @param[in]  value Float to print
+    *
+    * @note Uses snprintf() which is large.
+    * @note To use this function it is necessary to enable floating point printing\n
+    *       in the linker options (Support %f format in printf -u _print_float)).
+    */
+   Uart INLINE_RELEASE &writeln(float value) {
+      return writeln((double)value);
+   }
+   /**
+    * Transmit a character
+    *
+    * @param[in]  ch - character to send
+    *
+    * @return Reference to the Uart
+     */
+   Uart INLINE_RELEASE &operator <<(const char ch) {
+      return write(ch);
+   }
+   /**
+    * Transmit a C string
+    *
+    * @param[in]  str String to print
+    *
+    * @return Reference to the Uart
+    */
+   Uart INLINE_RELEASE &operator <<(const char *str) {
+      return write(str);
+   }
+   /**
+    * Transmit an unsigned long integer
+    *
+    * @param[in]  value Unsigned long to print
+    *
+    * @return Reference to the Uart
+    */
+   Uart INLINE_RELEASE &operator <<(unsigned long value) {
+      return write(value, fRadix);
+   }
+   /**
+    * Transmit a long integer
+    *
+    * @param[in]  value Long to print
+    *
+    * @return Reference to the Uart
+    */
+   Uart INLINE_RELEASE &operator <<(long value) {
+      return write(value, fRadix);
+   }
+   /**
+    * Transmit an unsigned integer
+    *
+    * @param[in]  value Unsigned to print
+    *
+    * @return Reference to the Uart
+    */
+   Uart INLINE_RELEASE &operator <<(unsigned int value) {
+      return write(value, fRadix);
+   }
+   /**
+    * Transmit an integer
+    *
+    * @param[in]  value Integer to print
+    *
+    * @return Reference to the Uart
+    */
+   Uart INLINE_RELEASE &operator <<(int value) {
+      return write(value, fRadix);
+   }
+   /**
+    * Transmit a float
+    *
+    * @param[in]  value Float to print
+    *
+    * @note Uses snprintf() which is large.
+    * @note To use this function it is necessary to enable floating point printing\n
+    *       in the linker options (Support %f format in printf -u _print_float)).
+    */
+   Uart INLINE_RELEASE &operator <<(float value) {
+      return write((double)value);
+   }
+   /**
+    * Transmit a double
+    *
+    * @param[in]  value Double to print
+    *
+    * @note Uses snprintf() which is large.
+    * @note To use this function it is necessary to enable floating point printing\n
+    *       in the linker options (Support %f format in printf -u _print_float)).
+    */
+   Uart INLINE_RELEASE &operator <<(double value) {
+      return write(value);
+   }
+
+   /**
+    * Sets the conversion radix for integer types
+    *
+    * @param radix Radix to set
+    *
+    * @return Reference to the Uart
+    */
+   Uart &operator <<(Radix radix) {
+      fRadix = radix;
+      return *this;
+   }
+
+   /**
+    * Get conversion radix given base
+    *
+    * @param radix Base to convert to radix [2..16]
+    *
+    * @return Radix corresponding to base
+    */
+   static Radix radix(int radix) {
+      return (Radix)radix;
+   }
+
+   /**
     * Clear UART error status
     */
    virtual void clearError() = 0;
@@ -390,33 +686,59 @@ class UartIrq_T : public Uart_T<Info> {
 
 protected:
    /** Callback function for ISR */
-   static UARTCallbackFunction callback;
+   static UARTCallbackFunction rxTxCallback;
+   static UARTCallbackFunction errorCallback;
+
+   static void unexpectedInterrupt(uint8_t) {
+      setAndCheckErrorCode(E_NO_HANDLER);
+   }
 
    UartIrq_T(unsigned baud) : Uart_T<Info>(baud) {
    }
 
 public:
    /**
-    * IRQ handler
+    * Receive/Transmit IRQ handler
     */
-   static void irqHandler(void) {
+   static void irqRxTxHandler(void) {
       uint8_t status = Info::uart->S1;
-      if (callback != 0) {
-         callback(status);
-      }
+      rxTxCallback(status);
    }
 
    /**
-    * Set Callback function
-    *
-    *   @param[in]  theCallback - Callback function to be executed on UART alarm interrupt
+    * Error and LON event IRQ handler
     */
-   static void setCallback(UARTCallbackFunction theCallback) {
-      callback = theCallback;
+   static void irqErrorHandler(void) {
+      uint8_t status = Info::uart->S1;
+      errorCallback(status);
+   }
+
+   /**
+    * Set Receive/Transmit Callback function
+    *
+    *   @param[in]  callback - Callback function to be executed on UART receive or transmit
+    */
+   static void setRxTxCallback(UARTCallbackFunction callback) {
+      if (callback == nullptr) {
+         rxTxCallback = unexpectedInterrupt;
+      }
+      rxTxCallback = callback;
+   }
+   /**
+    * Set Error Callback function
+    *
+    *   @param[in]  callback - Callback function to be executed on UART receive or transmit
+    */
+   static void setErrorCallback(UARTCallbackFunction callback) {
+      if (callback == nullptr) {
+         errorCallback = unexpectedInterrupt;
+      }
+      errorCallback = callback;
    }
 };
 
-template<class Info> UARTCallbackFunction UartIrq_T<Info>::callback = 0;
+template<class Info> UARTCallbackFunction UartIrq_T<Info>::rxTxCallback  = unexpectedInterrupt;
+template<class Info> UARTCallbackFunction UartIrq_T<Info>::errorCallback = unexpectedInterrupt;
 
 #ifdef USBDM_UART0_IS_DEFINED
 /**

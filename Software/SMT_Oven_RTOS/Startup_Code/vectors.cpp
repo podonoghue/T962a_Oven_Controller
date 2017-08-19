@@ -246,8 +246,8 @@ VectorTable const __vector_table = {
       I2S0_Tx_IRQHandler,            /*   44,   28  Synchronous Serial Interface                                                     */
       I2S0_Rx_IRQHandler,            /*   45,   29  Synchronous Serial Interface                                                     */
       Default_Handler,               /*   46,   30                                                                                   */
-      USBDM::Uart0::irqHandler,      /*   47,   31  Serial Communication Interface                                                   */
-      USBDM::Uart0::irqHandler,      /*   48,   32  Serial Communication Interface                                                   */
+      USBDM::Uart0::irqRxTxHandler,  /*   47,   31  Serial Communication Interface                                                   */
+      USBDM::Uart0::irqErrorHandler, /*   48,   32  Serial Communication Interface                                                   */
       UART1_RX_TX_IRQHandler,        /*   49,   33  Serial Communication Interface                                                   */
       UART1_ERR_IRQHandler,          /*   50,   34  Serial Communication Interface                                                   */
       UART2_RX_TX_IRQHandler,        /*   51,   35  Serial Communication Interface                                                   */

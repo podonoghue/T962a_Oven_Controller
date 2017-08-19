@@ -222,8 +222,8 @@ public:
       RTC_RAR_TPRR(1) | // Time Prescaler Register Read    
       RTC_RAR_TSRR(1);  // Time Seconds Register Read
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -310,8 +310,8 @@ public:
 
    // Template:mcg_mk
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -591,8 +591,8 @@ public:
 
    // Template:adc0_diff_a
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -810,8 +810,8 @@ public:
       CMP_MUXCR_PSEL(1)| // Plus Input Mux Control
       CMP_MUXCR_MSEL(7); // Minus Input Mux Control
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = true;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (1 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -923,8 +923,8 @@ public:
       CMP_MUXCR_PSEL(0)| // Plus Input Mux Control
       CMP_MUXCR_MSEL(0); // Minus Input Mux Control
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -1166,8 +1166,8 @@ public:
 
    // Template:dma0_16ch
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -1561,8 +1561,8 @@ public:
        0|                              // External Trigger Enable
        FTM_EXTTRIG_INITTRIGEN(0);    // Initialization Trigger Enable 
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -1725,8 +1725,8 @@ public:
        0|                              // External Trigger Enable
        FTM_EXTTRIG_INITTRIGEN(0);    // Initialization Trigger Enable 
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -1899,8 +1899,8 @@ public:
 
    // Template:gpioa_0x400ff000
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -1939,8 +1939,8 @@ public:
 
    // Template:gpioa_0x400ff000
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -1979,8 +1979,8 @@ public:
 
    // Template:gpioa_0x400ff000
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2019,8 +2019,8 @@ public:
 
    // Template:gpioa_0x400ff000
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2059,8 +2059,8 @@ public:
 
    // Template:gpioa_0x400ff000
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2105,8 +2105,8 @@ public:
 
    // Template:i2c0_mk10d5
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2303,8 +2303,8 @@ public:
       LLWU_RST_LLRSTE(1) |  // Low-Leakage Mode RESET Enable
       LLWU_RST_RSTFILT(0);  // Digital Filter On RESET Pin
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2413,8 +2413,8 @@ public:
       LPTMR_CSR_TPP(0)|
       LPTMR_CSR_TPS(0);
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2615,8 +2615,8 @@ public:
       return SystemBusClock;
    }
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2683,8 +2683,8 @@ public:
 
    // Template:pit_4ch_chain
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = true;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (1 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2792,38 +2792,33 @@ public:
 
    // Template:smc_mk11d5
 
-#ifndef SMC_PMPROT_AHSRUN
-#define SMC_PMPROT_AHSRUN(x) 0
-#endif
-
    // Power Mode Protection Register
    static constexpr uint8_t pmprot =  
+#ifdef SMC_PMPROT_AHSRUN
       SMC_PMPROT_AHSRUN(0) |  // Allow High Speed Run mode
+#endif
       SMC_PMPROT_AVLP(0) |  // Allow very low power modes
       SMC_PMPROT_ALLS(0) |  // Allow low leakage stop mode
       SMC_PMPROT_AVLLS(0);  // Allow very low leakage stop mode
 
 #ifndef SMC_PMCTRL_LPWUI
-#define SMC_PMCTRL_LPWUI(x) 0
-#endif
-
    // Power Mode Control Register
    static constexpr uint8_t pmctrl =  
       SMC_PMCTRL_LPWUI(1);   // Low Power Wake Up on Interrupt
 
-#ifndef SMC_STOPCTRL_PSTOPO
-#define SMC_STOPCTRL_PSTOPO(x) 0
-#endif
-
-#ifndef SMC_STOPCTRL_LPOPO
-#define SMC_STOPCTRL_LPOPO(x) 0
 #endif
 
    // VLLS Control Register
    static constexpr uint8_t stopctrl =  
+#ifdef SMC_STOPCTRL_PSTOPO
       SMC_STOPCTRL_PSTOPO(0) |  // Partial Stop Option (if present)
+#endif
+
       SMC_STOPCTRL_PORPO(0) |  // POR Power Option
+#ifdef SMC_STOPCTRL_LPOPO
       SMC_STOPCTRL_LPOPO(0) |  // POR Power Option (if present)
+#endif
+
       SMC_STOPCTRL_LLSM(0);   // LLS or VLLS Mode Control
 
 };
@@ -2866,8 +2861,8 @@ public:
 
    // Template:spi0_mk_pcsis6
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -2967,8 +2962,8 @@ public:
 
    // Template:uart0_mk11d5_c7816
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = true;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (1 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -3051,8 +3046,8 @@ public:
 
    // Template:uart1_mk10d10
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -3129,8 +3124,8 @@ public:
 
    // Template:uart1_mk10d10
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = false;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
@@ -3216,8 +3211,8 @@ public:
 
    // Template:usb0_otg_c
 
-   //! Callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = true;
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (1 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;

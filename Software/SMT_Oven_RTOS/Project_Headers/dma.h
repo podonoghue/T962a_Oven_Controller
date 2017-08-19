@@ -87,7 +87,7 @@ enum DmaChannelNum {
 /**
  * DMA transfer sizes
  */
-enum DmaSize {
+enum DmaSize : uint8_t {
    DmaSize_8bit    = 0,  //!< 8-bit transfer
    DmaSize_16bit   = 1,  //!< 16-bit transfer
    DmaSize_32bit   = 2,  //!< 32-bit transfer
@@ -111,6 +111,52 @@ enum DmaCanPreemptLower {
    DmaCanPreemptLower_Enable  = DMA_DCHPRI_DPA(0), //!< Channel N can suspend a lower priority channel
    DmaCanPreemptLower_Disable = DMA_DCHPRI_DPA(1), //!< Channel N cannot suspend a lower priority channel
 };
+
+/**
+ * Get DMA size of object.\n
+ * For use in TCD ATTR value
+ *
+ * @param[in] obj Object to obtain DMA size value for
+ *
+ * @return one of the DmaSize_xxxx values
+ */
+template <class T>
+static constexpr DmaSize dmaSize(const T &obj) {
+   static_assert(((sizeof(obj)==1)||(sizeof(obj)==2)||(sizeof(obj)==4)||(sizeof(obj)==16)||(sizeof(obj)==32)), "Illegal DMA transfer size");
+   return
+      (sizeof(obj)==1) ?DmaSize_8bit:
+      (sizeof(obj)==2) ?DmaSize_16bit:
+      (sizeof(obj)==4) ?DmaSize_32bit:
+      (sizeof(obj)==16)?DmaSize_16byte:
+      (sizeof(obj)==32)?DmaSize_32byte:
+            DmaSize_Illegal;
+};
+
+/**
+ * Get DMA source size of object.\n
+ * For use in TCD ATTR value
+ *
+ * @param[in] obj Object to get size of
+ *
+ * @return mask suitable for use as part of TCD.ATTR value
+ */
+template <class T>
+static constexpr uint32_t dmaSSize(const T &obj) {
+   return DMA_ATTR_SSIZE(dmaSize(obj));
+}
+
+/**
+ * Get DMA destination size of object.\n
+ * For use in TCD ATTR value
+ *
+ * @param[in] obj Object to get size of
+ *
+ * @return mask suitable for use as part of TCD.ATTR value
+ */
+template <class T>
+static constexpr uint32_t dmaDSize(const T &obj) {
+   return DMA_ATTR_DSIZE(dmaSize(obj));
+}
 
 /**
  * @verbatim
@@ -265,31 +311,14 @@ public:
    }
 
    /**
-    * Get DMA size from object size
-    *
-    * @param[in] size
-    *
-    * @return one of the DmaSize_xxxx values
-    */
-   static constexpr __attribute__((always_inline)) DmaSize getAttrSize(int size) {
-      return
-         (size==1) ?DmaSize_8bit:
-         (size==2) ?DmaSize_16bit:
-         (size==4) ?DmaSize_32bit:
-         (size==16)?DmaSize_16byte:
-         (size==32)?DmaSize_32byte:
-               DmaSize_Illegal;
-   };
-
-   /**
-    * Enable and configure shared settings
+    * Enable and configure shared DMA settings
     *
     * @param[in] dmaArbitration        How to arbitrate between requests from different channels
     * @param[in] dmaOnError            Whether to halt when a DMA error occurs
     * @param[in] dmaLink               Whether to enable continuous link mode
     * @param[in] dmaMinorLoopMapping   Whether to enable minor loop mapping
     */
-   static void enable(
+   static void configure(
          DmaArbitration       dmaArbitration=DmaArbitration_RoundRobin,
          DmaOnError           dmaOnError=DmaOnError_Halt,
          DmaLink              dmaLink=DmaLink_Disabled,

@@ -66,7 +66,7 @@ public:
     */
    static void init() {
       using namespace USBDM;
-      setOutput(pcrValue(PinPullNone, PinDriveStrengthLow));
+      setOutput(PinDriveStrength_Low, PinDriveMode_PushPull, PinSlewRate_Slow);
    }
 };
 /**
@@ -79,7 +79,7 @@ public:
     */
    static void init() {
       using namespace USBDM;
-      setOutput(pcrValue(PinPullNone, PinDriveStrengthLow));
+      setOutput(PinDriveStrength_Low, PinDriveMode_PushPull, PinSlewRate_Slow);
    }
 };
 
@@ -122,7 +122,7 @@ public:
     */
    static void init() {
       using namespace USBDM;
-      setOutput(pcrValue(PinPullNone, PinDriveStrengthLow));
+      setOutput(PinDriveStrength_Low, PinDriveMode_PushPull, PinSlewRate_Slow);
    }
    /**
     * Sound buzzer with abort on button press.\n
@@ -151,17 +151,17 @@ extern TemperatureSensors temperatureSensors;
 extern CaseTemperatureMonitor<CaseFan> caseTemperatureMonitor;
 
 /**
- * Set heater drive level (for PID)
- */
-extern void outPutControl(float dutyCycle);
-
-/**
  * Get oven temperature (for PID)
  * Averages multiple thermocouple inputs
  *
  * @return Averaged oven temperature
  */
 extern float getTemperature();
+
+/**
+ * Set heater drive level (for PID)
+ */
+extern void outPutControl(float dutyCycle);
 
 /**
  * PID controller

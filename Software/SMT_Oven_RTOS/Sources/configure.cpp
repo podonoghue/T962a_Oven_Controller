@@ -28,7 +28,7 @@ SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons{};
  *
  * @param[in] dutyCycle Controls the Heater/Fan
  */
-inline void outPutControl(float dutyCycle) {
+void outPutControl(float dutyCycle) {
    int heaterDutycycle;
    int fanDutycycle;
 

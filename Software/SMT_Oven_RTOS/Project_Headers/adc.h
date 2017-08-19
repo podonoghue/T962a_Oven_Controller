@@ -61,17 +61,22 @@ static constexpr PcrValue ADC_DEFAULT_PCR = pcrValue(
 
 /**
  * ADC Resolutions\n
- * The resolutions available vary with single-ended/differential modes
+ * The resolutions available vary with single-ended/differential modes\n
+ * Note the equivalence between modes e.g. 8-bit-se = 9-bit-diff
  */
 enum AdcResolution {
-   AdcResolution_8bit_se    = ADC_CFG1_MODE(0),  //!<  8-bit unsigned for use with single-ended mode
-   AdcResolution_10bit_se   = ADC_CFG1_MODE(2),  //!< 10-bit unsigned for use with single-ended mode
-   AdcResolution_12bit_se   = ADC_CFG1_MODE(1),  //!< 12-bit unsigned for use with single-ended mode
-   AdcResolution_16bit_se   = ADC_CFG1_MODE(3),  //!< 16-bit unsigned for use with single-ended mode
-   AdcResolution_9bit_diff  = ADC_CFG1_MODE(0),  //!<  9-bit signed for use with differential mode
-   AdcResolution_11bit_diff = ADC_CFG1_MODE(2),  //!< 11-bit signed for use with differential mode
-   AdcResolution_12bit_diff = ADC_CFG1_MODE(1),  //!< 12-bit signed for use with differential mode
-   AdcResolution_16bit_diff = ADC_CFG1_MODE(3),  //!< 16-bit signed for use with differential mode
+   AdcResolution_8bit_se_9bit_diff   = ADC_CFG1_MODE(0),  //!<  8-bit unsigned/9-bit signed
+   AdcResolution_10bit_se_11bit_diff = ADC_CFG1_MODE(2),  //!< 10-bit unsigned/11-bit signed
+   AdcResolution_12bit_se_13bit_diff = ADC_CFG1_MODE(1),  //!< 12-bit unsigned/13-bit signed
+   AdcResolution_16bit               = ADC_CFG1_MODE(3),  //!< 16-bit unsigned/unsigned
+   AdcResolution_8bit_se             = ADC_CFG1_MODE(0),  //!<  8-bit unsigned for use with single-ended mode
+   AdcResolution_10bit_se            = ADC_CFG1_MODE(2),  //!< 10-bit unsigned for use with single-ended mode
+   AdcResolution_12bit_se            = ADC_CFG1_MODE(1),  //!< 12-bit unsigned for use with single-ended mode
+   AdcResolution_16bit_se            = ADC_CFG1_MODE(3),  //!< 16-bit unsigned for use with single-ended mode
+   AdcResolution_9bit_diff           = ADC_CFG1_MODE(0),  //!<  9-bit signed for use with differential mode
+   AdcResolution_11bit_diff          = ADC_CFG1_MODE(2),  //!< 11-bit signed for use with differential mode
+   AdcResolution_13bit_diff          = ADC_CFG1_MODE(1),  //!< 12-bit signed for use with differential mode
+   AdcResolution_16bit_diff          = ADC_CFG1_MODE(3),  //!< 16-bit signed for use with differential mode
 };
 
 /**
@@ -118,8 +123,8 @@ enum AdcInterrupt {
  * Select the pretrigger
  */
 enum AdcPretrigger {
-   AdcPretrigger_A  = 0, //!< Use pretrigger A = SC1[0]/R[0]
-   AdcPretrigger_B  = 1, //!< Use pretrigger B = SC1[1]/R[1]
+   AdcPretrigger_0  = 0, //!< Use pretrigger A = SC1[0]/R[0]
+   AdcPretrigger_1  = 1, //!< Use pretrigger B = SC1[1]/R[1]
 };
 
 /**
@@ -190,14 +195,12 @@ enum AdcContinuous {
  */
 enum AdcCompare {
    AdcCompare_Disabled              = ADC_SC2_ACFE(0),                                          //!< Comparisons disabled
-
-   AdcCompare_LessThan              = ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(0)|ADC_SC2_ACREN(0),        //!< Value < cv1
-   AdcCompare_GreaterThanOrEqual    = ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(1)|ADC_SC2_ACREN(0),        //!< Value >= cv1
-
-   AdcCompare_OutsideRangeExclusive = (0<<8)|ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(0)|ADC_SC2_ACREN(1), //!< cv1<=cv2 => (Value < low) || (Value > high)
-   AdcCompare_InsideRangeExclusive  = (1<<8)|ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(0)|ADC_SC2_ACREN(1), //!< cv1>cv2  => low < value < high
-   AdcCompare_InsideRangeInclusive  = (0<<8)|ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(1)|ADC_SC2_ACREN(1), //!< cv1<=cv2 =>   low <= value <= high
-   AdcCompare_OutsideRangeInclusive = (1<<8)|ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(1)|ADC_SC2_ACREN(1), //!< cv1>cv2  => (Value <= low) || (Value >= high)
+   AdcCompare_LessThan              = ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(0)|ADC_SC2_ACREN(0),        //!< ADC_value < low
+   AdcCompare_GreaterThanOrEqual    = ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(1)|ADC_SC2_ACREN(0),        //!< ADC_value >= low
+   AdcCompare_OutsideRangeExclusive = (0<<8)|ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(0)|ADC_SC2_ACREN(1), //!< (ADC_value < low) || (ADC_value > high)
+   AdcCompare_OutsideRangeInclusive = (1<<8)|ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(1)|ADC_SC2_ACREN(1), //!< (ADC_value <= low) || (ADC_value >= high)
+   AdcCompare_InsideRangeExclusive  = (1<<8)|ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(0)|ADC_SC2_ACREN(1), //!<  low < ADC_value < high
+   AdcCompare_InsideRangeInclusive  = (0<<8)|ADC_SC2_ACFE(1)|ADC_SC2_ACFGT(1)|ADC_SC2_ACREN(1), //!<  low <= ADC_value <= high
 };
 
 /**
@@ -261,7 +264,23 @@ public:
    }
 
    /**
-    * Initialise ADC
+    * Configure with settings from Configure.usbdmProject.\n
+    * Includes configuring all pins
+    */
+   static void defaultConfigure() {
+      enable();
+
+      // Set mode to default
+      adc->CFG1 = Info::cfg1;
+      adc->CFG2 = Info::cfg2;
+      adc->SC2  = Info::sc2;
+      adc->CV1  = Info::cv1;
+      adc->CV1  = Info::cv2;
+      enableNvicInterrupts();
+   }
+
+   /**
+    * Configure ADC
     *
     * @param[in] adcResolution   Resolution for converter e.g. AdcResolution_16bit_se
     * @param[in] adcClockSource  Clock source e.g. AdcClockSource_Asynch
@@ -290,22 +309,6 @@ public:
       enable();
       adc->CFG1 = adcResolution|adcClockSource|adcClockDivider|adcPower|(adcSample&ADC_CFG1_ADLSMP_MASK);
       adc->CFG2 = adcMuxsel|adcClockRange|adcAsyncClock|(adcSample&ADC_CFG2_ADLSTS_MASK);
-   }
-
-   /**
-    * Initialise ADC to default settings\n
-    * Configures all ADC pins
-    */
-   static void configure() {
-      enable();
-      
-      // Set mode to default
-      adc->CFG1 = Info::cfg1;
-      adc->CFG2 = Info::cfg2;
-      adc->SC2  = Info::sc2;
-      adc->CV1  = Info::cv1;
-      adc->CV1  = Info::cv2;
-      enableNvicInterrupts();
    }
 
    /**
@@ -524,9 +527,9 @@ protected:
     *
     * @param[in] sc1Value SC1 register value including the ADC channel to use
     *
-    * @return - the result of the conversion
+    * @return - the result of the conversion (should be treated as signed if differential channel)
     */
-   static int readAnalogue(const int sc1Value) {
+   static uint16_t readAnalogue(const int sc1Value) {
 
       // Trigger conversion
       adc->SC1[0] = (sc1Value&(ADC_SC1_ADCH_MASK|ADC_SC1_AIEN_MASK|ADC_SC1_DIFF_MASK));
@@ -534,7 +537,7 @@ protected:
       while ((adc->SC1[0]&ADC_SC1_COCO_MASK) == 0) {
          __asm__("nop");
       }
-      return (int)adc->R[0];
+      return (uint16_t)adc->R[0];
    };
 
 };
@@ -638,7 +641,8 @@ public:
     * @return - the result of the conversion
     */
    static __attribute__((always_inline)) uint32_t readAnalogue() {
-      return AdcBase_T<Info>::readAnalogue(channel);
+      // Zero extended to 32 bits
+      return (uint32_t)(uint16_t)AdcBase_T<Info>::readAnalogue(channel);
    };
 };
 
@@ -698,7 +702,8 @@ public:
     * @return - the result of the conversion
     */
    static __attribute__((always_inline)) int32_t readAnalogue() {
-      return AdcBase_T<Info>::readAnalogue(channel|ADC_SC1_DIFF_MASK);
+      // Sign-extended to 32 bits
+      return (int32_t)(int16_t)AdcBase_T<Info>::readAnalogue(channel|ADC_SC1_DIFF_MASK);
    };
 };
 

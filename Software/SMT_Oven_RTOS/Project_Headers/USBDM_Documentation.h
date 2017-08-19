@@ -11,6 +11,7 @@
 \tableofcontents
 Table of Contents
  - \ref ADCExamples \n
+ - \ref Console \n
  - \ref DMAExamples \n
  - \ref FTMExamples \n
  - \ref GPIOExamples \n
@@ -19,7 +20,17 @@ Table of Contents
  - \ref PinSummary  \n
  - \ref PITExamples \n
 
-@page DMAExamples  Direct Memory Access Controller (DMAC)
+@page Console  Console and UART interface
+
+Convenience template for UART. Uses the following classes:\n
+<ul>
+<li> USBDM::Console
+<li> USBDM::Uart0
+<li> USBDM::Uart1
+<li> USBDM::Uart2
+</ul>
+
+@page DMAExamples  Direct Memory Access Controller
 
 Convenience template for DMAC. Uses the following classes:\n
 <ul>
@@ -39,6 +50,9 @@ This is a template class with static methods.\n
 
 <b>Examples</b>\n
  - @ref dma-memory-example.cpp
+ - @ref  digital-example1.cpp
+ - @ref  digital-example2.cpp
+ - @ref  dma-memory-example.cpp
 
  @page GPIOExamples  General Purpose Input Output
 
@@ -66,9 +80,21 @@ Convenience template for GPIO pins. Uses the following classes:\n
 <ul>
 <li>USBDM::GpioBase_T <clockMask, pcrAddress, gpioAddress, bitNum, polarity> \n
 <li>USBDM::Gpio_T <Info, bitNum, polarity>\n
-<li>USBDM::GpioA <bitNum, polarity>, USBDM::GpioB <bitNum, polarity> etc.\n
+<ul>
+<li>USBDM::GpioA <bitNum, polarity>
+<li>USBDM::GpioB <bitNum, polarity>
+<li>USBDM::GpioC <bitNum, polarity>
+<li>USBDM::GpioD <bitNum, polarity>
+<li>USBDM::GpioE <bitNum, polarity>
+</ul>
 <li>USBDM::Field_T <Info, left, right>\n
-<li>USBDM::GpioAField <left, right>, USBDM::GpioBField <left, right> etc.\n
+<ul>
+<li>USBDM::GpioAField <left, right>
+<li>USBDM::GpioBField <left, right>
+<li>USBDM::GpioCField <left, right>
+<li>USBDM::GpioDField <left, right>
+<li>USBDM::GpioEField <left, right>
+</ul>
 </ul>
 
 This template is an interface for the general purpose I/O pin hardware. \n
@@ -173,9 +199,21 @@ This is a template class with static methods.\n
 
 Convenience template for ADC inputs. Use the following classes:\n
 <ul>
-<li>USBDM::AdcBase_T\n
-<li>USBDM::AdcChannel_T\n
-<li>USBDM::AdcDiffChannel_T\n
+<li>USBDM::AdcBase_T
+<ul>
+<li>USBDM::Adc0
+<li>USBDM::Adc1
+</ul>
+<li>USBDM::AdcChannel_T
+<ul>
+<li>USBDM::Adc0Channel
+<li>USBDM::Adc1Channel
+</ul>
+<li>USBDM::AdcDiffChannel_T
+<ul>
+<li>USBDM::Adc0DiffChannel
+<li>USBDM::Adc1DiffChannel
+</ul>
 </ul>
 This template is an interface for the ADC input pins. \n
 
@@ -241,15 +279,29 @@ This is a template class with static methods.\n
 
 Convenience template for FTM hardware.
 The interface is divided into a number of templates:
-- USBDM::FtmBase_T Representing the shared FTM functionality.
-- USBDM::QuadEncoder_T Representing a FTM operating as a quadrature encoder.
-- USBDM::FtmChannel_T Representing individual channels of a single FTM.
-
+<ul>
+<li>USBDM::FtmBase_T Representing the shared FTM functionality.
+<ul>
+<li>USBDM::Ftm0
+<li>USBDM::Ftm1
+</ul>
+<li>USBDM::QuadEncoder_T Representing a FTM operating as a quadrature encoder.
+<ul>
+<li>USBDM::QuadEncoder1
+</ul>
+<li>USBDM::FtmChannel_T Representing individual channels of a single FTM.
+<ul>
+<li>USBDM::Ftm0Channel
+<li>USBDM::Ftm1Channel
+</ul>
+</ul>
 It provides:\n
-- Static pin mapping in conjunction with the configuration settings.
-- Setting the FTM period in ticks or seconds
-- Setting the channel duty cycle in percentage
-- Interrupt driven operation is also supported through a callback if <b>enabled in the configuration</b>.
+<ul>
+<li>Static pin mapping in conjunction with the configuration settings.
+<li>Setting the FTM period in ticks or seconds
+<li>Setting the channel duty cycle in percentage
+<li>Interrupt driven operation is also supported through a callback if <b>enabled in the configuration</b>.
+</ul>
 
 This is a template class with static methods.\n
 <em>It cannot be instantiated.</em>
@@ -413,10 +465,10 @@ This is a template class with static methods.\n
 @endcode
 
 @page Notes Notes
-  - enable()      Enables clock and configures pins (if present)
-  - configure()   As above, enable() + initialises according to Configure.usbdmProject\n
-                  May have defaulted parameters to do custom configuration.
-  - disable()     Disables the peripheral
+  - enable()            Enables clock and configures pins (if any configured in Configure.usbdmProject)
+  - defaultConfigure()  As above, enable() + initialises according to Configure.usbdmProject\n
+                        May have defaulted parameters to do custom configuration.
+  - disable()           Disables the peripheral
 
 @example analogue-comparison-example.cpp
 @example analogue-diff-example.cpp
@@ -426,6 +478,8 @@ This is a template class with static methods.\n
 @example digital-example1.cpp
 @example digital-example2.cpp
 @example dma-memory-example.cpp
+@example dma-spi-example.cpp
+@example dma-uart-example.cpp
 @example flash_programming_example.cpp
 @example ftm-ic-example.cpp
 @example ftm-oc-example.cpp

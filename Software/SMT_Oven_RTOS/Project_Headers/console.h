@@ -26,13 +26,13 @@ namespace USBDM {
  * @{
  */
 
-// Default baud rate for console
+//! Default baud rate for console
 constexpr int defaultBaudRate = 115200;
 
-// Maps console to UART used
+//! Maps console to UART used
 using  Console = USBDM::Uart0;
 
-// Console instance
+//! Console instance
 extern Console console;
 
 /**

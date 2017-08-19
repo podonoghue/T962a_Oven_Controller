@@ -157,11 +157,11 @@ private:
     */
    void callback() override {
       uint8_t snapshot =
-            (f1::read()? SwitchValue::SW_F1:0)|
-            (f2::read()? SwitchValue::SW_F2:0)|
-            (f3::read()? SwitchValue::SW_F3:0)|
-            (f4::read()? SwitchValue::SW_F4:0)|
-            (sel::read()?SwitchValue::SW_S:0);
+            (f1::isPressed()? SwitchValue::SW_F1:0)|
+            (f2::isPressed()? SwitchValue::SW_F2:0)|
+            (f3::isPressed()? SwitchValue::SW_F3:0)|
+            (f4::isPressed()? SwitchValue::SW_F4:0)|
+            (sel::isPressed()?SwitchValue::SW_S:0);
 
       if ((snapshot != 0) && (snapshot == lastSnapshot)) {
          // Keys pressed and unchanged
@@ -191,11 +191,11 @@ public:
     */
    SwitchDebouncer() {
       using namespace USBDM;
-      f1::setInput(pcrValue(PinPullUp, PinDriveStrengthHigh, PinDriveModePushPull, PinIrqNone));
-      f2::setInput();
-      f3::setInput();
-      f4::setInput();
-      sel::setInput();
+      f1::setInput(PinPull_Up);
+      f2::setInput(PinPull_Up);
+      f3::setInput(PinPull_Up);
+      f4::setInput(PinPull_Up);
+      sel::setInput(PinPull_Up);
 
       keyQueue.create();
       start(TICK_INTERVAL);

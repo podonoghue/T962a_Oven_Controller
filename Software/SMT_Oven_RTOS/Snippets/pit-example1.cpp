@@ -16,7 +16,7 @@ using namespace USBDM;
 
 // Connection mapping - change as required
 // Led is assumed active-low
-using LED   = GpioB<0>;
+using LED   = GpioA<2, ActiveLow>;
 
 int main() {
 
@@ -33,7 +33,7 @@ int main() {
 
       // Delay in ticks using channel 0
       // This is a busy-waiting loop!
-//      Pit::delay(0, ::SystemBusClock/10);
-      Pit::delay(0, 1000*ms);
+//      Pit::delayInTicks(0, ::SystemBusClock/10);
+      Pit::delay(0, 100*ms);
    }
 }
