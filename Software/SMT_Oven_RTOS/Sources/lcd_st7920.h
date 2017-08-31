@@ -19,8 +19,6 @@
 
 /**
  * Class representing an LCD connected over SPI
- *
- * @tparam pinNum Pin number for PCSn signal
  */
 class LCD_ST7920 {
 protected:
@@ -43,7 +41,7 @@ protected:
    /** SPI used for LCD */
    USBDM::Spi &spi;
 
-   const int pinNum;
+   const USBDM::SpiPeripheralSelect pinNum;
 
    /** Graphic mode X position */
    int x=0;
@@ -89,9 +87,9 @@ public:
     * Constructor
     *
     * @param[in] spi     The SPI to use to communicate with LCD
-    * @param[in] pinNum  Number of PCS to use
+    * @param[in] pinNum  SPI_PCSx to use
     */
-   LCD_ST7920(USBDM::Spi &spi, int pinNum) : spi(spi), pinNum(pinNum) {
+   LCD_ST7920(USBDM::Spi &spi, USBDM::SpiPeripheralSelect pinNum) : spi(spi), pinNum(pinNum) {
       initialise();
    }
 

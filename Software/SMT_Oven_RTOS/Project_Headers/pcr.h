@@ -62,7 +62,7 @@ constexpr   uint32_t PORTF_CLOCK_MASK         = SIM_SCGC5_PORTF_MASK;
  *
  * @param[in] mask Mask for PORTs to enable
  */
-static inline void enablePortClocks(uint32_t clockMask) {
+static inline __attribute__((always_inline)) void enablePortClocks(uint32_t clockMask) {
    SIM->SCGC5 |= clockMask;
    __DMB();
 };
@@ -72,7 +72,7 @@ static inline void enablePortClocks(uint32_t clockMask) {
  *
  * @param[in] mask Mask for PORTs to disable
  */
-static inline void disablePortClocks(uint32_t clockMask) {
+static inline __attribute__((always_inline)) void disablePortClocks(uint32_t clockMask) {
    SIM->SCGC5 &= ~clockMask;
    __DMB();
 };
@@ -243,7 +243,7 @@ using PcrValue = uint32_t;
  *
  * @return PCR value constructed from individual flags
  */
-static constexpr PcrValue pcrValue(
+static __attribute__((always_inline)) constexpr PcrValue pcrValue(
       PinPull           pinPull           = PinPull_None,
       PinDriveStrength  pinDriveStrength  = PinDriveStrength_Low,
       PinDriveMode      pinDriveMode      = PinDriveMode_PushPull,
@@ -263,7 +263,7 @@ static constexpr PcrValue pcrValue(
  *
  * @return PCR value constructed from individual flags
  */
-static constexpr PcrValue pcrValue(PcrValue original, uint32_t extraFlags) {
+static __attribute__((always_inline)) constexpr PcrValue pcrValue(PcrValue original, uint32_t extraFlags) {
    return original|extraFlags;
 }
 
@@ -274,7 +274,7 @@ static constexpr PcrValue pcrValue(PcrValue original, uint32_t extraFlags) {
  *
  * @return PCR value constructed from individual flags
  */
-static constexpr PcrValue pcrValue(uint32_t flags) {
+static __attribute__((always_inline)) constexpr PcrValue pcrValue(uint32_t flags) {
    return flags;
 }
 
@@ -358,7 +358,7 @@ public:
     * @param[in] callback The function to call on Pin interrupt. \n
     *                     nullptr to indicate none
     */
-   static void setCallback(PinCallbackFunction callback) {
+   static __attribute__((always_inline)) void setCallback(PinCallbackFunction callback) {
       if (callback == nullptr) {
          fCallback = unhandledCallback;
          return;
@@ -417,7 +417,7 @@ public:
     *
     * @param[in] enable true => enable, false => disable
     */
-   static void enableClock(bool enable=true) {
+   static __attribute__((always_inline)) void enableClock(bool enable=true) {
       if (enable) {
          enablePortClocks(clockMask);
       }
@@ -433,7 +433,7 @@ public:
     * @param[in] pcrValue PCR value constructed using pcrValue() including MUX value.\n
     *                     Defaults to template value.
     */
-   static void setPCR(PcrValue pcrValue=defPcrValue) {
+   static __attribute__((always_inline)) void setPCR(PcrValue pcrValue=defPcrValue) {
       if (pcrAddress != 0) {
          enablePortClocks(clockMask);
 
@@ -452,7 +452,7 @@ public:
     * @param[in] pinSlewRate      One of PinSlewRate_Slow, PinSlewRate_Fast (defaults to PinSlewRate_Fast)
     * @param[in] pinMux           One of PinMux_Analogue, PinMux_Gpio etc (defaults to template value)
     */
-   static void setPCR(
+   static __attribute__((always_inline)) void setPCR(
          PinPull           pinPull,
          PinDriveStrength  pinDriveStrength  = PinDriveStrength_Low,
          PinDriveMode      pinDriveMode      = PinDriveMode_PushPull,
@@ -474,7 +474,7 @@ public:
     *
     * @param[in] pinMux PCR MUX value [0..7]
     */
-   static void setMux(PinMux pinMux) {
+   static __attribute__((always_inline)) void setMux(PinMux pinMux) {
       *pcrReg = (*pcrReg&~PORT_PCR_MUX_MASK) | pinMux;
    }
    /**
@@ -483,7 +483,7 @@ public:
     *
     * @param[in] pinIrq Interrupt/DMA mode
     */
-   static void setIrq(PinIrq pinIrq) {
+   static __attribute__((always_inline)) void setIrq(PinIrq pinIrq) {
       *pcrReg = (*pcrReg&~PORT_PCR_IRQC_MASK) | pinIrq;
    }
 
@@ -491,7 +491,7 @@ public:
     * Clear interrupt flag
     * Assumes clock to the port has already been enabled
     */
-   static void clearIrqFlag() {
+   static __attribute__((always_inline)) void clearIrqFlag() {
       *pcrReg |= PORT_PCR_ISF_MASK;
    }
 
@@ -502,14 +502,14 @@ public:
     *
     *  @param[in] pinPull Pull selection mode
     */
-   static void setPullDevice(PinPull pinPull) {
+   static __attribute__((always_inline)) void setPullDevice(PinPull pinPull) {
       *pcrReg = (*pcrReg&~PORT_PCR_PD_MASK) | pinPull;
    }
 #else
    /**
     * Not supported
     */
-   static void setPullDevice(PinPullMode) {
+   static __attribute__((always_inline)) void setPullDevice(PinPullMode) {
    }
 #endif
 
@@ -520,14 +520,14 @@ public:
     *
     *  @param[in] pinDriveMode Drive mode
     */
-   static void setDriveMode(PinDriveMode pinDriveMode) {
+   static __attribute__((always_inline)) void setDriveMode(PinDriveMode pinDriveMode) {
       *pcrReg = (*pcrReg&~PORT_PCR_ODE_MASK) | pinDriveMode;
    }
 #else
    /**
     * Not supported
     */
-   static void setDriveMode(PinDriveMode) {
+   static __attribute__((always_inline)) void setDriveMode(PinDriveMode) {
    }
 #endif
 
@@ -538,14 +538,14 @@ public:
     *
     *  @param[in] pinSlewRate Slew rate. Either PinSlewRate_Slow or PinSlewRate_Fast
     */
-   static void setSlewRate(PinSlewRate  pinSlewRate) {
+   static __attribute__((always_inline)) void setSlewRate(PinSlewRate  pinSlewRate) {
       *pcrReg = (*pcrReg&~PORT_PCR_SRE_MASK) | pinSlewRate;
    }
 #else
    /**
     * Not supported
     */
-   static void setSlewRate(PinSlewRate) {
+   static __attribute__((always_inline)) void setSlewRate(PinSlewRate) {
    }
 #endif
 
@@ -556,14 +556,14 @@ public:
     *
     *  @param[in] pinFilter Pin filter option. Either PinFilter_None or PinFilter_Passive
     */
-   static void setFilter(PinFilter pinFilter) {
+   static __attribute__((always_inline)) void setFilter(PinFilter pinFilter) {
       *pcrReg = (*pcrReg&~PORT_PCR_PFE_MASK) | pinFilter;
    }
 #else
    /**
     * Not supported
     */
-   static void setFilter(PinFilter) {
+   static __attribute__((always_inline)) void setFilter(PinFilter) {
    }
 #endif
 
@@ -574,14 +574,14 @@ public:
     *
     *  @param[in] pinDriveStrength Drive strength to set
     */
-   static void setDriveStrength(PinDriveStrength pinDriveStrength) {
+   static __attribute__((always_inline)) void setDriveStrength(PinDriveStrength pinDriveStrength) {
       *pcrReg = (*pcrReg&~PORT_PCR_DSE_MASK) | pinDriveStrength;
    }
 #else
    /**
     * Not supported
     */
-   static void setDriveStrength(PinDriveStrength) {
+   static __attribute__((always_inline)) void setDriveStrength(PinDriveStrength) {
    }
 #endif
 
@@ -592,14 +592,14 @@ public:
     * The pin properties remains locked until the next reset
     * Not supported on all devices
     */
-   static void lock() {
+   static __attribute__((always_inline)) void lock() {
       *pcrReg |= PORT_PCR_LK_MASK;
    }
 #else
    /**
     * Not supported
     */
-   static void lock() {
+   static __attribute__((always_inline)) void lock() {
    }
 #endif
 
@@ -608,7 +608,7 @@ public:
     *
     * @param[in] enable true => enable, false => disable
     */
-   static void enableNvicInterrupts(bool enable=true) {
+   static __attribute__((always_inline)) void enableNvicInterrupts(bool enable=true) {
 
       constexpr IRQn_Type irqNum = (IRQn_Type)(PORTA_IRQn+((pcrAddress-PORTA_BasePtr)/(PORTB_BasePtr-PORTA_BasePtr)));
 

@@ -22,10 +22,10 @@ private:
 
    /** Temperature sensors */
    Max31855 fTemperatureSensors[NUM_THERMOCOUPLES] = {
-      Max31855(spi, t1_cs_num, t1Offset, t1Enable),
-      Max31855(spi, t2_cs_num, t2Offset, t2Enable),
-      Max31855(spi, t3_cs_num, t3Offset, t3Enable),
-      Max31855(spi, t4_cs_num, t4Offset, t4Enable),
+      Max31855(spi, t1_cs, t1Offset, t1Enable),
+      Max31855(spi, t2_cs, t2Offset, t2Enable),
+      Max31855(spi, t3_cs, t3Offset, t3Enable),
+      Max31855(spi, t4_cs, t4Offset, t4Enable),
    };
 
    /** The thermocouples are averaged this many times on reading. */

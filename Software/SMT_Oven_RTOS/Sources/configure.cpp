@@ -15,7 +15,7 @@
 USBDM::Spi0 spi;
 
 /** LCD */
-LCD_ST7920 lcd{spi, lcd_cs_num};
+LCD_ST7920 lcd{spi, lcd_cs};
 
 /** PWM for heater & oven fan */
 ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl{fanKickTime};

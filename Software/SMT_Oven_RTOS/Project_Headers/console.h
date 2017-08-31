@@ -4,6 +4,7 @@
  * @date    13 June 2015
  */
 #include <derivative.h>
+#include <uart.h>
 
  /*
  * *****************************
@@ -21,7 +22,7 @@
 namespace USBDM {
 
 /**
- * @addtogroup CONSOLE_Group Console
+ * @addtogroup CONSOLE_Group Console, Console
  * @brief Console serial interface
  * @{
  */

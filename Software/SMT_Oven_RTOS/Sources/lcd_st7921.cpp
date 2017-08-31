@@ -19,7 +19,6 @@ void LCD_ST7920::writeCommand(uint8_t value) {
          (uint8_t)(value<<4),
    };
    spi.startTransaction(spiConfig);
-   spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
    spi.txRxBytes(sizeof(data), data, nullptr);
    spi.endTransaction();
    USBDM::waitUS(100);
@@ -37,7 +36,6 @@ void LCD_ST7920::writeData(uint8_t value) {
          (uint8_t)(value<<4),
    };
    spi.startTransaction(spiConfig);
-   spi.setPushrValue(SPI_PUSHR_CTAS(0)|SPI_PUSHR_PCS(1<<pinNum));
    spi.txRxBytes(sizeof(data), data, nullptr);
    spi.endTransaction();
    USBDM::waitUS(100);
@@ -50,17 +48,18 @@ void LCD_ST7920::writeData(uint8_t value) {
 void LCD_ST7920::initialise() {
    USBDM::waitMS(200);
 
-   spi.setPcsPolarity(pinNum, USBDM::ActiveLow);
-
+   // Set up SPI
    spi.startTransaction();
+   spi.setPeripheralSelect(pinNum, USBDM::ActiveLow);
    spi.setSpeed(5000000);
-   spi.setMode(USBDM::SpiMode_3);
    spi.setDelays(1*USBDM::us, 1*USBDM::us, 1*USBDM::us);
+   spi.setMode(USBDM::SpiMode_3);
    spi.setFrameSize(8);
 
-   // Record CTAR value in case SPI shared
+   // Record SPI configuration as shared
    spiConfig = spi.getCTAR0Value();
    spi.endTransaction();
+
    writeCommand(0b00111000); // Function set(DL=1, RE=0)
    writeCommand(0b00001100); // On/Off(D=1 C=0, B=0)
    writeCommand(0b00000110); // EntryMode(I/D=1,S=0)

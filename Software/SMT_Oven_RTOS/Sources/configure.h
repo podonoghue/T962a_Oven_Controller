@@ -26,12 +26,12 @@
 #include "settings.h"
 #include "runProfile.h"
 
-/** PCS # for SPI connected to LCD and Thermocouples */
-static constexpr int lcd_cs_num = 4;
-static constexpr int t1_cs_num  = 2;
-static constexpr int t2_cs_num  = 3;
-static constexpr int t3_cs_num  = 1;
-static constexpr int t4_cs_num  = 0;
+/** SPI_PCSx signals for SPI connected to LCD and Thermocouples */
+static constexpr USBDM::SpiPeripheralSelect lcd_cs = USBDM::SpiPeripheralSelect_4;
+static constexpr USBDM::SpiPeripheralSelect t1_cs  = USBDM::SpiPeripheralSelect_2;
+static constexpr USBDM::SpiPeripheralSelect t2_cs  = USBDM::SpiPeripheralSelect_3;
+static constexpr USBDM::SpiPeripheralSelect t3_cs  = USBDM::SpiPeripheralSelect_1;
+static constexpr USBDM::SpiPeripheralSelect t4_cs  = USBDM::SpiPeripheralSelect_0;
 
 /**
  * SPI used for LCD and Thermocouples

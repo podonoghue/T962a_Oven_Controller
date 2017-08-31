@@ -2968,9 +2968,17 @@ public:
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
 
+   //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
 
+   //! Default Baud rate used if not explicitly given
    static constexpr uint32_t defaultBaudRate = 115200;
+
+   //! Default buffer size for receive queue when interrupt driven
+   static constexpr unsigned receiveBufferSize = 1;
+
+   //! Default buffer size for transmit queue when interrupt driven
+   static constexpr unsigned transmitBufferSize = 1;
 
    /**
     * Get input clock frequency
@@ -3052,9 +3060,17 @@ public:
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
 
+   //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
 
+   //! Default Baud rate used if not explicitly given
    static constexpr uint32_t defaultBaudRate = 115200;
+
+   //! Default buffer size for receive queue when interrupt driven
+   static constexpr unsigned receiveBufferSize = 1;
+
+   //! Default buffer size for transmit queue when interrupt driven
+   static constexpr unsigned transmitBufferSize = 1;
 
    /**
     * Get input clock frequency
@@ -3130,9 +3146,17 @@ public:
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  0;
 
+   //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
 
+   //! Default Baud rate used if not explicitly given
    static constexpr uint32_t defaultBaudRate = 115200;
+
+   //! Default buffer size for receive queue when interrupt driven
+   static constexpr unsigned receiveBufferSize = 1;
+
+   //! Default buffer size for transmit queue when interrupt driven
+   static constexpr unsigned transmitBufferSize = 1;
 
    /**
     * Get input clock frequency
