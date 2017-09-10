@@ -26,6 +26,7 @@
 #include "usb.h"
 #include "utilities.h"
 #include "EditProfile.h"
+#include "i2c.h"
 
 class profilesMenu {
 
@@ -69,7 +70,10 @@ public:
    }
 };
 
+using namespace USBDM;
+
 void initialise() {
+
    Buzzer::init();
    OvenFanLed::init();
    HeaterLed::init();
@@ -78,18 +82,21 @@ void initialise() {
 }
 
 int main() {
+
+   console.writeln("Starting Oven");
+
    initialise();
 
-   USBDM::mapAllPins();
+   mapAllPins();
 
-   if (USBDM::getError() != USBDM::E_NO_ERROR) {
+   if (getError() != E_NO_ERROR) {
       char buff[100];
       lcd.clear();
-      lcd.printf("Error in initialisation \n  %s\n", USBDM::getErrorMessage());
-      lcd.putString(buff);
+      lcd.printf("Error in initialisation \n  %s\n", getErrorMessage());
+      console.write(buff);
    }
 
-   USBDM::Usb0::initialise();
+   Usb0::initialise();
 
    MainMenu::run();
 

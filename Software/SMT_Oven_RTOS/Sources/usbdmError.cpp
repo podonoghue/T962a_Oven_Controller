@@ -14,7 +14,7 @@ namespace USBDM {
 volatile ErrorCode errorCode = E_NO_ERROR;
 
 /** Table of error messages indexed by error code */
-static const char *messages[] = {
+static const char *messages[] {
       "No error",
       "General error",
       "Too small",
@@ -23,6 +23,9 @@ static const char *messages[] = {
       "Interrupt handler not installed",
       "Flash initialisation failed",
       "ADC Calibration failed",
+      "Illegal processor run-mode transition",
+      "Failed communication",
+      "Program has terminated",
 };
 
 /**
@@ -55,6 +58,13 @@ const char *getErrorMessage(ErrorCode err) {
 }
 
 #ifdef DEBUG_BUILD
+void abort(const char *msg) {
+   console.writeln(msg);
+   while(true) {
+      __BKPT();
+   }
+}
+
 /**
  * Check for error code being set (drastically!)
  * This routine does not return if there is an error
@@ -64,7 +74,7 @@ ErrorCode checkError() {
       const char *msg = getErrorMessage();
       __attribute__((unused))
       int cmsisErrorCode = errorCode & ~E_CMSIS_ERR_OFFSET;
-      puts(msg);
+      console.writeln(msg);
       // If you arrive here then an error has been detected.
       // If a CMSIS error, check the 'cmsisErrorCode' above and refer to the CMSIS error codes
       __BKPT();

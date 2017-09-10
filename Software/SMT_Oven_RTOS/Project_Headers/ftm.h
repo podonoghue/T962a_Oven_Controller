@@ -78,6 +78,7 @@ enum FtmMode {
  * Controls basic operation of PWM/Input capture
  */
 enum FtmChMode {
+   FtmChMode_Disabled                              = FTM_CnSC_MS(0)|FTM_CnSC_ELS(0), //!< Channel disabled
    FtmChMode_InputCaptureRisingEdge                = FTM_CnSC_MS(0)|FTM_CnSC_ELS(1), //!< Capture rising edge
    FtmChMode_InputCaptureFallingEdge               = FTM_CnSC_MS(0)|FTM_CnSC_ELS(2), //!< Capture falling edge
    FtmChMode_InputCaptureEitherEdge                = FTM_CnSC_MS(0)|FTM_CnSC_ELS(3), //!< Capture both rising and falling edges
@@ -161,6 +162,22 @@ typedef void (*FtmCallbackFunction)();
 typedef void (*FtmChannelCallbackFunction)(uint8_t status);
 
 /**
+ * Holder for unhandledCallback() functions
+ */
+class FtmBase {
+
+protected:
+   /** Callback to catch unhandled interrupt */
+   static void unhandledCallback(uint8_t) {
+      setAndCheckErrorCode(E_NO_HANDLER);
+   }
+   /** Callback to catch unhandled interrupt */
+   static void unhandledCallback() {
+      setAndCheckErrorCode(E_NO_HANDLER);
+   }
+};
+
+/**
  * Base class representing an FTM
  *
  * Example
@@ -178,7 +195,7 @@ typedef void (*FtmChannelCallbackFunction)(uint8_t status);
  * @tparam Info  Class describing FTM hardware instance
  */
 template<class Info>
-class FtmBase_T {
+class FtmBase_T : public FtmBase {
 
 private:
    /**
@@ -188,14 +205,77 @@ private:
    FtmBase_T(const FtmBase_T&) = delete;
    FtmBase_T(FtmBase_T&&) = delete;
 
-protected:
-   /** Callback to catch unhandled interrupt */
-   static void unhandledCallback(uint8_t) {
-      setAndCheckErrorCode(E_NO_HANDLER);
+   /** Callback function for TOI ISR */
+   static FtmCallbackFunction toiCallback;
+   /** Callback function for Channel ISR */
+   static FtmChannelCallbackFunction callback;
+   /** Callback function for Channel Fault */
+   static FtmCallbackFunction faultCallback;
+
+public:
+   /**
+    * IRQ handler
+    */
+   static void irqHandler() {
+      if ((tmr->MODE&FTM_MODE_FAULTIE_MASK) && (tmr->FMS&FTM_FMS_FAULTF_MASK)) {
+         tmr->FMS &= ~FTM_FMS_FAULTF_MASK;
+         faultCallback();
+      }
+
+      if ((tmr->SC&(FTM_SC_TOF_MASK|FTM_SC_TOIE_MASK)) == (FTM_SC_TOF_MASK|FTM_SC_TOIE_MASK)) {
+         // Clear TOI flag
+         tmr->SC &= ~FTM_SC_TOF_MASK;
+         toiCallback();
+      }
+      uint8_t status = tmr->STATUS;
+      if (status) {
+         // Clear flags for channel events being handled (w0c register if read)
+         tmr->STATUS = 0;
+         callback(status);
+      }
    }
-   /** Callback to catch unhandled interrupt */
-   static void unhandledCallback() {
-      setAndCheckErrorCode(E_NO_HANDLER);
+
+   /**
+    * Set TOI Callback function\n
+    * Note that one callback is shared by all channels of the FTM
+    *
+    * @param[in] theCallback Callback function to execute on overflow interrupt.\n
+    *                        nullptr to indicate none
+    */
+   static __attribute__((always_inline)) void setTimerOverflowCallback(FtmCallbackFunction theCallback) {
+      if (theCallback == nullptr) {
+         toiCallback = unhandledCallback;
+         return;
+      }
+      toiCallback = theCallback;
+   }
+   /**
+    * Set channel Callback function\n
+    * Note that one callback is shared by all channels of the FTM
+    *
+    * @param[in] theCallback Callback function to execute on channel interrupt.\n
+    *                        nullptr to indicate none
+    */
+   static __attribute__((always_inline)) void setChannelCallback(FtmChannelCallbackFunction theCallback) {
+      if (theCallback == nullptr) {
+         callback = unhandledCallback;
+         return;
+      }
+      callback = theCallback;
+   }
+   /**
+    * Set fault Callback function\n
+    * Note that one callback is shared by all channels of the FTM
+    *
+    * @param[in] theCallback Callback function to execute on fault interrupt.\n
+    *                        nullptr to indicate none
+    */
+   static __attribute__((always_inline)) void setFaultCallback(FtmCallbackFunction theCallback) {
+      if (theCallback == nullptr) {
+         faultCallback = unhandledCallback;
+         return;
+      }
+      faultCallback = theCallback;
    }
 
 public:
@@ -393,7 +473,7 @@ public:
       tmr->SC  = sc;
 
       // OK period
-      return setErrorCode(E_NO_ERROR);
+      return E_NO_ERROR;
    }
 
    /**
@@ -465,6 +545,7 @@ public:
       setPeriodInTicks(0x10000);
       return rc;
    }
+
    /**
     * Get frequency of timer tick
     *
@@ -541,13 +622,14 @@ public:
    }
 
    /**
-    * Converts a time in microseconds to number of ticks
+    * Converts a time in seconds to number of ticks
     *
-    * @param[in] time Time in microseconds
+    * @param[in] time Time in seconds
     *
     * @return Time in ticks
     *
-    * @note Assumes prescale has been chosen as a appropriate value. Rudimentary range checking.
+    * @note Assumes prescale has been chosen as a appropriate value (see setMeasurementPeriod()). \n
+    *       Only rudimentary range checking is done.
     */
    static uint32_t convertSecondsToTicks(float time) {
 
@@ -606,7 +688,6 @@ public:
       return tickInterval/Info::getClockFrequencyF();
    }
 
-
    /**
     * Get Timer count
     *
@@ -616,6 +697,32 @@ public:
       return tmr->CNT;
    }
    
+   /**
+    * Get Timer event flags
+    *
+    * @return Flags indicating if an event has occurred on a channel
+    *         There is one bit for each channel
+    */
+   static __attribute__((always_inline)) unsigned getInterruptFlags() {
+      return tmr->STATUS;
+   }
+
+   /**
+    * Get and Clear Timer event flags
+    *
+    * @return Flags indicating if an event has occurred on a channel
+    *         There is one bit for each channel
+    *
+    * @note Only flags captured in the return value are cleared
+    */
+   static __attribute__((always_inline)) unsigned getAndClearInterruptFlags() {
+      // Note requires read and write zero to clear flags
+      // so only flags captured in status are cleared
+      unsigned status = tmr->STATUS;
+      tmr->STATUS = ~status;
+      return status;
+   }
+
    /**
     *  Enables fault detection input
     *
@@ -838,90 +945,9 @@ public:
 
 };
 
-/**
- * Template class to provide Timer callback
- */
-template<class Info>
-class FtmIrq_T : public FtmBase_T<Info> {
-
-protected:
-   /** Callback function for TOI ISR */
-   static FtmCallbackFunction toiCallback;
-   /** Callback function for Channel ISR */
-   static FtmChannelCallbackFunction callback;
-   /** Callback function for Channel Fault */
-   static FtmCallbackFunction faultCallback;
-
-public:
-   /**
-    * IRQ handler
-    */
-   static void irqHandler() {
-      if ((FtmBase_T<Info>::tmr->MODE&FTM_MODE_FAULTIE_MASK) && (FtmBase_T<Info>::tmr->FMS&FTM_FMS_FAULTF_MASK)) {
-         FtmBase_T<Info>::tmr->FMS &= ~FTM_FMS_FAULTF_MASK;
-         faultCallback();
-      }
-
-      if ((FtmBase_T<Info>::tmr->SC&(FTM_SC_TOF_MASK|FTM_SC_TOIE_MASK)) == (FTM_SC_TOF_MASK|FTM_SC_TOIE_MASK)) {
-         // Clear TOI flag
-         FtmBase_T<Info>::tmr->SC &= ~FTM_SC_TOF_MASK;
-         toiCallback();
-      }
-      uint8_t status = FtmBase_T<Info>::tmr->STATUS;
-      if (status) {
-         // Clear flags for channel events being handled (w0c register if read)
-         FtmBase_T<Info>::tmr->STATUS = 0;
-         callback(status);
-      }
-   }
-
-   /**
-    * Set TOI Callback function\n
-    * Note that one callback is shared by all channels of the FTM
-    *
-    * @param[in] theCallback Callback function to execute on overflow interrupt.\n
-    *                        nullptr to indicate none
-    */
-   static __attribute__((always_inline)) void setTimerOverflowCallback(FtmCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         toiCallback = FtmIrq_T<Info>::unhandledCallback;
-         return;
-      }
-      toiCallback = theCallback;
-   }
-   /**
-    * Set channel Callback function\n
-    * Note that one callback is shared by all channels of the FTM
-    *
-    * @param[in] theCallback Callback function to execute on channel interrupt.\n
-    *                        nullptr to indicate none
-    */
-   static __attribute__((always_inline)) void setChannelCallback(FtmChannelCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         callback = FtmBase_T<Info>::unhandledCallback;
-         return;
-      }
-      callback = theCallback;
-   }
-   /**
-    * Set fault Callback function\n
-    * Note that one callback is shared by all channels of the FTM
-    *
-    * @param[in] theCallback Callback function to execute on fault interrupt.\n
-    *                        nullptr to indicate none
-    */
-   static __attribute__((always_inline)) void setFaultCallback(FtmCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         faultCallback = FtmBase_T<Info>::unhandledCallback;
-         return;
-      }
-      faultCallback = theCallback;
-   }
-};
-
-template<class Info> FtmCallbackFunction           FtmIrq_T<Info>::toiCallback   = FtmBase_T<Info>::unhandledCallback;
-template<class Info> FtmChannelCallbackFunction    FtmIrq_T<Info>::callback      = FtmBase_T<Info>::unhandledCallback;
-template<class Info> FtmCallbackFunction           FtmIrq_T<Info>::faultCallback = FtmBase_T<Info>::unhandledCallback;
+template<class Info> FtmCallbackFunction           FtmBase_T<Info>::toiCallback   = FtmBase_T<Info>::unhandledCallback;
+template<class Info> FtmChannelCallbackFunction    FtmBase_T<Info>::callback      = FtmBase_T<Info>::unhandledCallback;
+template<class Info> FtmCallbackFunction           FtmBase_T<Info>::faultCallback = FtmBase_T<Info>::unhandledCallback;
 
 /**
  * Template class representing a timer channel
@@ -947,7 +973,12 @@ template<class Info> FtmCallbackFunction           FtmIrq_T<Info>::faultCallback
  * @tparam channel FTM timer channel
  */
 template <class Info, int channel>
-class FtmChannel_T : public FtmIrq_T<Info>, protected PcrTable_T<Info, channel>, CheckSignal<Info, channel> {
+class FtmChannel_T : public FtmBase_T<Info>, protected PcrTable_T<Info, channel>, CheckSignal<Info, channel> {
+
+private:
+   // Hide these FTM methods
+   static unsigned getAndClearInterruptFlags() {return 0;};
+   static unsigned getInterruptFlags()         {return 0;};
 
 protected:
    // Allow more convenient access to template super-classes
@@ -956,17 +987,18 @@ protected:
 public:
    // Allow more convenient access to template super-classes
    using Pcr = PcrTable_T<Info, channel>;
-   using Ftm = FtmIrq_T<Info>;
+   using Ftm = FtmBase_T<Info>;
 
    // Allow access to timer hardware instance
    using FtmBase_T<Info>::tmr;
 
-   // Make these PCR functions available
+   // Make these PCR methods available
    using Pcr::setDriveMode;
    using Pcr::setDriveStrength;
    using Pcr::setFilter;
    using Pcr::setPullDevice;
    using Pcr::setSlewRate;
+   using Pcr::setPCR;
 
    /**
     * Set callback for Pin IRQ
@@ -1007,11 +1039,11 @@ public:
          // Enable parent FTM if needed
          Ftm::defaultConfigure();
       }
-      Ftm::tmr->CONTROLS[channel].CnSC = ftmChMode|ftmChannelIrq|ftmChannelDma;
+      tmr->CONTROLS[channel].CnSC = ftmChMode|ftmChannelIrq|ftmChannelDma;
    }
 
    /**
-    * Configure channel and sets channel mode\n
+    * Configure channel\n
     * Doesn't affect shared settings of owning Timer
     *
     * @param[in] ftmChMode      Mode of operation for channel
@@ -1031,7 +1063,26 @@ public:
       assert(Ftm::isEnabled());
 #endif
 
-      Ftm::tmr->CONTROLS[channel].CnSC = ftmChMode|ftmChannelIrq|ftmChannelDma;
+      tmr->CONTROLS[channel].CnSC = ftmChMode|ftmChannelIrq|ftmChannelDma;
+   }
+
+   /**
+    * Set channel mode
+    *
+    * @param[in] ftmChMode      Mode of operation for channel
+    *
+    * @note This method has the side-effect of clearing the register update synchronisation i.e.
+    *       pending CnV register updates are discarded.
+    */
+   static __attribute__((always_inline)) void setMode(FtmChMode ftmChMode) {
+
+#ifdef DEBUG_BUILD
+      // Check that owning FTM has been enabled
+      assert(Ftm::isEnabled());
+#endif
+
+      tmr->CONTROLS[channel].CnSC =
+            (tmr->CONTROLS[channel].CnSC & ~(FTM_CnSC_MS_MASK|FTM_CnSC_ELS_MASK))|ftmChMode;
    }
 
    /**
@@ -1045,10 +1096,10 @@ public:
     */
    static __attribute__((always_inline)) void enableInterrupts(bool enable=true) {
       if (enable) {
-         Ftm::tmr->CONTROLS[channel].CnSC |= FTM_CnSC_CHIE_MASK;
+         tmr->CONTROLS[channel].CnSC |= FTM_CnSC_CHIE_MASK;
       }
       else {
-         Ftm::tmr->CONTROLS[channel].CnSC &= ~FTM_CnSC_CHIE_MASK;
+         tmr->CONTROLS[channel].CnSC &= ~FTM_CnSC_CHIE_MASK;
       }
    }
 
@@ -1062,10 +1113,10 @@ public:
     */
    static __attribute__((always_inline)) void enableDma(bool enable=true) {
       if (enable) {
-         Ftm::tmr->CONTROLS[channel].CnSC |= FTM_CnSC_DMA_MASK;
+         tmr->CONTROLS[channel].CnSC |= FTM_CnSC_DMA_MASK;
       }
       else {
-         Ftm::tmr->CONTROLS[channel].CnSC &= ~FTM_CnSC_DMA_MASK;
+         tmr->CONTROLS[channel].CnSC &= ~FTM_CnSC_DMA_MASK;
       }
    }
 
@@ -1075,7 +1126,7 @@ public:
     * @param[in] enable true to enable, false to disable
     */
    static __attribute__((always_inline)) void enableNvicInterrupts(bool enable=true) {
-      FtmIrq_T<Info>::enableNvicInterrupts(enable);
+      FtmBase_T<Info>::enableNvicInterrupts(enable);
    }
 
    /**
@@ -1118,6 +1169,46 @@ public:
          ) {
       Pcr::setPCR(pinPull,pinDriveStrength,pinDriveMode,pinIrq,pinFilter,pinSlewRate,pinMux);
    }
+
+   /**
+    * @brief
+    * Enable pin as digital output with initial inactive level and configures Pin Control Register (PCR) values
+    *
+    * @note Resets the Pin Control Register value (PCR value).
+    * @note Resets the pin value to the inactive state
+    * @note Use setOut() for a lightweight change of direction without affecting other pin settings.
+    *
+    * @param[in] pinDriveStrength One of PinDriveStrength_Low, PinDriveStrength_High
+    * @param[in] pinDriveMode     One of PinDriveMode_PushPull, PinDriveMode_OpenDrain (defaults to PinPushPull)
+    * @param[in] pinSlewRate      One of PinSlewRate_Slow, PinSlewRate_Fast (defaults to PinSlewRate_Fast)
+    */
+   static void setOutput(
+         PinDriveStrength  pinDriveStrength,
+         PinDriveMode      pinDriveMode      = PinDriveMode_PushPull,
+         PinSlewRate       pinSlewRate       = PinSlewRate_Fast
+         ) {
+      setPCR(pinDriveStrength|pinDriveMode|pinSlewRate);
+   }
+
+   /**
+    * @brief
+    * Enable pin as digital input and configures Pin Control Register (PCR) value
+    *
+    * @note Reset the Pin Control Register value (PCR value).
+    * @note Use setIn() for a lightweight change of direction without affecting other pin settings.
+    *
+    * @param[in] pinPull          One of PinPull_None, PinPull_Up, PinPull_Down
+    * @param[in] pinIrq           One of PinIrq_None, etc (defaults to PinIrq_None)
+    * @param[in] pinFilter        One of PinFilter_None, PinFilter_Passive (defaults to PinFilter_None)
+    */
+   static void setInput(
+         PinPull           pinPull,
+         PinIrq            pinIrq            = PinIrq_None,
+         PinFilter         pinFilter         = PinFilter_None
+         ) {
+      setPCR(pinPull|pinIrq|pinFilter|PinMux_Gpio);
+   }
+
    /**
     * Set PWM high time in ticks\n
     * Assumes value is less than period
@@ -1210,11 +1301,39 @@ public:
    }
 
    /**
+    * Get Timer interrupt flag
+    *
+    * @return true  Indicates an event has occurred on a channel
+    * @return false Indicates no event has occurred on a channel since last polled
+    */
+   static __attribute__((always_inline)) bool getInterruptFlag() {
+      return (tmr->STATUS&CHANNEL_MASK) != 0;
+   }
+
+   /**
+    * Get and Clear Timer interrupt flag
+    *
+    * @return true  Indicates an event has occurred on a channel
+    * @return false Indicates no event has occurred on a channel since last polled
+    *
+    * @note Only flags captured in the return value are cleared
+    */
+   static __attribute__((always_inline)) bool getAndClearInterruptFlag() {
+      // Note - requires read and write zero to clear flags
+      // so only flags captured in status are cleared
+      bool status = (tmr->STATUS&CHANNEL_MASK) != 0;
+      tmr->STATUS = ~CHANNEL_MASK;
+      return status;
+   }
+
+   /**
     * Clear interrupt flag on channel
     */
    static __attribute__((always_inline)) void clearInterruptFlag(void) {
-      Ftm::tmr->CONTROLS[channel].CnSC &= ~FTM_CnSC_CHF_MASK;
+      // Note - requires read and write zero to clear flag
+      tmr->CONTROLS[channel].CnSC &= ~FTM_CnSC_CHF_MASK;
    }
+
 };
 
 #ifdef USBDM_FTM0_IS_DEFINED
@@ -1247,7 +1366,7 @@ class Ftm0Channel : public FtmChannel_T<Ftm0Info, channel> {};
 /**
  * Class representing FTM0
  */
-using Ftm0 = FtmIrq_T<Ftm0Info>;
+using Ftm0 = FtmBase_T<Ftm0Info>;
 #endif
 
 #ifdef USBDM_FTM1_IS_DEFINED
@@ -1264,7 +1383,7 @@ class Ftm1Channel : public FtmChannel_T<Ftm1Info, channel> {};
 /**
  * Class representing FTM1
  */
-using Ftm1 = FtmIrq_T<Ftm1Info>;
+using Ftm1 = FtmBase_T<Ftm1Info>;
 #endif
 
 #ifdef USBDM_FTM2_IS_DEFINED
@@ -1281,7 +1400,7 @@ class Ftm2Channel : public FtmChannel_T<Ftm2Info, channel> {};
 /**
  * Class representing FTM2
  */
-using Ftm2 = FtmIrq_T<Ftm2Info>;
+using Ftm2 = FtmBase_T<Ftm2Info>;
 #endif
 
 #ifdef USBDM_FTM3_IS_DEFINED
@@ -1298,7 +1417,7 @@ class Ftm3Channel : public FtmChannel_T<Ftm3Info, channel> {};
 /**
  * Class representing FTM3
  */
-using Ftm3 = FtmIrq_T<Ftm3Info>;
+using Ftm3 = FtmBase_T<Ftm3Info>;
 #endif
 
 /**
@@ -1310,12 +1429,12 @@ using Ftm3 = FtmIrq_T<Ftm3Info>;
  *  QuadEncoder_T<Ftm0Info> encoder0;
  *
  *  for(;;) {
- *     printf("Position = %d\n", encoder.getPosition());
+ *     console.write("Position =").writeln(encoder.getPosition());
  *  }
  * @endcode
  */
 template <class Info>
-class QuadEncoder_T : public FtmIrq_T<Info> {
+class QuadEncoder_T : public FtmBase_T<Info> {
 
 #ifdef DEBUG_BUILD
    static_assert(Info::InfoQUAD::info[0].gpioBit != UNMAPPED_PCR, "QuadEncoder_T: FTM PHA is not mapped to a pin - Modify Configure.usbdm");

@@ -211,7 +211,16 @@ struct DmaTcd {
 };
 
 /**
- * Class providing interface to DMA Multiplexor
+ * Template class providing interface to DMA Multiplexor
+ *
+ * @tparam info      Information class for DMAMux
+ *
+ * @code
+ * using dmamux = DmaMux_T<DmaMuxInfo>;
+ *
+ *  dmamux::configure();
+ *
+ * @endcode
  */
 template <class DmaMuxInfo>
 class DmaMux_T {
@@ -226,9 +235,14 @@ public:
     */
    static void configure(DmaChannelNum dmaChannel, DmaSlot dmaSlot, DmaMuxEnable dmaMuxEnable=DmaMuxEnable_Continuous) {
 #ifdef DEBUG_BUILD
-      // PIT triggering only available on 1st 4 channels
-      assert ((dmaMuxEnable != DmaMuxEnable_Triggered) || (dmaChannel<=4));
-      assert (dmaChannel < DmaMuxInfo::NumChannels);
+      if ((dmaMuxEnable == DmaMuxEnable_Triggered) && (dmaChannel>USBDM::PitInfo::irqCount)) {
+         // PIT triggering only available on channels corresponding to PIT channels
+         setAndCheckErrorCode(E_ILLEGAL_PARAM);
+      }
+      if (dmaChannel >= DmaMuxInfo::NumChannels) {
+         // Channel doesn't exists
+         setAndCheckErrorCode(E_ILLEGAL_PARAM);
+      }
 #endif
       // Enable clock to peripheral
       *DmaMuxInfo::clockReg  |= DmaMuxInfo::clockMask;
@@ -249,10 +263,12 @@ public:
 };
 
 /**
+ * Class representing a DMA controller
+ *
  * @tparam DmaInfo Information describing DMA controller
  */
 template<class DmaInfo>
-class Dma_T {
+class DmaBase_T {
 
    using MuxInfo = Dmamux0Info;
 
@@ -483,9 +499,11 @@ public:
     * @return E_NO_ERROR on success
     */
    static ErrorCode enableNvicInterrupts(DmaChannelNum channel, bool enable=true) {
+#ifdef DEBUG_BUILD
       if (channel>=DmaInfo::NumChannels) {
          setAndCheckErrorCode(E_ILLEGAL_PARAM);
       }
+#endif
 
       IRQn_Type irqNum = (IRQn_Type)(DmaInfo::irqNums[0] + channel);
       if (enable) {
@@ -519,7 +537,7 @@ public:
 /**
  * Callback table for programmatically set handlers
  */
-template<class DmaInfo> DmaCallbackFunction Dma_T<DmaInfo>::callbacks[] = {
+template<class DmaInfo> DmaCallbackFunction DmaBase_T<DmaInfo>::callbacks[] = {
       noHandlerCallback,
       noHandlerCallback,
       noHandlerCallback,
@@ -535,11 +553,11 @@ using DmaMux1 = DmaMux_T<Dmamux1Info>;
 #endif
 
 #ifdef USBDM_DMA0_IS_DEFINED
-using Dma0 = Dma_T<Dma0Info>;
+using Dma0 = DmaBase_T<Dma0Info>;
 #endif
 
 #ifdef USBDM_DMA1_IS_DEFINED
-using Dma0 = Dma_T<Dma1Info>;
+using Dma0 = DmaBase_T<Dma1Info>;
 #endif
 
 /**

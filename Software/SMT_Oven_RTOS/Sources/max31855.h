@@ -16,6 +16,7 @@
  * Class representing an MAX31855 connected over SPI
  */
 class Max31855 {
+
 public:
    enum ThermocoupleStatus {
       TH_ENABLED,          // Enabled and OK
@@ -31,10 +32,10 @@ protected:
    /** SPI configuration value */
    USBDM::SpiConfig spiConfig;
 
-   /** SPI used for LCD */
+   /** SPI used for communication */
    USBDM::Spi &spi;
 
-   /** Number of PCS signal to use */
+   /** Which PCS signal to use */
    const USBDM::SpiPeripheralSelect pinNum;
 
    /** Offset to add to reading from probe */
@@ -48,25 +49,25 @@ public:
     * Constructor
     *
     * @param[in] spi     The SPI to use to communicate with MAX31855
-    * @param[in] pinNum  Number of PCS to use
+    * @param[in] pinNum  PCS to use
     * @param[in] offset  Offset to add to reading from probe
     * @param[in] enabled Reference to non-volatile variable enabling thermocouple
     */
    Max31855(USBDM::Spi &spi, USBDM::SpiPeripheralSelect pinNum, USBDM::Nonvolatile<int> &offset, USBDM::Nonvolatile<bool> &enabled) :
       spi(spi), pinNum(pinNum), offset(offset), enabled(enabled) {
-
-      spi.setPeripheralSelect(pinNum, USBDM::ActiveLow);
+      using namespace USBDM;
 
       spi.startTransaction();
 
       // Configure SPI
-      spi.setSpeed(2500000);
-      spi.setMode(USBDM::SpiMode_0);
-      spi.setDelays(0.1*USBDM::us, 0.1*USBDM::us, 0.1*USBDM::us);
+      spi.setPeripheralSelect(pinNum, ActiveLow);
+      spi.setSpeed(2.5*MHz);
+      spi.setMode(SpiMode_0);
       spi.setFrameSize(8);
 
       // Record configuration in case SPI is shared
       spiConfig = spi.getConfig();
+
       spi.endTransaction();
       }
 
@@ -129,7 +130,7 @@ public:
             0xFF, 0xFF, 0xFF, 0xFF,
       };
       spi.startTransaction(spiConfig);
-      spi.txRxBytes(sizeof(data), nullptr, data);
+      spi.txRx(sizeof(data), (uint8_t*)nullptr, data);
       spi.endTransaction();
 
       // Temperature = sign-extended 14-bit value

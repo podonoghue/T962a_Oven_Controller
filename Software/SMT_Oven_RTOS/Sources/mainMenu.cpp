@@ -36,7 +36,7 @@ static void factoryDefaults() {
    }
 }
 
-static MenuItem menu[] = {
+static const MenuItem menu[] {
       {"Manual Mode",          RunProfile::manualMode,        },
       {"Run Profile",          RunProfile::runProfile,        },
       {"Manage Profiles",      ManageProfiles::profileMenu,   },

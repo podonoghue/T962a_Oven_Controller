@@ -19,9 +19,9 @@ void LCD_ST7920::writeCommand(uint8_t value) {
          (uint8_t)(value<<4),
    };
    spi.startTransaction(spiConfig);
-   spi.txRxBytes(sizeof(data), data, nullptr);
+   spi.txRx(sizeof(data), data);
    spi.endTransaction();
-   USBDM::waitUS(100);
+   USBDM::waitUS(EXECUTE_TIME_US);
 }
 
 /**
@@ -36,9 +36,9 @@ void LCD_ST7920::writeData(uint8_t value) {
          (uint8_t)(value<<4),
    };
    spi.startTransaction(spiConfig);
-   spi.txRxBytes(sizeof(data), data, nullptr);
+   spi.txRx(sizeof(data), data);
    spi.endTransaction();
-   USBDM::waitUS(100);
+   USBDM::waitUS(EXECUTE_TIME_US);
 }
 
 
@@ -48,16 +48,16 @@ void LCD_ST7920::writeData(uint8_t value) {
 void LCD_ST7920::initialise() {
    USBDM::waitMS(200);
 
-   // Set up SPI
    spi.startTransaction();
+
+   // Set up SPI
    spi.setPeripheralSelect(pinNum, USBDM::ActiveLow);
-   spi.setSpeed(5000000);
-   spi.setDelays(1*USBDM::us, 1*USBDM::us, 1*USBDM::us);
+   spi.setSpeed(12000000);
    spi.setMode(USBDM::SpiMode_3);
    spi.setFrameSize(8);
 
    // Record SPI configuration as shared
-   spiConfig = spi.getCTAR0Value();
+   spiConfig = spi.getConfig();
    spi.endTransaction();
 
    writeCommand(0b00111000); // Function set(DL=1, RE=0)
@@ -75,7 +75,7 @@ void LCD_ST7920::clear() {
    writeCommand(0b00110000); // Basic instruction mode
    writeCommand(0b00000010); // Home
    writeCommand(0b00000001); // Clear
-   USBDM::waitMS(2);
+   USBDM::waitUS(CLEAR_TIME_US);
 }
 
 /**

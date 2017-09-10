@@ -15,20 +15,92 @@ Table of Contents
  - \ref DMAExamples \n
  - \ref FTMExamples \n
  - \ref GPIOExamples \n
+ - \ref I2CExamples \n
  - \ref LPTMRExamples \n
  - \ref PDBExamples \n
  - \ref PinSummary  \n
  - \ref PITExamples \n
+ - \ref SPIExamples \n
+
+@page I2CExamples  I2C interface
+
+Convenience template for SPI. Uses the following classes:\n
+<ul>
+<li>USBDM::I2cBase_T < Info >
+<li>USBDM::I2c
+<ul>
+<li>USBDM::I2c0
+<li>USBDM::I2c1
+</ul>
+</ul>
+
+<b>Examples</b>\n
+ - @ref i2c-example.cpp
+
+@page SPIExamples  SPI interface
+
+Convenience template for SPI. Uses the following classes:\n
+<ul>
+<li>USBDM::SpiBase_T < Info >
+<li>USBDM::Spi
+<ul>
+<li>USBDM::Spi0
+<li>USBDM::Spi1
+</ul>
+</ul>
+
+<b>Examples</b>\n
+ - @ref spi-example.cpp
 
 @page Console  Console and UART interface
 
 Convenience template for UART. Uses the following classes:\n
 <ul>
-<li> USBDM::Console
-<li> USBDM::Uart0
-<li> USBDM::Uart1
-<li> USBDM::Uart2
+<li>USBDM::Uart_T < Info >
+<li>USBDM::UartBuffered_T < Info, rxSize, txSize >
+<ul>
+<li>USBDM::Console
+<li>USBDM::Uart0
+<li>USBDM::Uart1
+<li>USBDM::Uart2
 </ul>
+</ul>
+
+<b>Examples</b>\n
+ - @ref console-example.cpp
+
+<b>Usage</b>
+ @code
+
+   console.writeln("Hello World");
+
+   int value;
+   console.write("Enter value: ").readln(value);
+   console.write("Value =").writeln(value);
+
+   console<<"Enter value: ">>value<<EndOfLine;
+   console<<"Value ="<<value<<EndOfLine;
+
+   // I/O with error checks
+   if (console.write("Number: ").readln(integer).isError()) {
+      console.writeln("Opps");
+   }
+   else {
+      console.writeln(integer);
+   }
+
+   // Utility functions
+   Console::ultoa(100, buff);
+   console.write("ultoa(100, buff)  = ").writeln(buff);
+   Console::ltoa(-100, buff);
+   console.write("ltoa(-100, buff)  = ").writeln(buff);
+
+   char *ptr = buff;
+   ptr = Console::strcpy(ptr, "Console::ultoa(100, buff) = ");
+   ptr = Console::ultoa(100, ptr);
+   ptr = Console::strcpy(ptr, ", oh well!");
+   console.writeln(buff);
+ @endcode
 
 @page DMAExamples  Direct Memory Access Controller
 
@@ -36,7 +108,7 @@ Convenience template for DMAC. Uses the following classes:\n
 <ul>
 <li>USBDM::DmaTcd \n
 <li>USBDM::DmaMux_T < DmaMuxInfo > \n
-<li>USBDM::Dma_T < DmaInfo > \n
+<li>USBDM::DmaBase_T < DmaInfo > \n
 </ul>
 
 This template is an interface for the Direct Memory Access Controller hardware. \n
@@ -60,7 +132,7 @@ This is a template class with static methods.\n
 
 Convenience template for LPTMR. Uses the following classes:\n
 <ul>
-<li>USBDM::Lptmr_T < Info > \n
+<li>USBDM::LptmrBase_T < Info > \n
 </ul>
 
 This template is an interface for the Low Power Timer hardware. \n
@@ -87,13 +159,13 @@ Convenience template for GPIO pins. Uses the following classes:\n
 <li>USBDM::GpioD <bitNum, polarity>
 <li>USBDM::GpioE <bitNum, polarity>
 </ul>
-<li>USBDM::Field_T <Info, left, right>\n
+<li>USBDM::Field_T <Info, left, right, polarity>\n
 <ul>
-<li>USBDM::GpioAField <left, right>
-<li>USBDM::GpioBField <left, right>
-<li>USBDM::GpioCField <left, right>
-<li>USBDM::GpioDField <left, right>
-<li>USBDM::GpioEField <left, right>
+<li>USBDM::GpioAField <left, right, polarity>
+<li>USBDM::GpioBField <left, right, polarity>
+<li>USBDM::GpioCField <left, right, polarity>
+<li>USBDM::GpioDField <left, right, polarity>
+<li>USBDM::GpioEField <left, right, polarity>
 </ul>
 </ul>
 
@@ -179,7 +251,7 @@ This is a template class with static methods.\n
    Gpio::setDriveMode(PinOpenDrain);
    Gpio::high();
    if (Gpio::readState() != Gpio::read()) {
-      printf("Open-drain pin is being held low\n");
+      console.writeln("Open-drain pin is being held low");
    }
 
    // Dynamically change pin to input
@@ -251,7 +323,7 @@ This is a template class with static methods.\n
    // Read ADC value
    uint32_t value = AdcChannel::readAnalogue();
 
-   printf("ADC measurement = %lu\n", value);
+   console.write("ADC measurement = ").writeln(value);
  @endcode
 
  <b>Usage - Differential measurement</b>
@@ -272,7 +344,7 @@ This is a template class with static methods.\n
    // Read signed differential ADC value
    int32_t value = Adc1_diff0::readAnalogue();
 
-   printf("ADC measurement = %ld\n", value);
+   console.write("ADC measurement = ").writeln(value);
  @endcode
 
 @page FTMExamples Flexible Timer Module
@@ -376,13 +448,13 @@ This is a template class with static methods.\n
 
    for (;;) {
       // Report position
-      printf("Shaft position = %d\n\r", QuadEncoder::getPosition());
+      console.write("Shaft position = ").writeln(QuadEncoder::getPosition());
    }
 @endcode
 
 @page PITExamples Programmable Interrupt Timer Module
 
-Convenience template for PIT hardware. Based on USBDM::Pit_T.\n
+Convenience template for PIT hardware. Based on USBDM::PitBase_T.\n
 
 It provides:\n
 - Static pin mapping in conjunction with the configuration settings.
@@ -475,6 +547,8 @@ This is a template class with static methods.\n
 @example analogue-interrupt-example.cpp
 @example analogue-joystick-example.cpp
 @example cmp.cpp
+@example console-example.cpp
+@example dac-example.cpp
 @example digital-example1.cpp
 @example digital-example2.cpp
 @example dma-memory-example.cpp
@@ -493,6 +567,7 @@ This is a template class with static methods.\n
 @example hmc5883l-example.cpp
 @example hmc5883l.cpp
 @example hmc5883l.h
+@example i2c-example.cpp
 @example llwu-example.cpp
 @example lptmr-example.cpp
 @example mag3310-example.cpp
@@ -513,6 +588,7 @@ This is a template class with static methods.\n
 @example pit-example3.cpp
 @example pdb-example.cpp
 @example rtc-example.cpp
+@example spi-example.cpp
 @example test-mcg.cpp
 @example tsi-mk-example.cpp
 @example usb.cpp

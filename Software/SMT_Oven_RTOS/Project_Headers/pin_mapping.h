@@ -177,7 +177,7 @@ public:
    // Template:rtc_tamper_wpon
 
    //! Frequency of RTC External Clock or Crystal
-   static constexpr uint32_t rtcclk_clock = 0UL;
+   static constexpr uint32_t rtcclk_clock = 32768UL;
 
    //! Oscillator control register
    static constexpr uint32_t cr =
@@ -2713,6 +2713,61 @@ public:
  * @}
  */
 /**
+ * @addtogroup PMC_Group PMC, Power Management Controller
+ * @brief Abstraction for Power Management Controller
+ * @{
+ */
+#define USBDM_PMC_IS_DEFINED 
+/**
+ * Peripheral information for PMC, Power Management Controller.
+ * 
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
+ */
+class PmcInfo {
+public:
+   //! Hardware base pointer
+   static constexpr volatile PMC_Type *pmc   = (volatile PMC_Type *)PMC_BasePtr;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = 1;
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = {PMC_IRQn};
+
+   // Template:pmc_mk
+
+   //! Default value for Low Voltage Detect Status And Control 1 register
+   static constexpr uint32_t pmc_lvdsc1  = 
+      PMC_LVDSC1_LVDIE(0) | // Low-Voltage Detect Interrupt Enable
+      PMC_LVDSC1_LVDRE(0) | // Low-Voltage Detect Reset Enable
+      PMC_LVDSC1_LVDV(0);   // Low-Voltage Detect Voltage Select   
+
+   //! Default value for Low Voltage Detect Status And Control 2 register
+   static constexpr uint32_t pmc_lvdsc2  = 
+      PMC_LVDSC2_LVWIE(0) | // Low-Voltage Warning Interrupt Enable
+      PMC_LVDSC2_LVWV(0);   // Low-Voltage Warning Voltage Select   
+
+   //! Default value for Regulator Status And Control register
+   static constexpr uint32_t pmc_regsc  = 
+   #ifdef PMC_REGSC_BGEN
+      PMC_REGSC_BGEN(0) | // Bandgap Enable In VLPx Operation
+   #endif
+      PMC_REGSC_BGBE(0);  // Bandgap Buffer Enable   
+
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  15;
+
+};
+
+/** 
+ * End group PMC_Group
+ * @}
+ */
+/**
  * @addtogroup Power_Group POWER, Power
  * @brief Abstraction for Power
  * @{
@@ -2801,7 +2856,7 @@ public:
       SMC_PMPROT_ALLS(0) |  // Allow low leakage stop mode
       SMC_PMPROT_AVLLS(0);  // Allow very low leakage stop mode
 
-#ifndef SMC_PMCTRL_LPWUI
+#ifdef SMC_PMCTRL_LPWUI
    // Power Mode Control Register
    static constexpr uint8_t pmctrl =  
       SMC_PMCTRL_LPWUI(1);   // Low Power Wake Up on Interrupt
@@ -2975,10 +3030,10 @@ public:
    static constexpr uint32_t defaultBaudRate = 115200;
 
    //! Default buffer size for receive queue when interrupt driven
-   static constexpr unsigned receiveBufferSize = 1;
+   static constexpr unsigned receiveBufferSize = 50;
 
    //! Default buffer size for transmit queue when interrupt driven
-   static constexpr unsigned transmitBufferSize = 1;
+   static constexpr unsigned transmitBufferSize = 50;
 
    /**
     * Get input clock frequency
@@ -3067,10 +3122,10 @@ public:
    static constexpr uint32_t defaultBaudRate = 115200;
 
    //! Default buffer size for receive queue when interrupt driven
-   static constexpr unsigned receiveBufferSize = 1;
+   static constexpr unsigned receiveBufferSize = 50;
 
    //! Default buffer size for transmit queue when interrupt driven
-   static constexpr unsigned transmitBufferSize = 1;
+   static constexpr unsigned transmitBufferSize = 50;
 
    /**
     * Get input clock frequency
@@ -3153,10 +3208,10 @@ public:
    static constexpr uint32_t defaultBaudRate = 115200;
 
    //! Default buffer size for receive queue when interrupt driven
-   static constexpr unsigned receiveBufferSize = 1;
+   static constexpr unsigned receiveBufferSize = 50;
 
    //! Default buffer size for transmit queue when interrupt driven
-   static constexpr unsigned transmitBufferSize = 1;
+   static constexpr unsigned transmitBufferSize = 50;
 
    /**
     * Get input clock frequency

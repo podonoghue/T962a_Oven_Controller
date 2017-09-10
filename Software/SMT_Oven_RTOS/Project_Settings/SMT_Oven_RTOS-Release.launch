@@ -31,7 +31,7 @@
 <stringAttribute key="net.sourceforge.usbdm.gdb.restartPcRegisterValue" value="__HardReset"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.restartSetPcRegister" value="false"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.restartStopAtMainAdress" value="main"/>
-<booleanAttribute key="net.sourceforge.usbdm.gdb.restartUsesStartup" value="true"/>
+<booleanAttribute key="net.sourceforge.usbdm.gdb.restartUsesStartup" value="false"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.runCommands" value=""/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.securityOption" value="SECURITY_SMART"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.serverType" value="SERVER_SOCKET"/>
@@ -50,7 +50,7 @@
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Release/SMT_Oven_RTOS.elf"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="SMT_Oven_RTOS"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="net.sourceforge.usbdm.cdt.arm.exe.release.configuration.1635279743"/>
 <booleanAttribute key="org.eclipse.cdt.launch.use_terminal" value="true"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/SMT_Oven_RTOS"/>

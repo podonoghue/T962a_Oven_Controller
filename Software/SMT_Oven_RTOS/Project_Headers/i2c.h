@@ -186,7 +186,7 @@ public:
    /**
     * Transmit message
     *
-    * @param[in]  address  Address of slave to communicate with
+    * @param[in]  address  Address of slave to communicate with (should include LSB = R/W bit = 0)
     * @param[in]  size     Size of transmission data
     * @param[in]  data     Data to transmit, 0th byte is often register address
     *
@@ -197,7 +197,7 @@ public:
    /**
     * Receive message
     *
-    * @param[in]  address  Address of slave to communicate with
+    * @param[in]  address  Address of slave to communicate with (should include LSB = R/W bit = 0)
     * @param[in]  size     Size of reception data
     * @param[out] data     Data buffer for reception
     *
@@ -210,7 +210,7 @@ public:
     *
     * Uses repeated-start.
     *
-    * @param[in]  address  Address of slave to communicate with
+    * @param[in]  address  Address of slave to communicate with (should include LSB = R/W bit = 0)
     * @param[in]  txSize   Size of transmission data
     * @param[in]  txData   Data for transmission
     * @param[in]  rxSize   Size of reception data
@@ -225,7 +225,7 @@ public:
     * Uses repeated-start.\n
     * Uses shared transmit and receive buffer
     *
-    * @param[in]    address  Address of slave to communicate with
+    * @param[in]  address  Address of slave to communicate with (should include LSB = R/W bit = 0)
     * @param[in]    txSize   Size of transmission data
     * @param[in]    rxSize   Size of reception data
     * @param[inout] data     Data for transmission and reception
@@ -243,7 +243,7 @@ public:
  *
  * @code
  *  // Instantiate interface
- *  I2c *i2c0 = new USBDM::I2c_T<I2cInfo>();
+ *  I2c *i2c0 = new USBDM::I2cBase_T<I2cInfo>();
  *
  *  // Transmit data
  *  const uint8_t txDataBuffer[] = {0x11, 0x22, 0x33, 0x44};
@@ -266,7 +266,7 @@ public:
  *
  * @tparam Info            Class describing I2C hardware
  */
-template<class Info> class I2c_T : public I2c {
+template<class Info> class I2cBase_T : public I2c {
 
 public:
    // Handle on I2C hardware
@@ -286,8 +286,16 @@ public:
 
 #ifdef __CMSIS_RTOS
 protected:
-   /** Mutex to protect access - static so per I2C template instantiation */
-   static CMSIS::Mutex mutex;
+   /**
+    * Mutex to protect access\n
+    * Using a static accessor function avoids issues with static object initialisation order
+    *
+    * @return mutex
+    */
+   static CMSIS::Mutex &mutex() {
+      static CMSIS::Mutex mutex;
+      return mutex;
+   }
 
 public:
    /**
@@ -302,7 +310,7 @@ public:
     * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
     */
    virtual osStatus startTransaction(int milliseconds=osWaitForever) override {
-      return mutex.wait(milliseconds);
+      return mutex().wait(milliseconds);
    }
 
    /**
@@ -313,7 +321,7 @@ public:
     * @return osErrorISR: osMutexRelease cannot be called from interrupt service routines.
     */
    virtual osStatus endTransaction() override {
-      return mutex.release();
+      return mutex().release();
    }
 #endif
 
@@ -325,7 +333,7 @@ public:
     * @param[in]  i2cMode    Mode of operation
     * @param[in]  myAddress  Address of this device on bus (not currently used)
     */
-   I2c_T(unsigned bps=400000, I2cMode i2cMode=I2cMode_Polled, uint8_t myAddress=0) : I2c(Info::i2c, i2cMode) {
+   I2cBase_T(unsigned bps=400000, I2cMode i2cMode=I2cMode_Polled, uint8_t myAddress=0) : I2c(Info::i2c, i2cMode) {
 
 #ifdef DEBUG_BUILD
       // Check pin assignments
@@ -341,7 +349,7 @@ public:
    /**
     * Destructor
     */
-   virtual ~I2c_T() {}
+   virtual ~I2cBase_T() {}
 
    /**
     * Set channel Callback function\n
@@ -436,25 +444,19 @@ public:
    }
 };
 
-template<class Info> I2cCallbackFunction I2c_T<Info>::callback = I2c::unhandledCallback;
+template<class Info> I2cCallbackFunction I2cBase_T<Info>::callback = I2c::unhandledCallback;
 
 /** Used by ISR to obtain handle of object */
-template<class Info> I2c *I2c_T<Info>::thisPtr = 0;
-
-#ifdef __CMSIS_RTOS
-/** Mutex to protect access - static so per I2C */
-template<class Info>
-CMSIS::Mutex I2c_T<Info>::mutex;
-#endif
+template<class Info> I2c *I2cBase_T<Info>::thisPtr = 0;
 
 #if defined(USBDM_I2C0_IS_DEFINED)
 /**
  * @brief Class representing the I2C0 interface
  *
  * <b>Example</b>\n
- * Refer @ref I2c_T
+ * Refer @ref I2cBase_T
  */
-using I2c0 = I2c_T<I2c0Info>;
+using I2c0 = I2cBase_T<I2c0Info>;
 #endif
 
 #if defined(USBDM_I2C1_IS_DEFINED)
@@ -462,9 +464,9 @@ using I2c0 = I2c_T<I2c0Info>;
  * @brief Class representing the I2C1 interface
  *
  * <b>Example</b>
- * Refer @ref I2c_T
+ * Refer @ref I2cBase_T
  */
-using I2c1 = I2c_T<I2c1Info>;
+using I2c1 = I2cBase_T<I2c1Info>;
 #endif
 
 #if defined(USBDM_I2C2_IS_DEFINED)
@@ -472,9 +474,9 @@ using I2c1 = I2c_T<I2c1Info>;
  * @brief Class representing the I2C2 interface
  *
  * <b>Example</b>
- * Refer @ref I2c_T
+ * Refer @ref I2cBase_T
  */
-using I2c2 = I2c_T<I2c2Info>;
+using I2c2 = I2cBase_T<I2c2Info>;
 #endif
 
 /**

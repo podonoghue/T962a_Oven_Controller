@@ -116,7 +116,7 @@ static void drawAxis(int profileIndex) {
       lcd.gotoXY((X_ORIGIN+round(time/timeScale)-3), lcd.LCD_HEIGHT-5);
       lcd.putSmallDigit(time/60);
    }
-   static uint8_t min[] = {
+   static uint8_t min[] {
          209,88,
          168,100,
          171,68,

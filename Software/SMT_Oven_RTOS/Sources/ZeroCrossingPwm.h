@@ -9,6 +9,7 @@
 #define HEADERS_ZEROCROSSINGPWM_H_
 
 #include "flash.h"
+#include "cmp.h"
 
 /**
  * Simple zero-crossing PWM for oven fan and heater controlled by zero-crossing SSDs
@@ -103,6 +104,8 @@ public:
 
 private:
    static void initialise() {
+      using namespace USBDM;
+
       heaterDutycycle = 0;
       fanDutycycle    = 0;
       HeaterLed::init();
@@ -115,12 +118,14 @@ private:
       /**
        * Set up comparator to generate events on mains zero-crossings
        */
-      Vmains::enable();
+      Vmains::configure(
+            CmpPower_HighSpeed,
+            CmpHysteresis_3,
+            CmpPolarity_Noninverted);
+      Vmains::configureDac(32, CmpDacSource_Vdd);
+      Vmains::selectInputs(Cmp0Input_CmpIn1,Cmp0Input_DacRef);
       Vmains::setCallback(callbackFunction);
-      Vmains::enableRisingEdgeInterrupts();
-      Vmains::enableFallingEdgeInterrupts();
-      Vmains::setDacLevel(32, 1, true);
-      Vmains::selectInputs(1,7);
+      Vmains::enableInterrupts(CmpInterrupt_Both);
    }
 
 public:

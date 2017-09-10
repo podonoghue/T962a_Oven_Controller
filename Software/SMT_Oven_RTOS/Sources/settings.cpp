@@ -271,23 +271,23 @@ public:
  * Also used by the Settings object to initialise FlexRAM objects
  */
 //                                      nvVariable        description                min   max  incr  default  test function
-const Setting_T<int> fanSetting      = {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   30,      FanTest::testFan};
-const Setting_T<int> kickSetting     = {fanKickTime,     "Fan Kick Cycles  %3d",       0,   50,  1,   10,      FanTest::testFan};
-const Setting_T<int> thermo1Setting  = {t1Offset,        "Thermo 1 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting_T<int> thermo2Setting  = {t2Offset,        "Thermo 2 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting_T<int> thermo3Setting  = {t3Offset,        "Thermo 3 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting_T<int> thermo4Setting  = {t4Offset,        "Thermo 4 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting_T<int> heaterSetting   = {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 600,       nullptr};
-const Setting_T<int> beepSetting     = {beepTime,        "Beep time        %3ds",      0,   30,  1,   0,       Settings::testBeep};
+const Setting_T<int> fanSetting      {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   30,      FanTest::testFan};
+const Setting_T<int> kickSetting     {fanKickTime,     "Fan Kick Cycles  %3d",       0,   50,  1,   10,      FanTest::testFan};
+const Setting_T<int> thermo1Setting  {t1Offset,        "Thermo 1 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting_T<int> thermo2Setting  {t2Offset,        "Thermo 2 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting_T<int> thermo3Setting  {t3Offset,        "Thermo 3 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting_T<int> thermo4Setting  {t4Offset,        "Thermo 4 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
+const Setting_T<int> heaterSetting   {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 600,       nullptr};
+const Setting_T<int> beepSetting     {beepTime,        "Beep time        %3ds",      0,   30,  1,   0,       Settings::testBeep};
 
-const Setting_T<float> pidKpSetting  = {pidKp,           "PID Kp      %6.1f",        0.5,  40.00,  0.1,  20.0f,   nullptr};
-const Setting_T<float> pidKiSetting  = {pidKi,           "PID Ki        %6.3f",      0.0,   1.00,  0.001, 0.016f, nullptr};
-const Setting_T<float> pidKdSetting  = {pidKd,           "PID Kd      %6.1f",        0.0, 200.00,  0.1,  62.5f,   nullptr};
+const Setting_T<float> pidKpSetting  {pidKp,           "PID Kp      %6.1f",        0.5,  40.00,  0.1,  20.0f,   nullptr};
+const Setting_T<float> pidKiSetting  {pidKi,           "PID Ki        %6.3f",      0.0,   1.00,  0.001, 0.016f, nullptr};
+const Setting_T<float> pidKdSetting  {pidKd,           "PID Kd      %6.1f",        0.0, 200.00,  0.1,  62.5f,   nullptr};
 
 /**
  * Describes the settings and limits for same
  */
-static const Setting * const menu[] = {
+const Setting *const menu[] {
       &fanSetting,
       &kickSetting,
       &thermo1Setting,

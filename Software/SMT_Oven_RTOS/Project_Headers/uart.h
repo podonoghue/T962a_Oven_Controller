@@ -201,7 +201,7 @@ public:
    /**
     * Enable/disable a DMA source
     *
-    * @param[in] uartDma  Interrupt source to modify
+    * @param[in] uartDma  DMA source to modify
     * @param[in] enable   True to enable, false to disable
     *
     * @note Changing the enabled DMA functions may also affect the interrupt settings
@@ -265,8 +265,9 @@ typedef void (*UARTCallbackFunction)(uint8_t status);
 template<class Info> class Uart_T : public Uart {
 
 protected:
-   /** Callback function for ISR */
+   /** Callback function for RxTx ISR */
    static UARTCallbackFunction rxTxCallback;
+   /** Callback function for Error ISR */
    static UARTCallbackFunction errorCallback;
 
 public:

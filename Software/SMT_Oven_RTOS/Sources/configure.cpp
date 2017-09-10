@@ -11,6 +11,9 @@
 
 // Note: Most objects are stateless static objects declared in Configure.h
 
+/** Mutex to protect Interactive and Remote control */
+CMSIS::Mutex interactiveMutex;
+
 /** SPI used for LCD and Thermocouples */
 USBDM::Spi0 spi;
 
@@ -67,7 +70,3 @@ TemperatureSensors temperatureSensors{};
 /** Monitor for case temperature */
 CaseTemperatureMonitor<CaseFan> caseTemperatureMonitor{temperatureSensors};
 
-/**
- * Mutex to protect Interactive and Remote control
- */
-CMSIS::Mutex interactiveMutex;

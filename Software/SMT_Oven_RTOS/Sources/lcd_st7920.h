@@ -21,6 +21,7 @@
  * Class representing an LCD connected over SPI
  */
 class LCD_ST7920 {
+
 protected:
    constexpr static USBDM::Font &font = USBDM::smallFont;
 
@@ -33,10 +34,14 @@ public:
    static constexpr int FONT_WIDTH = 6;
    /** Height of default font in pixels */
    static constexpr int FONT_HEIGHT = 8;
+   /** Command execution time for LCD */
+   static constexpr int EXECUTE_TIME_US = 75;
+   /** Command execution time for LCD */
+   static constexpr int CLEAR_TIME_US = 1600;
 
 protected:
-   /** SPI CTAR value */
-   uint32_t spiConfig = 0;
+   /** SPI Configuration */
+   USBDM::SpiConfig spiConfig;
 
    /** SPI used for LCD */
    USBDM::Spi &spi;
@@ -173,7 +178,7 @@ public:
     *
     * @param[in] ch The character to write
     */
-   void putChar(uint8_t ch);
+   void __attribute__((noinline)) putChar(uint8_t ch);
 
    /**
     * Writes whitespace to the LCD in graphics mode at the current x,y location

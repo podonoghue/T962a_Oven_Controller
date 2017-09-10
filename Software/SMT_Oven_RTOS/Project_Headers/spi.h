@@ -2,7 +2,7 @@
  * @file     spi.h (180.ARM_Peripherals/Project_Headers/spi-MK.h)
  * @brief    Serial Peripheral Interface
  *
- * @version  V4.12.1.80
+ * @version  V4.12.1.210
  * @date     13 April 2016
  */
 #ifndef INCLUDE_USBDM_SPI_H_
@@ -101,15 +101,15 @@ enum SpiEndOfQueueInterrupt {
  */
 enum SpiPeripheralSelect {
    SpiPeripheralSelect_None = SPI_PUSHR_PCS(0),   //!< Select peripheral using programmatic GPIO
-   SpiPeripheralSelect_0    = SPI_PUSHR_PCS(1<<0),//!< Select peripheral PCS0 signal
-   SpiPeripheralSelect_1    = SPI_PUSHR_PCS(1<<1),//!< Select peripheral PCS1 signal
-   SpiPeripheralSelect_2    = SPI_PUSHR_PCS(1<<2),//!< Select peripheral PCS2 signal
-   SpiPeripheralSelect_3    = SPI_PUSHR_PCS(1<<3),//!< Select peripheral PCS3 signal
-   SpiPeripheralSelect_4    = SPI_PUSHR_PCS(1<<4),//!< Select peripheral PCS4 signal
+   SpiPeripheralSelect_0    = SPI_PUSHR_PCS(1<<0),//!< Select peripheral using SPI_PCS0 signal
+   SpiPeripheralSelect_1    = SPI_PUSHR_PCS(1<<1),//!< Select peripheral using SPI_PCS1 signal
+   SpiPeripheralSelect_2    = SPI_PUSHR_PCS(1<<2),//!< Select peripheral using SPI_PCS2 signal
+   SpiPeripheralSelect_3    = SPI_PUSHR_PCS(1<<3),//!< Select peripheral using SPI_PCS3 signal
+   SpiPeripheralSelect_4    = SPI_PUSHR_PCS(1<<4),//!< Select peripheral using SPI_PCS4 signal
 };
 
 /**
- * Select which CTAS setting to use for transaction
+ * Select which CTAR to use for transaction
  */
 enum SpiCtarSelect {
    SpiCtarSelect_0 = (0), //!< CTAR #0
@@ -128,8 +128,8 @@ enum SpiSelectMode {
  * Used to hold SPI configuration that may commonly be modified for different target peripherals
  */
 struct SpiConfig {
-   uint32_t pushr; //!  PUSHR register value e.g. Target, selection mode etc
-   uint32_t ctar;  //!  CTAR register value e.g. Baud, number of bits, timing
+   uint32_t pushr; //!<  PUSHR register value e.g. Target, selection mode etc
+   uint32_t ctar;  //!<  CTAR register value e.g. Baud, number of bits, timing
 };
 
 using SpiModeValue = uint32_t;
@@ -355,6 +355,7 @@ public:
     * Obtain SPI - dummy routine (non RTOS)
     */
    int startTransaction(int =0) {
+      spi->MCR &= ~SPI_MCR_HALT_MASK;
       return 0;
    }
    /**
@@ -363,6 +364,7 @@ public:
     * @param[in] config The configuration values to set for the transaction.
     */
    int startTransaction(SpiConfig &config, int =0) {
+      spi->MCR    &= ~SPI_MCR_HALT_MASK;
       spi->CTAR[0] = config.ctar;
       pushrMask    = config.pushr;
       return 0;
@@ -371,6 +373,7 @@ public:
     * Release SPI - dummy routine (non RTOS)
     */
    int endTransaction() {
+      spi->MCR  |= SPI_MCR_HALT_MASK;
       return 0;
    }
 #endif
@@ -458,32 +461,25 @@ public:
 
    }
    /**
-    *  Transmit and receive a series of 4 to 8-bit values
+    *  Transmit and receive a series of values
+    *
+    *  @tparam T Type for data transfer (may be inferred from parameters)
     *
     *  @param[in]  dataSize  Number of values to transfer
-    *  @param[in]  txData    Transmit bytes (may be NULL for Rx only)
-    *  @param[out] rxData    Receive byte buffer (may be NULL for Tx only)
+    *  @param[in]  txData    Transmit bytes (may be nullptr for Receive only)
+    *  @param[out] rxData    Receive byte buffer (may be nullptr for Transmit only)
     *
-    *  Note: rxData may use same buffer as txData
+    *  @note: rxData may use same buffer as txData
+    *  @note: Size of txData and rxData should be appropriate for transmission size.
     */
-   void txRxBytes(uint32_t dataSize, const uint8_t *txData, uint8_t *rxData=0);
-
-   /**
-    *  Transmit and receive a series of 9 to 16-bit values
-    *
-    *  @param[in]  dataSize  Number of values to transfer
-    *  @param[in]  txData    Transmit values (may be NULL for Rx only)
-    *  @param[out] rxData    Receive buffer (may be NULL for Tx only)
-    *
-    *  Note: rxData may use same buffer as txData
-    */
-   void txRxWords(uint32_t dataSize, const uint16_t *txData, uint16_t *rxData=0);
+   template<typename T>
+   void txRx(uint32_t dataSize, const T *txData, T *rxData=nullptr);
 
    /**
     * Transmit and receive a value over SPI
     *
-    * @param[in]  data - Data to send (8-16 bits) <br>
-    *             May include other control bits
+    * @param[in] data - Data to send (4-16 bits) <br>
+    *                   May include other control bits
     *
     * @return Data received
     */
@@ -505,6 +501,8 @@ public:
     *  This includes timing settings, word length and transmit order
     *
     * @return Configuration value
+    *
+    * @note Typically used with startTransaction()
     */
    SpiConfig getConfig() {
       return SpiConfig{pushrMask,spi->CTAR[0]};
@@ -595,19 +593,53 @@ public:
  * @tparam  Info           Class describing Spi hardware
  */
 template<class Info>
-class Spi_T : public Spi {
+class SpiBase_T : public Spi {
 
-#ifdef __CMSIS_RTOS
 protected:
-   /** Mutex to protect access - static so per SPI */
-   static CMSIS::Mutex mutex;
+   /** Callback function for ISR */
+   static SpiCallbackFunction callback;
 
 public:
    /**
-    * Obtain SPI mutex
+    * IRQ handler
+    */
+   static void irqHandler() {
+      callback(SpiBase_T<Info>::getStatus());
+   }
+
+   /**
+    * Set Callback function\n
     *
-    * @param[in]  config  The configuration to set for the transaction\n
-    *                     A value of zero leaves the configuration unchanged
+    * @param[in] theCallback Callback function to execute on interrupt.\n
+    *                        nullptr to indicate none
+    */
+   static __attribute__((always_inline)) void setCallback(SpiCallbackFunction theCallback) {
+      if (theCallback == nullptr) {
+         callback = Spi::unhandledCallback;
+         return;
+      }
+      callback = theCallback;
+   }
+
+
+#ifdef __CMSIS_RTOS
+protected:
+   /**
+    * Mutex to protect access\n
+    * Using a static accessor function avoids issues with static object initialisation order
+    *
+    * @return mutex
+    */
+   static CMSIS::Mutex &mutex() {
+      static CMSIS::Mutex mutex;
+      return mutex;
+   }
+
+public:
+   /**
+    * Obtain SPI mutex and set SPI configuration
+    *
+    * @param[in]  config       The configuration to set for the transaction
     * @param[in]  milliseconds How long to wait in milliseconds. Use osWaitForever for indefinite wait
     *
     * @return osOK: The mutex has been obtain.
@@ -618,8 +650,9 @@ public:
     */
    virtual osStatus startTransaction(SpiConfig &config, int milliseconds=osWaitForever) override {
       // Obtain mutex
-      osStatus status = mutex.wait(milliseconds);
+      osStatus status = mutex().wait(milliseconds);
       if (status == osOK) {
+         spi->MCR    &= ~SPI_MCR_HALT_MASK;
          // Change configuration for this transaction
          spi->CTAR[0] = config.ctar;
          pushrMask    = config.pushr;
@@ -628,7 +661,7 @@ public:
    }
 
    /**
-    * Obtain SPI mutex
+    * Obtain SPI mutex (SPI configuration unchanged)
     *
     * @param[in]  milliseconds How long to wait in milliseconds. Use osWaitForever for indefinite wait
     *
@@ -640,7 +673,13 @@ public:
     */
    virtual osStatus startTransaction(int milliseconds=osWaitForever) override {
       // Obtain mutex
-      osStatus status = mutex.wait(milliseconds);
+      osStatus status = mutex().wait(milliseconds);
+      if (status != osOK) {
+         setCmsisErrorCode(status);
+      }
+      else {
+         spi->MCR &= ~SPI_MCR_HALT_MASK;
+      }
       return status;
    }
 
@@ -653,7 +692,8 @@ public:
     */
    virtual osStatus endTransaction() override {
       // Release mutex
-      return mutex.release();
+      spi->MCR |= SPI_MCR_HALT_MASK;
+      return mutex().release();
    }
 #endif
 
@@ -669,7 +709,7 @@ public:
    // SPI SOUT (data out = usually MOSI) Pin
    using soutGpio = GpioTable_T<Info, 2, ActiveHigh>;
 
-   virtual ~Spi_T() {}
+   virtual ~SpiBase_T() {}
 
    virtual void enablePins() override {
       // Configure SPI pins
@@ -713,7 +753,7 @@ public:
    /**
     * Constructor
     */
-   Spi_T() : Spi(reinterpret_cast<volatile SPI_Type*>(Info::spi)) {
+   SpiBase_T() : Spi(reinterpret_cast<volatile SPI_Type*>(Info::spi)) {
 
 #ifdef DEBUG_BUILD
       // Check pin assignments
@@ -727,14 +767,14 @@ public:
       __DMB();
 
       spi->MCR =
-            SPI_MCR_HALT(1)|        // Halt transfers
+            SPI_MCR_HALT(1)|        // Halt transfers initially
             SPI_MCR_CLR_RXF(1)|     // Clear Rx FIFO
             SPI_MCR_CLR_TXF(1)|     // Clear Tx FIFO
             SPI_MCR_ROOE(1)|        // Receive FIFO Overflow Overwrite
             SPI_MCR_MSTR(1)|        // Master mode
             SPI_MCR_DCONF(0)|       // Must be zero
             SPI_MCR_SMPL_PT(0)|     // 0 system clocks between SCK edge and SIN sample
-            SPI_MCR_PCSIS(0);       // Assume all SPI_PCSx active-high
+            SPI_MCR_PCSIS(0);       // Assume all SPI_PCSx active-high (initially)
 
       setCTAR0Value(0);         // Clear
       setCTAR1Value(0);         // Clear
@@ -762,45 +802,51 @@ public:
 };
 
 /**
- * Template class to provide callback
+ *  Transmit and receive a series of values
+ *
+ *  @tparam T Type for data transfer (may be inferred from parameters)
+ *
+ *  @param[in]  dataSize  Number of values to transfer
+ *  @param[in]  txData    Transmit bytes (may be nullptr for Receive only)
+ *  @param[out] rxData    Receive byte buffer (may be nullptr for Transmit only)
+ *
+ *  @note: rxData may use same buffer as txData
+ *  @note: Size of txData and rxData should be appropriate for transmission size.
  */
-template<class Info>
-class SpiIrq_T : public Spi_T<Info> {
+template<typename T>
+void __attribute__((noinline)) Spi::txRx(uint32_t dataSize, const T *txData, T *rxData) {
 
-protected:
-   /** Callback function for ISR */
-   static SpiCallbackFunction callback;
+   static_assert (((sizeof(T) == 1)||(sizeof(T) == 2)), "Size of data type T must be 8 or 16-bits");
 
-public:
-   /**
-    * IRQ handler
-    */
-   static void irqHandler() {
-      callback(Spi_T<Info>::getStatus());
-   }
-
-   /**
-    * Set Callback function\n
-    *
-    * @param[in] theCallback Callback function to execute on interrupt.\n
-    *                        nullptr to indicate none
-    */
-   static __attribute__((always_inline)) void setCallback(SpiCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         callback = Spi::unhandledCallback;
-         return;
+   while(dataSize-->0) {
+      uint32_t sendData = 0xFFFF;
+      if (txData != nullptr) {
+         sendData = (uint16_t)*txData++;
       }
-      callback = theCallback;
+      if (dataSize == 0) {
+         // Mark last data
+         sendData |= SPI_PUSHR_EOQ_MASK;
+      }
+      else {
+         // Keep SPI_PCS asserted between data values
+         sendData |= SPI_PUSHR_CONT_MASK;
+      }
+      spi->PUSHR = sendData|pushrMask;
+      while ((spi->SR & SPI_SR_TCF_MASK)==0) {
+      }
+      spi->SR = SPI_SR_TCF_MASK|SPI_SR_EOQF_MASK;
+      uint32_t receiveData = spi->POPR;
+      if (rxData != nullptr) {
+         *rxData++ = receiveData;
+      }
    }
-};
+   // Wait until tx/rx complete
+   while ((spi->SR&SPI_SR_TXRXS_MASK) == 0) {
+      __asm__("nop");
+   }
+}
 
-template<class Info> SpiCallbackFunction SpiIrq_T<Info>::callback = Spi::unhandledCallback;
-
-#ifdef __CMSIS_RTOS
-/** Mutex to protect access - static so per SPI */
-template<class Info>
-CMSIS::Mutex Spi_T<Info>::mutex;
-#endif
+template<class Info> SpiCallbackFunction SpiBase_T<Info>::callback = Spi::unhandledCallback;
 
 #if defined(USBDM_SPI0_IS_DEFINED)
 /**
@@ -816,7 +862,7 @@ CMSIS::Mutex Spi_T<Info>::mutex;
  * @endcode
  *
  */
-using Spi0 = SpiIrq_T<Spi0Info>;
+using Spi0 = SpiBase_T<Spi0Info>;
 #endif
 
 #if defined(USBDM_SPI1_IS_DEFINED)
@@ -833,7 +879,7 @@ using Spi0 = SpiIrq_T<Spi0Info>;
  * @endcode
  *
  */
-using  Spi1 = SpiIrq_T<Spi1Info>;
+using  Spi1 = SpiBase_T<Spi1Info>;
 #endif
 /**
  * @}

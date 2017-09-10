@@ -56,7 +56,7 @@ static const uint8_t s_cdc_data[]        = "CDC Data Interface";        //!< CDC
 /**
  * String descriptor table
  */
-const uint8_t *const Usb0::stringDescriptors[] = {
+const uint8_t *const Usb0::stringDescriptors[] {
       s_language,
       s_manufacturer,
       s_product,
@@ -74,7 +74,7 @@ const uint8_t *const Usb0::stringDescriptors[] = {
 /**
  * Device Descriptor
  */
-const DeviceDescriptor Usb0::deviceDescriptor = {
+const DeviceDescriptor Usb0::deviceDescriptor {
       /* bLength             */ sizeof(DeviceDescriptor),
       /* bDescriptorType     */ DT_DEVICE,
       /* bcdUSB              */ nativeToLe16(0x0200),           // USB specification release No. [BCD = 2.00]
@@ -94,7 +94,7 @@ const DeviceDescriptor Usb0::deviceDescriptor = {
 /**
  * All other descriptors
  */
-const Usb0::Descriptors Usb0::otherDescriptors = {
+const Usb0::Descriptors Usb0::otherDescriptors {
       { // configDescriptor
             /* bLength                 */ sizeof(ConfigurationDescriptor),
             /* bDescriptorType         */ DT_CONFIGURATION,

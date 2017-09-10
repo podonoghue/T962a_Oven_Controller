@@ -112,7 +112,7 @@ void NvSolderProfile::operator=(const NvSolderProfile &other ) {
 //}
 
 /** Amtech 4300 63Sn/37Pb leaded profile */
-const SolderProfile am4300profileA = {
+const SolderProfile am4300profileA {
       /* Soak 140-180C/60-90s, above liquidus(183 C) for 30-60s, peak 200-230 C */
       /* flags         */ 0,
       /* description   */ "4300 63SN/37PB-a",
@@ -128,7 +128,7 @@ const SolderProfile am4300profileA = {
 };
 
 /** Amtech 4300 63Sn/37Pb leaded profile */
-const SolderProfile am4300profileB = {
+const SolderProfile am4300profileB {
       /* Soak 140-180C/90-120s, above liquidus(183 C) for 30-60s, peak 200-230 C */
       /* flags         */ 0,
       /* description   */ "4300 63SN/37PB-b",
@@ -144,7 +144,7 @@ const SolderProfile am4300profileB = {
 };
 
 /** NC-31 low-temperature lead-free profile */
-const SolderProfile nc31profile = {
+const SolderProfile nc31profile {
       /* Soak 90-140C/60-90s, above liquidus(138 C) for 60 s, peak 158-165 C */
       /* flags         */ 0,
       /* description   */ "NC-31 LOW-TEMP LF",
@@ -160,7 +160,7 @@ const SolderProfile nc31profile = {
 };
 
 /** SynTECH-LF normal temperature lead-free profile */
-const SolderProfile syntechlfprofile = {
+const SolderProfile syntechlfprofile {
       /* Soak 140-200C/60-90s ramp@<2C/s, above liquidus(219 C) for 30-60s, peak 230-249 C */
       /* flags         */ 0,
       /* description   */ "AMTECH SYNTECH-LF",
@@ -176,7 +176,7 @@ const SolderProfile syntechlfprofile = {
 };
 
 /** Default for editing - Amtech 4300 63Sn/37Pb leaded profile */
-const SolderProfile defaultProfile = {
+const SolderProfile defaultProfile {
       /* Soak 140-180C/60-90s, above liquidus(183 C) for 30-60s, peak 200-230 C */
       /* flags         */ P_UNLOCKED,
       /* description   */ "Empty",
