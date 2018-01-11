@@ -45,7 +45,7 @@ private:
     * Function is called on zero-crossings of the mains.
     * Implements a simple PWM with variable period (~20ms - ~1s @50Hz mains).
     */
-   static void callbackFunction(int status) {
+   static void callbackFunction(USBDM::CmpEvent status) {
       (void)status;
 
       // Keeps track of heater drive

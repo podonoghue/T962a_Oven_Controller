@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="net.sourceforge.usbdm.gdb.launchConfigurationType">
 <stringAttribute key="net.sourceforge.usbdm.gdb.autoReconnect" value="AUTOCONNECT_ALWAYS"/>
-<stringAttribute key="net.sourceforge.usbdm.gdb.bdmSerialNumber" value="[Any connected USBDM]"/>
+<stringAttribute key="net.sourceforge.usbdm.gdb.bdmSerialNumber" value="USBDM-MK-4234942603"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.bdmSerialNumberMatchRequired" value="false"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.buildToolId" value="net.sourceforge.usbdm.cdt.toolchain.processor.usbdmConfigure.armLtdGnuToolsForARM"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.catchVLLSxEvents" value="false"/>

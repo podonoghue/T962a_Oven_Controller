@@ -63,7 +63,11 @@ enum ErrorCode {
    E_CALIBRATE_FAIL,              //!< Failed ADC calibration
    E_ILLEGAL_POWER_TRANSITION,    //!< Can't transit to power mode from current power mode
    E_NO_COMMUNICATION,            //!< Failed communication
+   E_NO_ACK,                      //!< No acknowledge (I2C)
+   E_LOST_ARBITRATION,            //!< Lost arbitration for bus (I2C)
    E_TERMINATED,                  //!< The program has terminated
+   E_CLOCK_INIT_FAILED,           //!< Clock initialisation failed
+   E_HANDLER_ALREADY_SET,         //!< Handler (callback) already installed
 
    E_CMSIS_ERR_OFFSET = 1<<20,    //!< Offset added to CMSIS error codes
 };
@@ -72,11 +76,16 @@ enum ErrorCode {
 extern volatile ErrorCode errorCode;
 
 /**
- * Get USBDM error code
+ * Get USBDM error code.
+ * The error code is cleared.
  *
- * @return  Error code
+ * @return  E_NO_ERROR - No error
+ * @return  other      - Error
  */
-ErrorCode getError();
+inline static ErrorCode getError() {
+   ErrorCode tError = errorCode;
+   return tError;
+}
 
 /**
  * Get error message from error code or last error if not provided
@@ -178,11 +187,17 @@ inline void clearError() {
 
 } // End namespace USBDM
 
-// Use when in-lining makes the only makes the release build smaller
+// Use when in-lining makes the release build smaller
 #ifdef DEBUG_BUILD
-#define INLINE_RELEASE
+#define INLINE_RELEASE __attribute__((noinline))
 #else
 #define INLINE_RELEASE __attribute__((always_inline))
+#endif
+
+#ifdef DEBUG_BUILD
+#define NOINLINE_DEBUG __attribute__((noinline))
+#else
+#define NOINLINE_DEBUG
 #endif
 
 #if defined (DEBUG_BUILD) && !defined (NDEBUG)
@@ -207,8 +222,25 @@ inline void clearError() {
 #define usbdm_assert(__e, __m) ((void)0)
 #endif
 
+/**
+ * Convenience names for common priority levels
+ */
+enum NvicPriority {
+   NvicPriority_VeryHigh = 0, //!< NvicPriority_VeryHigh
+   NvicPriority_High     = 2, //!< NvicPriority_High
+   NvicPriority_MidHigh  = 5, //!< NvicPriority_MidHigh
+   NvicPriority_Normal   = 8, //!< NvicPriority_Normal
+   NvicPriority_Midlow   = 11,//!< NvicPriority_Midlow
+   NvicPriority_Low      = 13,//!< NvicPriority_Low
+   NvicPriority_VeryLow  = 15,//!< NvicPriority_VeryLow
+};
+
 #include "pin_mapping.h"
 #include "delay.h"
 #include "console.h"
+
+namespace USBDM {
+
+} // End namespace USBDM
 
 #endif /* PROJECT_HEADERS_HARDWARE_H_ */

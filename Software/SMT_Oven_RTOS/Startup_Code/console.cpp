@@ -8,12 +8,6 @@
 #include <derivative.h>
 #include "system.h"
 #include "hardware.h"
-#if defined(USBDM_UART0_IS_DEFINED) || defined(USBDM_UART1_IS_DEFINED) || defined(USBDM_UART2_IS_DEFINED) || defined(USBDM_UART3_IS_DEFINED) || defined(USBDM_UART4_IS_DEFINED)
-#include "uart.h"
-#endif
-#if defined(USBDM_LPUART0_IS_DEFINED) || defined(USBDM_LPUART1_IS_DEFINED) || defined(USBDM_LPUART2_IS_DEFINED)
-#include "lpuart.h"
-#endif
 #include "console.h"
 
  /*
@@ -24,6 +18,8 @@
   * This file is generated automatically.
   * Any manual changes will be lost.
   */
+
+#if USE_CONSOLE
 
 namespace USBDM {
 
@@ -42,7 +38,7 @@ Console console;
 extern "C"
 void console_initialise() {
    console.setBaudRate(defaultBaudRate);
-   console.setEcho(EchoMode_On);
+   console.setEcho();
 }
 
 /*
@@ -80,3 +76,5 @@ int console_rxChar(void) {
  */
 
 } // End namespace USBDM
+
+#endif /* USE_CONSOLE */

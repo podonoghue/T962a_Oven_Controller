@@ -4,7 +4,13 @@
  * @date    13 June 2015
  */
 #include <derivative.h>
-#include <uart.h>
+#include "hardware.h"
+#if defined(USBDM_UART0_IS_DEFINED) || defined(USBDM_UART1_IS_DEFINED) || defined(USBDM_UART2_IS_DEFINED) || defined(USBDM_UART3_IS_DEFINED) || defined(USBDM_UART4_IS_DEFINED)
+#include "uart.h"
+#endif
+#if defined(USBDM_LPUART0_IS_DEFINED) || defined(USBDM_LPUART1_IS_DEFINED) || defined(USBDM_LPUART2_IS_DEFINED)
+#include "lpuart.h"
+#endif
 
  /*
  * *****************************
@@ -17,6 +23,10 @@
 
 #ifndef CONSOLE_H_
 #define CONSOLE_H_
+
+#define USE_CONSOLE 1
+
+#if USE_CONSOLE
 
 #ifdef __cplusplus
 namespace USBDM {
@@ -77,4 +87,7 @@ int  console_rxChar(void);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* USE_CONSOLE */
+
 #endif /* CONSOLE_H_ */

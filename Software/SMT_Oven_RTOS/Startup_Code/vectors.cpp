@@ -16,8 +16,6 @@
 /*********** $start(VectorsIncludeFiles) *** Do not edit after this comment ****************/
 #include "cmp.h"
 #include "usb.h"
-#include "uart.h"
-#include "pit.h"
 /*********** $end(VectorsIncludeFiles)   *** Do not edit above this comment ***************/
 
 /*
@@ -123,6 +121,14 @@ extern uint32_t __StackTop;
  * the weak default.
  */
 /*********** $start(cVectorTable) *** Do not edit after this comment ****************/
+#ifdef __cplusplus
+extern "C" {
+#endif
+// Reset handler must have C linkage
+void Reset_Handler(void);
+#ifdef __cplusplus
+}
+#endif
 void NMI_Handler(void)                        WEAK_DEFAULT_HANDLER;
 void MemManage_Handler(void)                  WEAK_DEFAULT_HANDLER;
 void BusFault_Handler(void)                   WEAK_DEFAULT_HANDLER;
@@ -160,12 +166,14 @@ void SPI0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void SPI1_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void I2S0_Tx_IRQHandler(void)                 WEAK_DEFAULT_HANDLER;
 void I2S0_Rx_IRQHandler(void)                 WEAK_DEFAULT_HANDLER;
-void UART1_RX_TX_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
-void UART1_ERR_IRQHandler(void)               WEAK_DEFAULT_HANDLER;
-void UART2_RX_TX_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
-void UART2_ERR_IRQHandler(void)               WEAK_DEFAULT_HANDLER;
-void UART3_RX_TX_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
-void UART3_ERR_IRQHandler(void)               WEAK_DEFAULT_HANDLER;
+void UART0_RxTx_IRQHandler(void)              WEAK_DEFAULT_HANDLER;
+void UART0_Error_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
+void UART1_RxTx_IRQHandler(void)              WEAK_DEFAULT_HANDLER;
+void UART1_Error_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
+void UART2_RxTx_IRQHandler(void)              WEAK_DEFAULT_HANDLER;
+void UART2_Error_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
+void UART3_RxTx_IRQHandler(void)              WEAK_DEFAULT_HANDLER;
+void UART3_Error_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
 void ADC0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void CMP1_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void FTM0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
@@ -174,6 +182,10 @@ void FTM2_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void CMT_IRQHandler(void)                     WEAK_DEFAULT_HANDLER;
 void RTC_Alarm_IRQHandler(void)               WEAK_DEFAULT_HANDLER;
 void RTC_Seconds_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
+void PIT0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
+void PIT1_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
+void PIT2_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
+void PIT3_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void PDB0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void USBDCD_IRQHandler(void)                  WEAK_DEFAULT_HANDLER;
 void DAC0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
@@ -195,91 +207,91 @@ extern VectorTable const __vector_table;
 
 __attribute__ ((section(".interrupt_vectors")))
 VectorTable const __vector_table = {
-                                     /*  Exc# Irq# */
-   &__StackTop,                      /*    0   -16  Initial stack pointer                                                            */
+                                               /*  Exc# Irq# */
+   &__StackTop,                                /*    0   -16  Initial stack pointer                                                            */
    {
-      __HardReset,                   /*    1   -15  Reset Handler                                                                    */
-      NMI_Handler,                   /*    2,  -14  Non maskable Interrupt, cannot be stopped or preempted                           */
-      HardFault_Handler,             /*    3,  -13  Hard Fault, all classes of Fault                                                 */
-      MemManage_Handler,             /*    4,  -12  Memory Management, MPU mismatch, including Access Violation and No Match         */
-      BusFault_Handler,              /*    5,  -11  Bus Fault, Pre-Fetch-, Memory Access Fault, other address/memory related Fault   */
-      UsageFault_Handler,            /*    6,  -10  Usage Fault, i.e. Undef Instruction, Illegal State Transition                    */
-      0,                             /*    7,   -9                                                                                   */
-      0,                             /*    8,   -8                                                                                   */
-      0,                             /*    9,   -7                                                                                   */
-      0,                             /*   10,   -6                                                                                   */
-      SVC_Handler,                   /*   11,   -5  System Service Call via SVC instruction                                          */
-      DebugMon_Handler,              /*   12,   -4  Debug Monitor                                                                    */
-      0,                             /*   13,   -3                                                                                   */
-      PendSV_Handler,                /*   14,   -2  Pendable request for system service                                              */
-      SysTick_Handler,               /*   15,   -1  System Tick Timer                                                                */
+      Reset_Handler,                           /*    1,  -15  Reset Vector, invoked on Power up and warm reset                                 */
+      NMI_Handler,                             /*    2,  -14  Non maskable Interrupt, cannot be stopped or preempted                           */
+      HardFault_Handler,                       /*    3,  -13  Hard Fault, all classes of Fault                                                 */
+      MemManage_Handler,                       /*    4,  -12  Memory Management, MPU mismatch, including Access Violation and No Match         */
+      BusFault_Handler,                        /*    5,  -11  Bus Fault, Pre-Fetch-, Memory Access Fault, other address/memory related Fault   */
+      UsageFault_Handler,                      /*    6,  -10  Usage Fault, i.e. Undef Instruction, Illegal State Transition                    */
+      0,                                       /*    7,   -9                                                                                   */
+      0,                                       /*    8,   -8                                                                                   */
+      0,                                       /*    9,   -7                                                                                   */
+      0,                                       /*   10,   -6                                                                                   */
+      SVC_Handler,                             /*   11,   -5  System Service Call via SVC instruction                                          */
+      DebugMon_Handler,                        /*   12,   -4  Debug Monitor                                                                    */
+      0,                                       /*   13,   -3                                                                                   */
+      PendSV_Handler,                          /*   14,   -2  Pendable request for system service                                              */
+      SysTick_Handler,                         /*   15,   -1  System Tick Timer                                                                */
 
-                                     /* External Interrupts */
-      DMA0_IRQHandler,               /*   16,    0  Direct memory access controller                                                  */
-      DMA1_IRQHandler,               /*   17,    1  Direct memory access controller                                                  */
-      DMA2_IRQHandler,               /*   18,    2  Direct memory access controller                                                  */
-      DMA3_IRQHandler,               /*   19,    3  Direct memory access controller                                                  */
-      DMA4_IRQHandler,               /*   20,    4  Direct memory access controller                                                  */
-      DMA5_IRQHandler,               /*   21,    5  Direct memory access controller                                                  */
-      DMA6_IRQHandler,               /*   22,    6  Direct memory access controller                                                  */
-      DMA7_IRQHandler,               /*   23,    7  Direct memory access controller                                                  */
-      DMA8_IRQHandler,               /*   24,    8  Direct memory access controller                                                  */
-      DMA9_IRQHandler,               /*   25,    9  Direct memory access controller                                                  */
-      DMA10_IRQHandler,              /*   26,   10  Direct memory access controller                                                  */
-      DMA11_IRQHandler,              /*   27,   11  Direct memory access controller                                                  */
-      DMA12_IRQHandler,              /*   28,   12  Direct memory access controller                                                  */
-      DMA13_IRQHandler,              /*   29,   13  Direct memory access controller                                                  */
-      DMA14_IRQHandler,              /*   30,   14  Direct memory access controller                                                  */
-      DMA15_IRQHandler,              /*   31,   15  Direct memory access controller                                                  */
-      DMA_Error_IRQHandler,          /*   32,   16  DMA error interrupt all channels                                                 */
-      MCM_IRQHandler,                /*   33,   17  Miscellaneous Control Module                                                     */
-      FTF_Command_IRQHandler,        /*   34,   18  Flash Memory Interface                                                           */
-      FTF_ReadCollision_IRQHandler,  /*   35,   19  Flash Memory Interface                                                           */
-      PMC_IRQHandler,                /*   36,   20  Power Management Controller                                                      */
-      LLWU_IRQHandler,               /*   37,   21  Low Leakage Wakeup                                                               */
-      WDOG_IRQHandler,               /*   38,   22  External Watchdog Monitor                                                        */
-      Default_Handler,               /*   39,   23                                                                                   */
-      I2C0_IRQHandler,               /*   40,   24  Inter-Integrated Circuit                                                         */
-      I2C1_IRQHandler,               /*   41,   25  Inter-Integrated Circuit                                                         */
-      SPI0_IRQHandler,               /*   42,   26  Serial Peripheral Interface                                                      */
-      SPI1_IRQHandler,               /*   43,   27  Serial Peripheral Interface                                                      */
-      I2S0_Tx_IRQHandler,            /*   44,   28  Synchronous Serial Interface                                                     */
-      I2S0_Rx_IRQHandler,            /*   45,   29  Synchronous Serial Interface                                                     */
-      Default_Handler,               /*   46,   30                                                                                   */
-      USBDM::Uart0::irqRxTxHandler,  /*   47,   31  Serial Communication Interface                                                   */
-      USBDM::Uart0::irqErrorHandler, /*   48,   32  Serial Communication Interface                                                   */
-      UART1_RX_TX_IRQHandler,        /*   49,   33  Serial Communication Interface                                                   */
-      UART1_ERR_IRQHandler,          /*   50,   34  Serial Communication Interface                                                   */
-      UART2_RX_TX_IRQHandler,        /*   51,   35  Serial Communication Interface                                                   */
-      UART2_ERR_IRQHandler,          /*   52,   36  Serial Communication Interface                                                   */
-      UART3_RX_TX_IRQHandler,        /*   53,   37  Serial Communication Interface                                                   */
-      UART3_ERR_IRQHandler,          /*   54,   38  Serial Communication Interface                                                   */
-      ADC0_IRQHandler,               /*   55,   39  Analogue to Digital Converter                                                    */
-      USBDM::Cmp0::irqHandler,       /*   56,   40  High-Speed Comparator                                                            */
-      CMP1_IRQHandler,               /*   57,   41  High-Speed Comparator                                                            */
-      FTM0_IRQHandler,               /*   58,   42  FlexTimer Module                                                                 */
-      FTM1_IRQHandler,               /*   59,   43  FlexTimer Module                                                                 */
-      FTM2_IRQHandler,               /*   60,   44  FlexTimer Module                                                                 */
-      CMT_IRQHandler,                /*   61,   45  Carrier Modulator Transmitter                                                    */
-      RTC_Alarm_IRQHandler,          /*   62,   46  Real Time Clock                                                                  */
-      RTC_Seconds_IRQHandler,        /*   63,   47  Real Time Clock                                                                  */
-      USBDM::Pit::irq0Handler,       /*   64,   48  Periodic Interrupt Timer                                                         */
-      USBDM::Pit::irq1Handler,       /*   65,   49  Periodic Interrupt Timer                                                         */
-      USBDM::Pit::irq2Handler,       /*   66,   50  Periodic Interrupt Timer                                                         */
-      USBDM::Pit::irq3Handler,       /*   67,   51  Periodic Interrupt Timer                                                         */
-      PDB0_IRQHandler,               /*   68,   52  Programmable Delay Block                                                         */
-      USBDM::Usb0::irqHandler,       /*   69,   53  Universal Serial Bus                                                             */
-      USBDCD_IRQHandler,             /*   70,   54  USB Device Charger Detection                                                     */
-      Default_Handler,               /*   71,   55                                                                                   */
-      DAC0_IRQHandler,               /*   72,   56  Digital to Analogue Converter                                                    */
-      MCG_IRQHandler,                /*   73,   57  Multipurpose Clock Generator                                                     */
-      LPTMR0_IRQHandler,             /*   74,   58  Low Power Timer                                                                  */
-      PORTA_IRQHandler,              /*   75,   59  General Purpose Input/Output                                                     */
-      PORTB_IRQHandler,              /*   76,   60  General Purpose Input/Output                                                     */
-      PORTC_IRQHandler,              /*   77,   61  General Purpose Input/Output                                                     */
-      PORTD_IRQHandler,              /*   78,   62  General Purpose Input/Output                                                     */
-      PORTE_IRQHandler,              /*   79,   63  General Purpose Input/Output                                                     */
-      SWI_IRQHandler,                /*   80,   64  Software interrupt                                                               */
+                                               /* External Interrupts */
+      DMA0_IRQHandler,                         /*   16,    0  Direct memory access controller                                                  */
+      DMA1_IRQHandler,                         /*   17,    1  Direct memory access controller                                                  */
+      DMA2_IRQHandler,                         /*   18,    2  Direct memory access controller                                                  */
+      DMA3_IRQHandler,                         /*   19,    3  Direct memory access controller                                                  */
+      DMA4_IRQHandler,                         /*   20,    4  Direct memory access controller                                                  */
+      DMA5_IRQHandler,                         /*   21,    5  Direct memory access controller                                                  */
+      DMA6_IRQHandler,                         /*   22,    6  Direct memory access controller                                                  */
+      DMA7_IRQHandler,                         /*   23,    7  Direct memory access controller                                                  */
+      DMA8_IRQHandler,                         /*   24,    8  Direct memory access controller                                                  */
+      DMA9_IRQHandler,                         /*   25,    9  Direct memory access controller                                                  */
+      DMA10_IRQHandler,                        /*   26,   10  Direct memory access controller                                                  */
+      DMA11_IRQHandler,                        /*   27,   11  Direct memory access controller                                                  */
+      DMA12_IRQHandler,                        /*   28,   12  Direct memory access controller                                                  */
+      DMA13_IRQHandler,                        /*   29,   13  Direct memory access controller                                                  */
+      DMA14_IRQHandler,                        /*   30,   14  Direct memory access controller                                                  */
+      DMA15_IRQHandler,                        /*   31,   15  Direct memory access controller                                                  */
+      DMA_Error_IRQHandler,                    /*   32,   16  DMA error interrupt all channels                                                 */
+      MCM_IRQHandler,                          /*   33,   17  Miscellaneous Control Module                                                     */
+      FTF_Command_IRQHandler,                  /*   34,   18  Flash Memory Interface                                                           */
+      FTF_ReadCollision_IRQHandler,            /*   35,   19  Flash Memory Interface                                                           */
+      PMC_IRQHandler,                          /*   36,   20  Power Management Controller                                                      */
+      LLWU_IRQHandler,                         /*   37,   21  Low Leakage Wakeup                                                               */
+      WDOG_IRQHandler,                         /*   38,   22  External Watchdog Monitor                                                        */
+      Default_Handler,                         /*   39,   23                                                                                   */
+      I2C0_IRQHandler,                         /*   40,   24  Inter-Integrated Circuit                                                         */
+      I2C1_IRQHandler,                         /*   41,   25  Inter-Integrated Circuit                                                         */
+      SPI0_IRQHandler,                         /*   42,   26  Serial Peripheral Interface                                                      */
+      SPI1_IRQHandler,                         /*   43,   27  Serial Peripheral Interface                                                      */
+      I2S0_Tx_IRQHandler,                      /*   44,   28  Synchronous Serial Interface                                                     */
+      I2S0_Rx_IRQHandler,                      /*   45,   29  Synchronous Serial Interface                                                     */
+      Default_Handler,                         /*   46,   30                                                                                   */
+      UART0_RxTx_IRQHandler,                   /*   47,   31  Serial Communication Interface                                                   */
+      UART0_Error_IRQHandler,                  /*   48,   32  Serial Communication Interface                                                   */
+      UART1_RxTx_IRQHandler,                   /*   49,   33  Serial Communication Interface                                                   */
+      UART1_Error_IRQHandler,                  /*   50,   34  Serial Communication Interface                                                   */
+      UART2_RxTx_IRQHandler,                   /*   51,   35  Serial Communication Interface                                                   */
+      UART2_Error_IRQHandler,                  /*   52,   36  Serial Communication Interface                                                   */
+      UART3_RxTx_IRQHandler,                   /*   53,   37  Serial Communication Interface                                                   */
+      UART3_Error_IRQHandler,                  /*   54,   38  Serial Communication Interface                                                   */
+      ADC0_IRQHandler,                         /*   55,   39  Analogue to Digital Converter                                                    */
+      USBDM::Cmp0::irqHandler,                 /*   56,   40  High-Speed Comparator                                                            */
+      CMP1_IRQHandler,                         /*   57,   41  High-Speed Comparator                                                            */
+      FTM0_IRQHandler,                         /*   58,   42  FlexTimer Module                                                                 */
+      FTM1_IRQHandler,                         /*   59,   43  FlexTimer Module                                                                 */
+      FTM2_IRQHandler,                         /*   60,   44  FlexTimer Module                                                                 */
+      CMT_IRQHandler,                          /*   61,   45  Carrier Modulator Transmitter                                                    */
+      RTC_Alarm_IRQHandler,                    /*   62,   46  Real Time Clock                                                                  */
+      RTC_Seconds_IRQHandler,                  /*   63,   47  Real Time Clock                                                                  */
+      PIT0_IRQHandler,                         /*   64,   48  Periodic Interrupt Timer                                                         */
+      PIT1_IRQHandler,                         /*   65,   49  Periodic Interrupt Timer                                                         */
+      PIT2_IRQHandler,                         /*   66,   50  Periodic Interrupt Timer                                                         */
+      PIT3_IRQHandler,                         /*   67,   51  Periodic Interrupt Timer                                                         */
+      PDB0_IRQHandler,                         /*   68,   52  Programmable Delay Block                                                         */
+      USBDM::Usb0::irqHandler,                 /*   69,   53  Universal Serial Bus                                                             */
+      USBDCD_IRQHandler,                       /*   70,   54  USB Device Charger Detection                                                     */
+      Default_Handler,                         /*   71,   55                                                                                   */
+      DAC0_IRQHandler,                         /*   72,   56  Digital to Analogue Converter                                                    */
+      MCG_IRQHandler,                          /*   73,   57  Multipurpose Clock Generator                                                     */
+      LPTMR0_IRQHandler,                       /*   74,   58  Low Power Timer                                                                  */
+      PORTA_IRQHandler,                        /*   75,   59  General Purpose Input/Output                                                     */
+      PORTB_IRQHandler,                        /*   76,   60  General Purpose Input/Output                                                     */
+      PORTC_IRQHandler,                        /*   77,   61  General Purpose Input/Output                                                     */
+      PORTD_IRQHandler,                        /*   78,   62  General Purpose Input/Output                                                     */
+      PORTE_IRQHandler,                        /*   79,   63  General Purpose Input/Output                                                     */
+      SWI_IRQHandler,                          /*   80,   64  Software interrupt                                                               */
    }
 };
 

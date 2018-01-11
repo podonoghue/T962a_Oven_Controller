@@ -124,7 +124,9 @@ This is a template class with static methods.\n
  - @ref dma-memory-example.cpp
  - @ref dma-memory-template-example.cpp
  - @ref dma-spi-example.cpp
- - @ref dma-uart-example.cpp
+ - @ref dma-uart-example-mk20.cpp
+ - @ref dma-uart-example-mk22f.cpp
+ - @ref dma-uart-example-mk28f.cpp
 
  @page GPIOExamples  General Purpose Input Output
 
@@ -150,22 +152,22 @@ This is a template class with static methods.\n
 
 Convenience template for GPIO pins. Uses the following classes:\n
 <ul>
-<li>USBDM::GpioBase_T <clockMask, pcrAddress, gpioAddress, bitNum, polarity> \n
-<li>USBDM::Gpio_T <Info, bitNum, polarity>\n
+<li>USBDM::GpioBase_T &lt;clockMask, portAddress, gpioAddress, bitNum, polarity&gt; \n
+<li>USBDM::Gpio_T &lt;Info, bitNum, polarity&gt;\n
 <ul>
-<li>USBDM::GpioA <bitNum, polarity>
-<li>USBDM::GpioB <bitNum, polarity>
-<li>USBDM::GpioC <bitNum, polarity>
-<li>USBDM::GpioD <bitNum, polarity>
-<li>USBDM::GpioE <bitNum, polarity>
+<li>USBDM::GpioA &lt;bitNum, polarity&gt;
+<li>USBDM::GpioB &lt;bitNum, polarity&gt;
+<li>USBDM::GpioC &lt;bitNum, polarity&gt;
+<li>USBDM::GpioD &lt;bitNum, polarity&gt;
+<li>USBDM::GpioE &lt;bitNum, polarity&gt;
 </ul>
-<li>USBDM::Field_T <Info, left, right, polarity>\n
+<li>USBDM::Field_T &lt;Info, left, right, polarity&gt;\n
 <ul>
-<li>USBDM::GpioAField <left, right, polarity>
-<li>USBDM::GpioBField <left, right, polarity>
-<li>USBDM::GpioCField <left, right, polarity>
-<li>USBDM::GpioDField <left, right, polarity>
-<li>USBDM::GpioEField <left, right, polarity>
+<li>USBDM::GpioAField &lt;left, right, polarity&gt;
+<li>USBDM::GpioBField &lt;left, right, polarity&gt;
+<li>USBDM::GpioCField &lt;left, right, polarity&gt;
+<li>USBDM::GpioDField &lt;left, right, polarity&gt;
+<li>USBDM::GpioEField &lt;left, right, polarity&gt;
 </ul>
 </ul>
 
@@ -311,14 +313,20 @@ This is a template class with static methods.\n
    // This allows access to USBDM classes and methods without the USBDM:: prefix.
    using namespace USBDM;
 
+   // ADC being used (for shared settings)
+   using Adc         = Adc0;
+
    // Use ADC0 channel 6 as ADC input (ADC_IN6)
    using AdcChannel = USBDM::Adc0Channel<6>;
 
-   // Set ADC resolution to 16 bits
-   AdcChannel::setResolution(AdcResolution_16bit_se);
+   // Initially configure ADC for resolution of 16 bits with default settings
+   Adc::configure(AdcResolution_16bit_se);
 
+   // Calibrate before use
+   Adc::calibrate();
+   
    // Set ADC averaging to 4 samples
-   AdcChannel::setAveraging(AdcAveraging_4);
+   Adc::setAveraging(AdcAveraging_4);
 
    // Read ADC value
    uint32_t value = AdcChannel::readAnalogue();
@@ -332,14 +340,20 @@ This is a template class with static methods.\n
    // This allows access to USBDM classes and methods without the USBDM:: prefix.
    using namespace USBDM;
 
+   // ADC being used (for shared settings)
+   using Adc         = Adc0;
+
    // Use channel 0 as ADC differential input (ADC_DM0, ADC_DP0)
    using Adc1_diff0 = USBDM::Adc0DiffChannel<0>;
 
-   // Set ADC resolution to 11 bits differential
-   Adc1_diff0::setResolution(AdcResolution_11bit_diff);
+   // Initially configure ADC for resolution of 11 bits differential with default settings
+   Adc::configure(AdcResolution_11bit_diff);
 
+   // Calibrate before use
+   Adc::calibrate();
+   
    // Set ADC averaging to 4 samples
-   Adc1_diff0::setAveraging(AdcAveraging_4);
+   Adc::setAveraging(AdcAveraging_4);
 
    // Read signed differential ADC value
    int32_t value = Adc1_diff0::readAnalogue();
@@ -454,8 +468,13 @@ This is a template class with static methods.\n
 
 @page PITExamples Programmable Interrupt Timer Module
 
-Convenience template for PIT hardware. Based on USBDM::PitBase_T.\n
-
+Convenience template for PIT hardware. \n
+Uses the following classes:
+<ul>
+<li> USBDM::PitBase_T &lt;Info&gt;
+<li> USBDM::Pit
+<li> USBDM::PitChannel &lt;channel&gt;
+</ul>
 It provides:\n
 - Static pin mapping in conjunction with the configuration settings.
 - Setting the PIT channel period in seconds
@@ -538,7 +557,8 @@ This is a template class with static methods.\n
 
 @page Notes Notes
   - enable()            Enables clock and configures pins (if any configured in Configure.usbdmProject)
-  - defaultConfigure()  As above, enable() + initialises according to Configure.usbdmProject\n
+  - configureAllPins()  Configures all pins associated with the peripheral
+  - defaultConfigure()  enable() + initialises according to Configure.usbdmProject\n
                         May have defaulted parameters to do custom configuration.
   - disable()           Disables the peripheral
 
@@ -546,7 +566,7 @@ This is a template class with static methods.\n
 @example analogue-diff-example.cpp
 @example analogue-interrupt-example.cpp
 @example analogue-joystick-example.cpp
-@example cmp.cpp
+@example cmp-example.cpp
 @example console-example.cpp
 @example dac-example.cpp
 @example digital-example1.cpp
@@ -554,7 +574,9 @@ This is a template class with static methods.\n
 @example dma-memory-example.cpp
 @example dma-memory-template-example.cpp
 @example dma-spi-example.cpp
-@example dma-uart-example.cpp
+@example dma-uart-example-mk20.cpp
+@example dma-uart-example-mk22f.cpp
+@example dma-uart-example-mk28f.cpp
 @example flash_programming_example.cpp
 @example ftm-ic-example.cpp
 @example ftm-oc-example.cpp
@@ -568,7 +590,8 @@ This is a template class with static methods.\n
 @example hmc5883l.cpp
 @example hmc5883l.h
 @example i2c-example.cpp
-@example llwu-example.cpp
+@example llwu-example-mk20.cpp
+@example llwu-example-mk22f.cpp
 @example lptmr-example.cpp
 @example mag3310-example.cpp
 @example mag3310.cpp
@@ -589,7 +612,7 @@ This is a template class with static methods.\n
 @example pdb-example.cpp
 @example rtc-example.cpp
 @example spi-example.cpp
-@example test-mcg.cpp
+@example mcg-test.cpp
 @example tsi-mk-example.cpp
 @example usb.cpp
 @example usb_cdc_interface.cpp
