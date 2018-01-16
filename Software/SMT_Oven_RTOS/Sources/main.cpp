@@ -73,7 +73,6 @@ public:
 using namespace USBDM;
 
 void initialise() {
-
    Buzzer::init();
    OvenFanLed::init();
    HeaterLed::init();

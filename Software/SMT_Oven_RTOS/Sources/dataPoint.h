@@ -12,18 +12,20 @@
 #include <stdint.h>
 #include "Max31855.h"
 
-/** Mode of operation within profile */
+/**
+ * Mode of operation within profile
+ */
 enum State {
-   s_off,
-   s_fail,
-   s_init,
-   s_preheat,
-   s_soak,
-   s_ramp_up,
-   s_dwell,
-   s_ramp_down,
-   s_complete,
-   s_manual,
+   s_off,        //!< Off
+   s_fail,       //!< Failed
+   s_init,       //!< Initialization
+   s_preheat,    //!< Preheat
+   s_soak,       //!< Soak
+   s_ramp_up,    //!< Ramp up
+   s_dwell,      //!< Dwell
+   s_ramp_down,  //!< Ramp down
+   s_complete,   //!< Complete
+   s_manual,     //!< Manual
 };
 
 /**

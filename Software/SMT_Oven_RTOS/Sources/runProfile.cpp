@@ -52,13 +52,13 @@ void monitor() {
    int   time  = 0;
 
    temperatureSensors.updateMeasurements();
-   Reporter::displayThermocoupleStatus();
+   Reporter::displayProfileProgress();
 
    do {
       // Update display
       temperatureSensors.updateMeasurements();
       Reporter::addLogPoint(time, s_off);
-      Reporter::displayThermocoupleStatus();
+      Reporter::displayProfileProgress();
 
       // Get key-press
       SwitchValue key = buttons.getButton(100);
@@ -94,8 +94,20 @@ static float ambient;
 /** State in the profile sequence */
 static State state = s_off;
 
-/*
+/**
  * Call-back from the timer to step through the profile state-machine
+ *                      .--.
+ *                     /    \
+ *                    /      \
+ *               .....        \
+ *          ....               \
+ *      ....                    \
+ *     /                         \
+ *    /                           \
+ *   /                             \
+ *  /                               \
+ * /                   dwell         \
+ * preheat  soak   ramp_up  ramp_down
  */
 static void handler(const void *) {
 
@@ -108,154 +120,159 @@ static void handler(const void *) {
    /* Used for timeout for profile changes */
    static int timeout;
 
-   /* Tolerance of temperature checks */
-   constexpr int DELTA = 5;
+   /* Tolerance of temperature checks - Celsius */
+   constexpr int DELTA = 2;
 
    // Get current temperature (NAN on thermocouple failure)
-   const float currentTemperature = temperatureSensors.getTemperature();
+   float currentTemperature = temperatureSensors.getTemperature();
 
-   if (std::isnan(getTemperature())) {
+   if (std::isnan(currentTemperature)) {
       state = s_fail;
    }
 
+#ifdef DEBUG_BUILD
+   if ((state != s_init) && (setpoint>(ambient+2))) {
+      // Dummy for testing sequence without oven
+      currentTemperature = setpoint-2+(rand()%4);
+   }
+#endif
+
+   PRINTF("%3d, %10s: TO=%3d, T=%4.1f, SP=%4.1f\n", time, Reporter::getStateName(state), timeout, currentTemperature, setpoint);
+
    // Handle state
    switch (state) {
-   case s_complete:
-   case s_fail:
-      // Not operating
-      pid.setSetpoint(0);
-      pid.enable(false);
-      ovenControl.setHeaterDutycycle(0);
-      ovenControl.setFanDutycycle(0);
-      return;
-   case s_off:
-   case s_manual:
-      return;
-   case s_init:
-      /*
-       * Startup
-       */
-      ambient  = currentTemperature;   // Use starting temperature as ambient reference
-      time     = 0;
-      setpoint = ambient;
-      pid.setTunings(pidKp, pidKi, pidKd);
-      pid.setSetpoint(ambient);
-      pid.enable();
-      state    = s_preheat;
+      case s_complete:
+      case s_fail:
+         // Not operating
+         pid.setSetpoint(0);
+         pid.enable(false);
+         ovenControl.setHeaterDutycycle(0);
+         ovenControl.setFanDutycycle(0);
+         return;
+      case s_off:
+      case s_manual:
+         return;
+      case s_init:
+         /*
+          * Startup
+          */
+         time     = 0;
+         state    = s_preheat;
 
-      // Calculate timeout for preheat ramp (10% over)
-      timeout = (int)round(1.1*currentProfile->preheatTime);
-      // no break
-   case s_preheat:
-      /*
-       * Heat from ambient to start of soak temperature
-       * Will wait until reached T~soakTemp1 with 20s timeout
-       *
-       * Ambient -> soakTemp1 @ ramp1Slope
-       */
-      // Check timeout
-      if (--timeout<0) {
-         state = s_fail;
-      }
-      if (setpoint<currentProfile->soakTemp1) {
-         // Still following profile
-         setpoint = ambient + (time/(float)currentProfile->preheatTime)*(currentProfile->soakTemp1-ambient);
-         pid.setSetpoint(setpoint);
-      }
-      else {
-         // Reached end of profile
-         // Move on if reached soak temperature or been nearly there for 5s
-         // This allows for tolerances in the PID controller
-         if ((currentTemperature>=currentProfile->soakTemp1) ||
-               ((timeout>5)&&(currentTemperature>=(currentProfile->soakTemp1-DELTA)))) {
-            // Reach soak temperature - move on
+         // Use starting temperature as ambient reference
+         ambient  = currentTemperature;
+
+         pid.setTunings(pidKp, pidKi, pidKd);
+         pid.setSetpoint(ambient);
+         pid.enable();
+
+         // Calculate maximum time for preheat ramp to complete (10% over)
+         timeout = (int)round(1.1*currentProfile->preheatTime);
+
+         PRINTF("Starting sequence, Ta=%f\n", ambient);
+         // no break
+      case s_preheat:
+         /*
+          * Set-point follows profile temperature from ambient to start of soak temperature/time
+          * It will delay for a short while (10% of preheat time) if soakTemp1 not yet reached
+          *
+          * Ambient -> soakTemp1 @ ramp1Slope
+          */
+         if (time<currentProfile->preheatTime) {
+            // Following profile
+            setpoint = ambient + (time/(float)currentProfile->preheatTime)*(currentProfile->soakTemp1-ambient);
+            pid.setSetpoint(setpoint);
+         }
+         else if (currentTemperature>=(currentProfile->soakTemp1-DELTA)) {
+            // Reached end of preheat time
+            // Move on if nearly reached soak start temperature
+            // This allows for tolerances in the PID controller
             state = s_soak;
             startOfSoakTime = time;
 
             // Calculate timeout for soak ramp (10% over)
-            timeout = (int)round(1.1*currentProfile->soakTime);
+            timeout = startOfSoakTime+(int)round(1.1*currentProfile->soakTime);
          }
-      }
-      break;
-   case s_soak:
-      /*
-       * Heat from soak start temperature to soak end temperature over soak time
-       * Will wait until reached T~soakTemp2 and minimum soak duration with timeout
-       *
-       * soakTemp1 -> soakTemp2 over soakTime time
-       */
-      // Check timeout
-      if (--timeout<0) {
-         state = s_fail;
-      }
-      if (setpoint<currentProfile->soakTemp2) {
-         // Follow profile
-         setpoint = currentProfile->soakTemp1 + (time-startOfSoakTime)*(currentProfile->soakTemp2-currentProfile->soakTemp1)/currentProfile->soakTime;
-         pid.setSetpoint(setpoint);
-      }
-      if (time >= (startOfSoakTime+currentProfile->soakTime)) {
-         // Reached end of soak time
-         // Move on if reached soak temperature or been nearly there for a while
-         if ((currentTemperature>=currentProfile->soakTemp2) ||
-               ((timeout>5)&&(currentTemperature>=(currentProfile->soakTemp2-DELTA)))) {
-            // Reach soak temperature 2 - move on
+         else if (time>timeout) {
+            // Timeout
+            state = s_fail;
+         }
+         break;
+      case s_soak:
+         /*
+          * Heat from soak start temperature to soak end temperature over soak time
+          * It will delay for a short while (10% of soak time) if soakTemp2 temperature not yet reached
+          *
+          * soakTemp1 -> soakTemp2 over soakTime time
+          */
+         if (time<(startOfSoakTime+currentProfile->soakTime)) {
+            // Following profile
+            setpoint = currentProfile->soakTemp1 +
+                  (time-startOfSoakTime)*(currentProfile->soakTemp2-currentProfile->soakTemp1)/currentProfile->soakTime;
+            pid.setSetpoint(setpoint);
+         }
+         else if (currentTemperature>=(currentProfile->soakTemp2-DELTA)) {
+            // Reached end of soak time
+            // Move on if nearly reached final soak temperature
+            // This allows for tolerances in the PID controller
             state = s_ramp_up;
 
             // Calculate timeout for ramp up to peak ramp (10% over)
-            timeout = (int)round(1.1*(currentProfile->peakTemp-setpoint)/currentProfile->rampUpSlope);
+            timeout = time + (int)round(1.1*(currentProfile->peakTemp-setpoint)/currentProfile->rampUpSlope);
          }
-      }
-      break;
-   case s_ramp_up:
-      /*
-       * Heat from soak end temperature to peak at rampUp rate
-       * Will wait until reached T~peakTemp with timeout
-       *
-       * soakTemp2 -> peakTemp @ ramp2Slope
-       */
-      // Check timeout
-      if (--timeout<0) {
-         state = s_fail;
-      }
-      if (setpoint < currentProfile->peakTemp) {
-         setpoint += currentProfile->rampUpSlope;
-         pid.setSetpoint(setpoint);
-         timeout = 0;
-      }
-      if (currentTemperature >= (currentProfile->peakTemp-DELTA)) {
-         state = s_dwell;
-         startOfDwellTime = time;
-      }
-      else {
-         timeout++;
-         if (timeout>40) {
+         else if (time>timeout) {
+            // Timeout
             state = s_fail;
          }
-      }
-      break;
-   case s_dwell:
-      /*
-       * Remain at peak temperature for dwell time
-       *
-       * peakTemp for peakDwell
-       */
-      if (time>(startOfDwellTime+currentProfile->peakDwell)) {
-         state = s_ramp_down;
-      }
-      break;
-   case s_ramp_down:
-      /* Ramp down at rampDown rate without timeout
-       *
-       * peakTemp -> ambient @ rampDown
-       */
-      if (setpoint > ambient) {
-         setpoint += currentProfile->rampDownSlope;
-      }
-      pid.setSetpoint(setpoint);
-      if (currentTemperature<=ambient) {
-         state = s_complete;
-      }
-      break;
+         break;
+      case s_ramp_up:
+         /*
+          * Heat from soak end temperature to peak at rampUp rate
+          * Will wait until reached T~peakTemp with timeout
+          *
+          * soakTemp2 -> peakTemp @ ramp2Slope
+          */
+         if (setpoint < currentProfile->peakTemp) {
+            // Following profile
+            setpoint += currentProfile->rampUpSlope;
+            pid.setSetpoint(setpoint);
+         }
+         else if (currentTemperature >= (currentProfile->peakTemp-DELTA)) {
+            state = s_dwell;
+            startOfDwellTime = time;
+
+            // No timeout
+            timeout = 0;
+         }
+         else {
+            if (time>timeout) {
+               state = s_fail;
+            }
+         }
+         break;
+      case s_dwell:
+         /*
+          * Remain at peak temperature for dwell time
+          *
+          * peakTemp for peakDwell
+          */
+         if (time >= (startOfDwellTime+currentProfile->peakDwell)) {
+            state = s_ramp_down;
+         }
+         break;
+      case s_ramp_down:
+         /* Ramp down at rampDown rate without timeout
+          *
+          * peakTemp -> ambient @ rampDown
+          */
+         if (setpoint > ambient) {
+            setpoint += currentProfile->rampDownSlope;
+         }
+         pid.setSetpoint(setpoint);
+         if (currentTemperature<=ambient+20) {
+            state = s_complete;
+         }
+         break;
    }
    // Add data point to record
    Reporter::addLogPoint(time, state);
@@ -301,9 +318,9 @@ bool startRunProfile(NvSolderProfile &profile) {
 }
 
 /**
- * Abort the current sequence
+ * Complete the current sequence
  */
-void abortRunProfile() {
+void completeRunProfile() {
    // Stop timer callback
    timer.stop();
    timer.destroy();
@@ -312,12 +329,20 @@ void abortRunProfile() {
    pid.enable(false);
    pid.setSetpoint(0);
 
-   state = s_fail;
-
    Reporter::addLogPoint(time, state);
 
    ovenControl.setHeaterDutycycle(0);
    ovenControl.setFanDutycycle(100);
+}
+
+/**
+ * Abort the current sequence
+ */
+void abortRunProfile() {
+
+   completeRunProfile();
+   state = s_fail;
+
 }
 
 /**
@@ -409,13 +434,15 @@ void runProfile() {
 //         Reporter::addLogPoint(time, state);
       }
       // Update display
-      Reporter::displayThermocoupleStatus();
+      Reporter::displayProfileProgress();
 
       SwitchValue key = buttons.getButton(10);
       if ((state == s_complete) || (state == s_fail)) {
+         completeRunProfile();
          break;
       }
       if (key == SwitchValue::SW_S) {
+         abortRunProfile();
          break;
       }
       if (key == SwitchValue::SW_F4) {
@@ -423,8 +450,6 @@ void runProfile() {
          Reporter::setDisplayFormat(plotDisplay);
       }
    }
-
-   abortRunProfile();
 
    Reporter::setDisplayFormat(Reporter::DisplayTable);
 
@@ -447,7 +472,7 @@ void runProfile() {
 
    // Report every second until key-press
    do {
-      Reporter::displayThermocoupleStatus();
+      Reporter::displayProfileProgress();
    } while (buttons.getButton(1000) == SwitchValue::SW_NONE);
 
    ovenControl.setFanDutycycle(0);
@@ -575,6 +600,7 @@ void manualMode() {
          }
          break;
       case SwitchValue::SW_F3:
+         // Increment
          if (state == s_manual) {
             // Oven operating
             // Increase temperature set-point
@@ -593,6 +619,7 @@ void manualMode() {
          }
          break;
       case SwitchValue::SW_F4:
+         // Decrement
          if (state == s_manual) {
             // Oven operating
             // Decrease temperature set-point

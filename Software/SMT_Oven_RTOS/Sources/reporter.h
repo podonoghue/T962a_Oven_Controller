@@ -81,7 +81,7 @@ void setProfile(int profile);
 /**
  * Reports thermocouple status on LCD
  */
-void displayThermocoupleStatus();
+void displayProfileProgress();
 
 /**
  * Record data point for logging.\n

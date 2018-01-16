@@ -124,7 +124,7 @@ static void writeThermocoupleStatus() {
 /**
  * Reports thermocouple status on LCD
  */
-void displayThermocoupleStatus() {
+void displayProfileProgress() {
    switch(usePlot) {
       case DisplayPlot:
          writePlot();
