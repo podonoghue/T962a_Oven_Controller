@@ -96,6 +96,7 @@ void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
  *
  *  @param cmd Profile described by a string e.g.\n
  *  4,My Profile,FF,1.0,140,183,90,1.4,210,15,-3.0;
+ *  profile-number,description,flags,liquidus,preheatTime,soakTemp1,soakTemp2,soakTime,rampUpSlope,peakTemp,peakDwell,rampDownSlope
  *
  *  @return true  Successfully parsed
  *  @return false Failed parse
@@ -295,12 +296,21 @@ bool RemoteInterface::doCommand(Command *cmd) {
    }
 
    if (strcasecmp((const char *)(cmd->data), "IDN?\n") == 0) {
+      /*
+       *  Identify oven
+       *  -> "IDN?"
+       *  <- "SMT-Oven 1.0.0.0"
+       */
       strcpy(reinterpret_cast<char*>(response->data), IDN);
       response->size = strlen(IDN);
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "THERM ", 6) == 0) {
-      // Lock interface
+      /*
+       * Sets the enable and offset value for each thermocouple
+       * -> "THERM T1Enable,T1Offset,T2Enable,T2Offset,T3Enable,T3Offset,T4Enable,T5Offset"
+       * <- "OK"
+       */
       if (!getInteractiveMutex(response)) {
          return false;
       }
@@ -315,6 +325,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "THERM?\n") == 0) {
+      /*
+       *  Get thermocouple status
+       *  -> "THERM?"
+       *  <- "T1Enable,T1Offset,T2Enable,T2Offset,T3Enable,T3Offset,T4Enable,T5Offset;"
+       */
       response->data[0] = (uint8_t)'\0';
       for (int t=0; t<4; t++) {
          char buff[10];
@@ -333,6 +348,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "PID ", 4) == 0) {
+      /*
+       *  Set PID parameters
+       *  -> "PID Proportional,Integral,Differential"
+       *  <- "OK"
+       */
       // Lock interface
       if (!getInteractiveMutex(response)) {
          return false;
@@ -348,6 +368,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "PID?\n") == 0) {
+      /*
+       *  Set PID parameters
+       *  -> "PID?"
+       *  <- "Proportional,Integral,Differential;"
+       */
       response->data[0] = (uint8_t)'\0';
       snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%f,%f,%f\n\r",
             (float)pidKp, (float)pidKi, (float)pidKd);
@@ -355,6 +380,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "PROF ", 5) == 0) {
+      /*
+       *  Set profile parameters
+       *  -> "PROF profile-number,description,flags,liquidus,preheatTime,soakTemp1,soakTemp2,soakTime,rampUpSlope,peakTemp,peakDwell,rampDownSlope;
+       *  <- "OK"
+       */
       // Lock interface
       if (!getInteractiveMutex(response)) {
          return false;
@@ -370,10 +400,15 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "PROF?\n") == 0) {
+      /*
+       *  Get current profile parameters
+       *  -> "PROF?"
+       *  -> "profile-number,description,flags,liquidus,preheatTime,soakTemp1,soakTemp2,soakTime,rampUpSlope,peakTemp,peakDwell,rampDownSlope;
+       */
       const NvSolderProfile &profile = profiles[currentProfileIndex];
       snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data),
             /* index         */ "%d,"
-            /* name          */ "%s,"
+            /* description   */ "%s,"
             /* flags         */ "%2.2X,"
             /* liquidus      */ "%d,"
             /* preheatTime   */ "%d,"
@@ -400,6 +435,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "PLOT?\n") == 0) {
+      /*
+       *  Get plot value
+       *  <- "PLOT?"
+       *  ->
+       */
       int lastValid = Draw::getData().getLastValid();
       snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%d;", lastValid+1);
       if (lastValid < 0) {
@@ -413,6 +453,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       }
    }
    else if (strncasecmp((const char *)(cmd->data), "RUN\n\r", 4) == 0) {
+      /*
+       *   Start running current profile
+       *   <- "RUN"
+       *   -> "OK"
+       */
       // Lock interface
       if (!getInteractiveMutex(response)) {
          return false;
@@ -423,6 +468,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "ABORT\n\r", 4) == 0) {
+      /*
+       *   Abort running profile
+       *   <- "ABORT"
+       *   -> "OK"
+       */
       // Lock interface
       if (!getInteractiveMutex(response)) {
          return false;
@@ -437,6 +487,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "RUN?\n\r", 4) == 0) {
+      /*
+       * Get state of running profile
+       * <- "RUN?"
+       * -> "OK|Failed|Running"
+       */
       // Lock interface
       if (!getInteractiveMutex(response)) {
          return false;
@@ -461,6 +516,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
       send(response);
    }
    else {
+      /*
+       * Unknown command
+       * <- "?????"
+       * -> "Failed - ..."
+       */
       strcpy(reinterpret_cast<char*>(response->data), "Failed - unrecognized command\n\r");
       response->size = strlen(reinterpret_cast<char*>(response->data));
       send(response);

@@ -1,9 +1,11 @@
 /*
- *  @file vectors.cpp 
+ *  @file vectors.cpp  (180.ARM_Peripherals/Startup_Code/vectors-cm4.cpp)
  *
  *  Generated from  vectors-cm4.cpp
  *
  *  Generic vectors Kinetis Cortex-M4 devices
+ *
+ *  Based on Keil Application Note 209
  *
  *  Created on: 22/05/2017
  *      Author: podonoghue

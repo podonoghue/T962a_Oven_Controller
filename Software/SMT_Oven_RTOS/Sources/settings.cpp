@@ -280,8 +280,8 @@ const Setting_T<int> thermo4Setting  {t4Offset,        "Thermo 4 Offset  %3d\x7F
 const Setting_T<int> heaterSetting   {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 600,       nullptr};
 const Setting_T<int> beepSetting     {beepTime,        "Beep time        %3ds",      0,   30,  1,   0,       Settings::testBeep};
 
-const Setting_T<float> pidKpSetting  {pidKp,           "PID Kp      %6.1f",        0.5,  40.00,  0.1,  20.0f,   nullptr};
-const Setting_T<float> pidKiSetting  {pidKi,           "PID Ki        %6.3f",      0.0,   1.00,  0.001, 0.016f, nullptr};
+const Setting_T<float> pidKpSetting  {pidKp,           "PID Kp      %6.1f",        0.5,  60.00,  0.1,  40.0f,   nullptr};
+const Setting_T<float> pidKiSetting  {pidKi,           "PID Ki        %6.3f",      0.0,   1.00,  0.001, 0.050f, nullptr};
 const Setting_T<float> pidKdSetting  {pidKd,           "PID Kd      %6.1f",        0.0, 200.00,  0.1,  62.5f,   nullptr};
 
 /**

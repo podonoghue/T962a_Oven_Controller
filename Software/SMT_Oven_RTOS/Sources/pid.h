@@ -31,25 +31,25 @@ template<Pid::InFunction inputFn, Pid::OutFunction outputFn>
 class Pid_T : private Pid, private CMSIS::TimerClass {
 
 private:
-   const double interval;     //! Interval for sampling
-   const double outMin;       //! Minimum limit for output
-   const double outMax;       //! Maximum limit for output
+   const double interval;     //!< Interval for sampling
+   const double outMin;       //!< Minimum limit for output
+   const double outMax;       //!< Maximum limit for output
 
-   double kp;                 //! Proportional Tuning Parameter
-   double ki;                 //! Integral Tuning Parameter
-   double kd;                 //! Derivative Tuning Parameter
+   double kp;                 //!< Proportional Tuning Parameter
+   double ki;                 //!< Integral Tuning Parameter
+   double kd;                 //!< Derivative Tuning Parameter
 
-   bool   enabled;            //! Enable for controller
+   bool   enabled;            //!< Enable for controller
 
-   double integral;           //! Integral accumulation term
+   double integral;           //!< Integral accumulation term
 
-   double lastInput;          //! Last input sample
-   double currentInput;       //! Current input sample
-   double currentOutput;      //! Current output
-   double setpoint;           //! Set-point for controller
-   double currentError;       //! Current error calculation
+   double lastInput;          //!< Last input sample
+   double currentInput;       //!< Current input sample
+   double currentOutput;      //!< Current output
+   double setpoint;           //!< Set-point for controller
+   double currentError;       //!< Current error calculation
 
-   unsigned tickCount = 0;    //! Time in ticks since last enabled
+   unsigned tickCount = 0;    //!< Time in ticks since last enabled
 
 public:
    /**

@@ -78,6 +78,7 @@ void initialise() {
    HeaterLed::init();
    Spare::enable();
    Spare::setDutyCycle(0);
+   ovenControl.initialise();
 }
 
 int main() {
@@ -85,6 +86,8 @@ int main() {
    console.writeln("Starting Oven");
 
    initialise();
+
+   Usb0::initialise();
 
    mapAllPins();
 
@@ -94,8 +97,6 @@ int main() {
       lcd.printf("Error in initialisation \n  %s\n", getErrorMessage());
       console.write(buff);
    }
-
-   Usb0::initialise();
 
    MainMenu::run();
 

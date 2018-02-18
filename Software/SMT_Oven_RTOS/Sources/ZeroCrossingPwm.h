@@ -99,10 +99,9 @@ public:
     * @param fanKickTime Non-volatile variable used to control the fan kick time applied when starting
     */
    ZeroCrossingPwm(const USBDM::Nonvolatile<int> &fanKickTime) : fanKickTime(fanKickTime) {
-      initialise();
+//      initialise();
    }
 
-private:
    static void initialise() {
       using namespace USBDM;
 

@@ -190,8 +190,8 @@ static void handler(const void *) {
             state = s_soak;
             startOfSoakTime = time;
 
-            // Calculate timeout for soak ramp (10% over)
-            timeout = startOfSoakTime+(int)round(1.1*currentProfile->soakTime);
+            // Calculate timeout for soak ramp (20% over)
+            timeout = startOfSoakTime+(int)round(1.2*currentProfile->soakTime);
          }
          else if (time>timeout) {
             // Timeout
@@ -201,7 +201,7 @@ static void handler(const void *) {
       case s_soak:
          /*
           * Heat from soak start temperature to soak end temperature over soak time
-          * It will delay for a short while (10% of soak time) if soakTemp2 temperature not yet reached
+          * It will delay for a while (20% of soak time) if soakTemp2 temperature not yet reached
           *
           * soakTemp1 -> soakTemp2 over soakTime time
           */
@@ -217,8 +217,8 @@ static void handler(const void *) {
             // This allows for tolerances in the PID controller
             state = s_ramp_up;
 
-            // Calculate timeout for ramp up to peak ramp (10% over)
-            timeout = time + (int)round(1.1*(currentProfile->peakTemp-setpoint)/currentProfile->rampUpSlope);
+            // Calculate timeout for ramp up to peak ramp (100% over - THE OVEN REALLY CAN'T COPE WITH THE RAMP)
+            timeout = time + (int)round(2*(currentProfile->peakTemp-setpoint)/currentProfile->rampUpSlope);
          }
          else if (time>timeout) {
             // Timeout
