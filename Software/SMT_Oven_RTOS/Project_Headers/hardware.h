@@ -68,6 +68,7 @@ enum ErrorCode {
    E_TERMINATED,                  //!< The program has terminated
    E_CLOCK_INIT_FAILED,           //!< Clock initialisation failed
    E_HANDLER_ALREADY_SET,         //!< Handler (callback) already installed
+   E_NO_RESOURCE,                 //!< Failed resource allocation
 
    E_CMSIS_ERR_OFFSET = 1<<20,    //!< Offset added to CMSIS error codes
 };
@@ -185,6 +186,12 @@ inline void clearError() {
    errorCode = E_NO_ERROR;
 }
 
+/**
+ * Print simple log message to console
+ *
+ * @param msg Message to print
+ */
+extern void log_error(const char *msg);
 } // End namespace USBDM
 
 // Use when in-lining makes the release build smaller
@@ -203,13 +210,21 @@ inline void clearError() {
 #if defined (DEBUG_BUILD) && !defined (NDEBUG)
 #define USBDM_STRINGIFY(x)  #x
 #define USBDM_TOSTRING(x)   USBDM_STRINGIFY(x)
+
+extern "C" void _exit(int);
+
+inline void _usbdm_assert(const char *msg) {
+   USBDM::log_error(msg);
+   _exit(-1);
+}
+
 /**
  * Macro to do ASSERT operation in debug build
  *
  * @param __e Assert expression to evaluate
  * @param __m Message to print if expression is false
  */
-#define USBDM_ASSERT(__e, __m) ((__e) ? (void)0 : (void)console.writeln("Assertion Failed @" __FILE__ ":" USBDM_TOSTRING(__LINE__) " - " __m))
+#define USBDM_ASSERT(__e, __m) ((__e) ? (void)0 : (void)_usbdm_assert("Assertion Failed @" __FILE__ ":" USBDM_TOSTRING(__LINE__) " - " __m))
 #define usbdm_assert(__e, __m) USBDM_ASSERT(__e, __m)
 #else
 /**
@@ -238,6 +253,32 @@ enum NvicPriority {
 #include "pin_mapping.h"
 #include "delay.h"
 #include "console.h"
+
+/**
+ * Calculate a Vector number using an offset from an existing number.
+ * This is only useful if related vectors are consecutive e.g. DMA0_IRQn, DMA1_IRQn ...
+ *
+ * @param vector  Base vector to use
+ * @param offset  Offset from base vector
+ *
+ * @return  Vector number calculated from vector+offset
+ */
+constexpr IRQn_Type inline operator+(IRQn_Type vector, unsigned offset) {
+   return (IRQn_Type)((unsigned)vector + offset);
+}
+
+/**
+ * Calculate a Vector number using an offset from an existing number.
+ * This is only useful if related vectors are consecutive e.g. DMA0_IRQn, DMA1_IRQn ...
+ *
+ * @param vector  Base vector to use
+ * @param offset  Offset from base vector
+ *
+ * @return  Vector number calculated from vector+offset
+ */
+constexpr IRQn_Type inline operator+(IRQn_Type vector, int offset) {
+   return vector + (unsigned)offset;
+}
 
 namespace USBDM {
 

@@ -25,11 +25,11 @@ void draw() {
    lcd.gotoXY(10,0);
    lcd.setInversion(true); lcd.putString(" Copy Profile "); lcd.setInversion(false);
    lcd.gotoXY(0,1*lcd.FONT_HEIGHT+5);
-   lcd.setInversion(false);lcd.putString("Copy:");     lcd.setInversion(false);
+   lcd.setInversion(false);lcd.putString("Copy:");          lcd.setInversion(false);
    lcd.gotoXY(0,2*lcd.FONT_HEIGHT+5);
    lcd.printf("%d:%s", sourceProfileIndex, (const volatile char *)profiles[sourceProfileIndex].description);
    lcd.gotoXY(0,4*lcd.FONT_HEIGHT);
-   lcd.setInversion(false);lcd.putString("To:");         lcd.setInversion(false);
+   lcd.setInversion(false);lcd.putString("To:");            lcd.setInversion(false);
    lcd.gotoXY(0,5*lcd.FONT_HEIGHT);
    lcd.printf("%d:%s", destinationProfileIndex, (const volatile char *)profiles[destinationProfileIndex].description);
 
@@ -92,28 +92,28 @@ void run(int index) {
          needsUpdate = false;
       }
       switch(buttons.getButton()) {
-      case SwitchValue::SW_F1:
-         if (destinationProfileIndex>0) {
-            destinationProfileIndex--;
+         case SwitchValue::SW_F1:
+            if (destinationProfileIndex>0) {
+               destinationProfileIndex--;
+               needsUpdate = true;
+            }
+            break;
+         case SwitchValue::SW_F2:
+            if ((destinationProfileIndex+1)<(sizeof(profiles)/sizeof(profiles[0]))) {
+               destinationProfileIndex++;
+               needsUpdate = true;
+            }
+            break;
+         case SwitchValue::SW_F4:
+            if (copyProfile(sourceProfileIndex, destinationProfileIndex)) {
+               return;
+            }
             needsUpdate = true;
-         }
-         break;
-      case SwitchValue::SW_F2:
-         if ((destinationProfileIndex+1)<(sizeof(profiles)/sizeof(profiles[0]))) {
-            destinationProfileIndex++;
-            needsUpdate = true;
-         }
-         break;
-      case SwitchValue::SW_F4:
-         if (copyProfile(sourceProfileIndex, destinationProfileIndex)) {
+            break;
+         case SwitchValue::SW_S:
             return;
-         }
-         needsUpdate = true;
-         break;
-      case SwitchValue::SW_S:
-         return;
-      default:
-         break;
+         default:
+            break;
       }
    } while(true);
 }

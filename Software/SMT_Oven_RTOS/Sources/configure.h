@@ -104,7 +104,7 @@ using Vmains     = USBDM::Cmp0;
 extern LCD_ST7920 lcd;
 
 /** PWM for heater & oven fan */
-extern ZeroCrossingPwm <Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl;
+extern ZeroCrossingPwm<Heater, HeaterLed, OvenFan, OvenFanLed, Vmains> ovenControl;
 
 /** Switch debouncer for front panel buttons */
 extern SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons;

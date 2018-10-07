@@ -1,15 +1,14 @@
 /*
- *  @file system.c
- *
- *  Derived from  system-kinetis.c
+ *  @file system.cpp (from Stationery/Packages/180.ARM_Peripherals/Startup_Code/)
  *
  * Generic system initialization for Kinetis family
  *
- *  Created on: 25/5/2017
+ *  Created on: 23/9/2017
  */
 
 #include <stdint.h>
 #include "derivative.h"
+#include "pmc.h"
 
 /* This definition is overridden if Clock initialisation is provided */
 __attribute__((__weak__))
@@ -21,6 +20,8 @@ __attribute__((__weak__))
 uint32_t SystemCoreClock = 4000000;
 __attribute__((__weak__))
 uint32_t SystemBusClock = 8000000;
+
+extern "C" {
 
 /* Actual Vector table */
 extern int const __vector_table[];
@@ -37,16 +38,18 @@ void console_initialise() {
 
 /* This definition is overridden if RTC initialisation is provided */
 __attribute__((__weak__))
-void rtc_initialise(void) {
+void rtc_initialise() {
 }
 
 // Dummy hook routine for when CMSIS is not used.
 __attribute__((__weak__))
-void software_init_hook (void) {
+void software_init_hook () {
+}
 }
 
 #ifdef __NO_STARTFILES__
 #warning Due to limited RAM the C library standard initialisation is not called - BSS and DATA are still initialised
+void* __dso_handle;
 #endif
 
 /**
@@ -62,7 +65,7 @@ void SystemInitLowLevel(void) {
     * It may not be correct for a specific target
     */
 
-#ifdef __VTOR_PRESENT
+#if (__VTOR_PRESENT != 0)
    /* Set the interrupt vector table position */
    SCB->VTOR = (uint32_t)__vector_table;
 #endif
@@ -90,6 +93,10 @@ void SystemInitLowLevel(void) {
    WDOG->CNT    = WDOG_UPDATE_KEY; // Write the unlock word
    WDOG->TOVAL  = -1;              // Setting time-out value
    WDOG->CS     =
+#ifdef WDOG_CS_CMD32EN
+         WDOG_CS_CMD32EN(1) |    // Enable 32 bit writes
+#endif
+         WDOG_CS_EN(0) |         // Disable watch-dog
          WDOG_CS_CLK(1) |        // Setting 1-kHz clock source
          WDOG_CS_UPDATE(1);      // Allow future update
 #endif
@@ -135,6 +142,8 @@ void SystemInit(void) {
     * It may not be correct for a specific target
     */
 
+   USBDM::Pmc::releasePins();
+
    /* Use Clock initialisation - if present */
    clock_initialise();
 
@@ -144,7 +153,7 @@ void SystemInit(void) {
    /* Use RTC initialisation - if present */
    rtc_initialise();
 
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
+#if defined(__VFP_FP__) && !defined(__SOFTFP__)
    /* Initialise FPU if present & in use */
    __asm__ (
          "  .equ CPACR, 0xE000ED88     \n"
@@ -200,4 +209,3 @@ int enableInterrupts() {
    }
    return 0;
 }
-

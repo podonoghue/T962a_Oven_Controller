@@ -50,9 +50,9 @@ extern void setSysDividersStub(uint32_t simClkDiv1);
  * Clock configuration names
  */
 enum ClockConfig {
-   ClockConfig_PEE_96MHz,
-   ClockConfig_1,
-   ClockConfig_2,
+   ClockConfig_PEE_48MHz,
+   ClockConfig_BLPE_4MHz,
+   ClockConfig_FEE_40MHz,
 
    ClockConfig_default = 0,
 };
@@ -76,15 +76,15 @@ private:
    /** Callback function for ISR */
    static MCGCallbackFunction callback;
 
-   /** Pointer to hardware */
-   static constexpr volatile MCG_Type *mcg = McgInfo::mcg;
+   /** Hardware instance */
+   static __attribute__((always_inline)) volatile MCG_Type &mcg() { return McgInfo::mcg(); }
 
+public:
    /**
     * Table of clock settings
     */
    static const McgInfo::ClockInfo clockInfo[];
 
-public:
    /**
     * Transition from current clock mode to mode given
     *

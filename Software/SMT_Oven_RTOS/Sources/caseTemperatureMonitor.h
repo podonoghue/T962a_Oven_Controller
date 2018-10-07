@@ -50,8 +50,8 @@ public:
     * @param tempSensor Temperature sensor
     */
    CaseTemperatureMonitor(TemperatureSensors &tempSensor) : tempSensor(tempSensor) {
-      CaseFan::enable();
-      CaseFan::setPeriod(20*USBDM::ms);
+      CaseFan::Ftm::enable();
+      CaseFan::Ftm::setPeriod(20*USBDM::ms);
       CaseFan::setDutyCycle(0);
 
       // Check every 5 seconds

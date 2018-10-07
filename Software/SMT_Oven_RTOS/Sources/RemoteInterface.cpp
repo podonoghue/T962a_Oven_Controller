@@ -9,9 +9,9 @@
  *  Created on: 26Feb.,2017
  *      Author: podonoghue
  */
-#include <RemoteInterface.h>
-#include "cmsis.h"
 #include "configure.h"
+#include "cmsis.h"
+#include "RemoteInterface.h"
 
 /** Current command */
 RemoteInterface::Command   *RemoteInterface::command;
@@ -583,7 +583,7 @@ void RemoteInterface::putData(int size, const uint8_t *buff) {
          command->size = 0;
       }
       // Check for command too large
-      assert(command->size<((sizeof(command->data)/sizeof(command->data[0]))-2));
+      usbdm_assert(command->size<((sizeof(command->data)/sizeof(command->data[0]))-2), "Command size too large");
 
       // Check for command termination
       if ((buff[i] == '\r') || (buff[i] == '\n')) {

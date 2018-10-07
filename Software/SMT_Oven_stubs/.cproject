@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="net.sourceforge.usbdm.cdt.arm.exe.debug.configuration.1109045209">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="net.sourceforge.usbdm.cdt.arm.exe.debug.configuration.1109045209" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${usbdm_rm_command} -rf" description="" id="net.sourceforge.usbdm.cdt.arm.exe.debug.configuration.1109045209" name="Debug" parent="net.sourceforge.usbdm.cdt.arm.exe.debug.configuration">
+					<folderInfo id="net.sourceforge.usbdm.cdt.arm.exe.debug.configuration.1109045209." name="/" resourcePath="">
+						<toolChain id="net.sourceforge.usbdm.cdt.arm.exe.debug.toolchain.832648741" name="ARM-USBDM ToolChain" superClass="net.sourceforge.usbdm.cdt.arm.exe.debug.toolchain">
+							<option defaultValue="net.sourceforge.usbdm.cdt.toolchain.debug.debugLevel.max" id="net.sourceforge.usbdm.cdt.toolchain.debug.debugLevel.1768450069" name="Debug level" superClass="net.sourceforge.usbdm.cdt.toolchain.debug.debugLevel" useByScannerDiscovery="false" valueType="enumerated"/>
+							<option defaultValue="net.sourceforge.usbdm.gnu.c.optimization.level.none" id="net.sourceforge.usbdm.cdt.toolchain.optimization.level.1910299826" name="Optimization level" superClass="net.sourceforge.usbdm.cdt.toolchain.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+							<option id="net.sourceforge.usbdm.cdt.arm.toolchain.mcpu.947865662" name="Cpu (-mcpu=)" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.mcpu" useByScannerDiscovery="false" value="net.sourceforge.usbdm.cdt.arm.toolchain.mcpu.cortexM4" valueType="enumerated"/>
+							<option id="net.sourceforge.usbdm.cdt.arm.toolchain.mthumb.715223182" name="Thumb Instruction set (-mthumb)" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.mthumb" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+							<option id="net.sourceforge.usbdm.cdt.toolchain.optimization.compilerOther.1076328216" name="Other flags (compiler)" superClass="net.sourceforge.usbdm.cdt.toolchain.optimization.compilerOther" useByScannerDiscovery="false" value="-finline-limit=100" valueType="string"/>
+							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF" id="net.sourceforge.usbdm.cdt.toolchain.targetPlatform.468870707" name="USBDM common base platform" superClass="net.sourceforge.usbdm.cdt.toolchain.targetPlatform"/>
+							<builder buildPath="${workspace_loc:/SMT_Oven_stubs}/Debug" id="net.sourceforge.usbdm.cdt.toolchain.builder.1853199524" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="net.sourceforge.usbdm.cdt.toolchain.builder"/>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.cppAssembler.20988429" name="ARM Assembler" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cppAssembler">
+								<option id="net.sourceforge.usbdm.cdt.toolchain.cppAssembler.preprocess.definedSymbols.330684511" name="Defined Symbols (-D)" superClass="net.sourceforge.usbdm.cdt.toolchain.cppAssembler.preprocess.definedSymbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG_BUILD"/>
+								</option>
+								<option id="net.sourceforge.usbdm.cdt.toolchain.cppAssembler.Directories.includePaths.1413011940" name="Include paths (-I)" superClass="net.sourceforge.usbdm.cdt.toolchain.cppAssembler.Directories.includePaths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis&quot;"/>
+								</option>
+								<inputType id="net.sourceforge.usbdm.cdt.arm.toolchain.cppAssembler.inputType.549401277" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cppAssembler.inputType"/>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.c.compiler.1473911035" name="ARM C Compiler" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.c.compiler">
+								<option id="net.sourceforge.usbdm.gnu.c.compiler.option.preprocessor.def.symbols.618023525" name="Defined symbols (-D)" superClass="net.sourceforge.usbdm.gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG_BUILD"/>
+									<listOptionValue builtIn="false" value="__CORTEX_M4"/>
+									<listOptionValue builtIn="false" value="__CMSIS_RTOS"/>
+								</option>
+								<option id="net.sourceforge.usbdm.gnu.c.compiler.option.include.paths.522207090" name="Include paths (-I)" superClass="net.sourceforge.usbdm.gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Sources&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis/INC&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis/SRC&quot;"/>
+								</option>
+								<inputType id="net.sourceforge.usbdm.cdt.arm.toolchain.c.compiler.input.749459240" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.c.compiler.input"/>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.compiler.1857908750" name="ARM C++ Compiler" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.compiler">
+								<option id="net.sourceforge.usbdm.gnu.cpp.compiler.option.preprocessor.def.symbols.382498938" name="Defined symbols (-D)" superClass="net.sourceforge.usbdm.gnu.cpp.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG_BUILD"/>
+									<listOptionValue builtIn="false" value="__CORTEX_M4"/>
+									<listOptionValue builtIn="false" value="__CMSIS_RTOS"/>
+								</option>
+								<option id="net.sourceforge.usbdm.gnu.cpp.compiler.option.include.paths.700549995" name="Include paths (-I)" superClass="net.sourceforge.usbdm.gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Sources&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis/INC&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis/SRC&quot;"/>
+								</option>
+								<inputType id="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.compiler.input.939325452" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.compiler.input"/>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.archiver.706885342" name="ARM Archiver" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.archiver"/>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.c.linker.1230589984" name="ARM C Linker" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.c.linker">
+								<option id="net.sourceforge.usbdm.cdt.toolchain.c.linker.linkerFile.1965657370" name="Linker File (-T option):" superClass="net.sourceforge.usbdm.cdt.toolchain.c.linker.linkerFile" value="Linker-rom.ld" valueType="string"/>
+								<option id="gnu.c.link.option.paths.1093402074" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Settings/Linker_Files&quot;"/>
+								</option>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.linker.560835207" name="ARM C++ Linker" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.linker">
+								<option id="net.sourceforge.usbdm.cdt.toolchain.cpp.linker.linkerFile.995753511" name="Linker File (-T option):" superClass="net.sourceforge.usbdm.cdt.toolchain.cpp.linker.linkerFile" useByScannerDiscovery="false" value="Linker-rom.ld" valueType="string"/>
+								<option id="gnu.cpp.link.option.paths.2120381851" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Settings/Linker_Files&quot;"/>
+								</option>
+								<option id="net.sourceforge.usbdm.cdt.toolchain.cpp.linker.printfFloat.199550121" name="Support %f format in printf (-u _printf_float)" superClass="net.sourceforge.usbdm.cdt.toolchain.cpp.linker.printfFloat" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.317537538" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.lister.1897864083" name="ARM Disassembler" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.lister"/>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.sizer.1981270178" name="ARM Sizer" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.sizer"/>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.sym.1460334619" name="ARM Symbol Table" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.sym"/>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="Snippets" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="net.sourceforge.usbdm.cdt.arm.exe.release.configuration.1832621260">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="net.sourceforge.usbdm.cdt.arm.exe.release.configuration.1832621260" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="${usbdm_rm_command} -rf" description="" id="net.sourceforge.usbdm.cdt.arm.exe.release.configuration.1832621260" name="Release" parent="net.sourceforge.usbdm.cdt.arm.exe.release.configuration">
+					<folderInfo id="net.sourceforge.usbdm.cdt.arm.exe.release.configuration.1832621260." name="/" resourcePath="">
+						<toolChain id="net.sourceforge.usbdm.cdt.arm.exe.release.toolchain.2005825399" name="ARM-USBDM ToolChain" superClass="net.sourceforge.usbdm.cdt.arm.exe.release.toolchain">
+							<option defaultValue="net.sourceforge.usbdm.cdt.toolchain.debug.debugLevel.none" id="net.sourceforge.usbdm.cdt.toolchain.debug.debugLevel.1813024109" name="Debug level" superClass="net.sourceforge.usbdm.cdt.toolchain.debug.debugLevel" useByScannerDiscovery="false" value="net.sourceforge.usbdm.cdt.toolchain.debug.debugLevel.max" valueType="enumerated"/>
+							<option defaultValue="net.sourceforge.usbdm.gnu.c.optimization.level.most" id="net.sourceforge.usbdm.cdt.toolchain.optimization.level.1551783964" name="Optimization level" superClass="net.sourceforge.usbdm.cdt.toolchain.optimization.level" useByScannerDiscovery="false" value="net.sourceforge.usbdm.gnu.c.optimization.level.size" valueType="enumerated"/>
+							<option id="net.sourceforge.usbdm.cdt.arm.toolchain.mcpu.1955269233" name="Cpu (-mcpu=)" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.mcpu" useByScannerDiscovery="false" value="net.sourceforge.usbdm.cdt.arm.toolchain.mcpu.cortexM4" valueType="enumerated"/>
+							<option id="net.sourceforge.usbdm.cdt.arm.toolchain.mthumb.1225823007" name="Thumb Instruction set (-mthumb)" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.mthumb" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+							<option id="net.sourceforge.usbdm.cdt.toolchain.optimization.compilerOther.642734074" name="Other flags (compiler)" superClass="net.sourceforge.usbdm.cdt.toolchain.optimization.compilerOther" useByScannerDiscovery="false" value="-finline-limit=100" valueType="string"/>
+							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF" id="net.sourceforge.usbdm.cdt.toolchain.targetPlatform.1950237913" name="USBDM common base platform" superClass="net.sourceforge.usbdm.cdt.toolchain.targetPlatform"/>
+							<builder buildPath="${workspace_loc:/SMT_Oven_stubs}/Release" id="net.sourceforge.usbdm.cdt.toolchain.builder.2037952329" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="net.sourceforge.usbdm.cdt.toolchain.builder"/>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.cppAssembler.1032893717" name="ARM Assembler" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cppAssembler">
+								<option id="net.sourceforge.usbdm.cdt.toolchain.cppAssembler.preprocess.definedSymbols.174534492" name="Defined Symbols (-D)" superClass="net.sourceforge.usbdm.cdt.toolchain.cppAssembler.preprocess.definedSymbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="RELEASE_BUILD"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+								</option>
+								<option id="net.sourceforge.usbdm.cdt.toolchain.cppAssembler.Directories.includePaths.1417498671" name="Include paths (-I)" superClass="net.sourceforge.usbdm.cdt.toolchain.cppAssembler.Directories.includePaths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis&quot;"/>
+								</option>
+								<inputType id="net.sourceforge.usbdm.cdt.arm.toolchain.cppAssembler.inputType.1224017681" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cppAssembler.inputType"/>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.c.compiler.527814068" name="ARM C Compiler" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.c.compiler">
+								<option id="net.sourceforge.usbdm.gnu.c.compiler.option.preprocessor.def.symbols.173605480" name="Defined symbols (-D)" superClass="net.sourceforge.usbdm.gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="RELEASE_BUILD"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="__CORTEX_M4"/>
+									<listOptionValue builtIn="false" value="__CMSIS_RTOS"/>
+								</option>
+								<option id="net.sourceforge.usbdm.gnu.c.compiler.option.include.paths.1345203909" name="Include paths (-I)" superClass="net.sourceforge.usbdm.gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Sources&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis/INC&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis/SRC&quot;"/>
+								</option>
+								<inputType id="net.sourceforge.usbdm.cdt.arm.toolchain.c.compiler.input.716645488" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.c.compiler.input"/>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.compiler.762238528" name="ARM C++ Compiler" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.compiler">
+								<option id="net.sourceforge.usbdm.gnu.cpp.compiler.option.preprocessor.def.symbols.1059495338" name="Defined symbols (-D)" superClass="net.sourceforge.usbdm.gnu.cpp.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="RELEASE_BUILD"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="__CORTEX_M4"/>
+									<listOptionValue builtIn="false" value="__CMSIS_RTOS"/>
+								</option>
+								<option id="net.sourceforge.usbdm.gnu.cpp.compiler.option.include.paths.878467417" name="Include paths (-I)" superClass="net.sourceforge.usbdm.gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Sources&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis/INC&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/cmsis/SRC&quot;"/>
+								</option>
+								<inputType id="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.compiler.input.690798278" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.compiler.input"/>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.archiver.1806267191" name="ARM Archiver" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.archiver"/>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.c.linker.206169935" name="ARM C Linker" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.c.linker">
+								<option id="net.sourceforge.usbdm.cdt.toolchain.c.linker.linkerFile.1125443908" name="Linker File (-T option):" superClass="net.sourceforge.usbdm.cdt.toolchain.c.linker.linkerFile" value="Linker-rom.ld" valueType="string"/>
+								<option id="gnu.c.link.option.paths.2062473026" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Settings/Linker_Files&quot;"/>
+								</option>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.linker.528341387" name="ARM C++ Linker" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.cpp.linker">
+								<option id="net.sourceforge.usbdm.cdt.toolchain.cpp.linker.linkerFile.2106253643" name="Linker File (-T option):" superClass="net.sourceforge.usbdm.cdt.toolchain.cpp.linker.linkerFile" useByScannerDiscovery="false" value="Linker-rom.ld" valueType="string"/>
+								<option id="gnu.cpp.link.option.paths.789052939" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/Project_Settings/Linker_Files&quot;"/>
+								</option>
+								<option id="net.sourceforge.usbdm.cdt.toolchain.cpp.linker.printfFloat.797711938" name="Support %f format in printf (-u _printf_float)" superClass="net.sourceforge.usbdm.cdt.toolchain.cpp.linker.printfFloat" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1786693848" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.lister.333965744" name="ARM Disassembler" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.lister"/>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.sizer.443352085" name="ARM Sizer" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.sizer"/>
+							<tool id="net.sourceforge.usbdm.cdt.arm.toolchain.sym.398787532" name="ARM Symbol Table" superClass="net.sourceforge.usbdm.cdt.arm.toolchain.sym"/>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="Snippets" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="SMT_Oven_stubs.net.sourceforge.usbdm.cdt.newProjectType.exe.1100346126" name="Executable" projectType="net.sourceforge.usbdm.cdt.newProjectType.exe"/>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+</cproject>

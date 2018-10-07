@@ -18,7 +18,7 @@
  * Any manual changes will be lost.
  */
 #include <stdint.h>
-#include <cstdio>       // snprintf()
+//#include <cstdio>       // snprintf()
 #include <ctype.h>      // isspace() etc
 #include "hardware.h"
 
@@ -146,7 +146,7 @@ protected:
     * @return >=0 Digit in range 0 - (radix-1)
     * @return <0  Invalid character for radix
     */
-   static int NOINLINE_DEBUG convertDigit(int ch, Radix radix) {
+   static int convertDigit(int ch, Radix radix) {
       unsigned digit = ch - '0';
       if (digit<10) {
          return (digit<radix)?digit:-1;
@@ -192,7 +192,7 @@ public:
     * @return <0   No character available
     * @return >=0  Character available
     */
-   int NOINLINE_DEBUG peek() {
+   int __attribute__((noinline)) peek() {
       if (lookAhead>0) {
          return lookAhead;
       }
@@ -278,7 +278,7 @@ public:
     * @return Pointer to '\0' null character at end of converted number\n
     *         May be used for incrementally writing to a buffer.
     */
-   static NOINLINE_DEBUG char *ultoa(
+   static __attribute__((noinline)) char *ultoa(
          char          *ptr,
          unsigned long  value,
          Radix          radix,
@@ -306,7 +306,10 @@ public:
       // Add leading padding
       switch (padding) {
          case Padding_None:
-            break;
+            if (isNegative) {
+                *ptr++ = '-';
+             }
+             break;
          case Padding_LeadingSpaces:
             if (isNegative) {
                *ptr++ = '-';
@@ -353,7 +356,7 @@ public:
     *
     * @param[in] ptr      Buffer to write result (at least 32 characters for binary)
     * @param[in] value    Unsigned long to convert
-    * @param[in] radix    Radix for conversion [2..16]
+    * @param[in] radix    Radix for conversion [2..16] (default 10)
     * @param[in] padding  How to pad the number if smaller than field width
     * @param[in] width    Field width of printed number
     *
@@ -375,7 +378,7 @@ public:
     *
     * @param[in] ptr      Buffer to write result (at least 32 characters for binary)
     * @param[in] value    Long to convert
-    * @param[in] radix    Radix for conversion [2..16]
+    * @param[in] radix    Radix for conversion [2..16] (default 10)
     * @param[in] padding  How to pad the number if smaller than field width
     * @param[in] width    Field width of printed number
     *
@@ -457,7 +460,7 @@ public:
     *    int numChars = gets(buff, sizeof(buff));
     * @endcode
     */
-   int NOINLINE_DEBUG gets(char data[], uint16_t size, char terminator='\n') {
+   int __attribute__((noinline)) gets(char data[], uint16_t size, char terminator='\n') {
       char *ptr = data;
       while (size-->1) {
          char ch = readChar();
@@ -489,9 +492,18 @@ public:
     * @return Reference to self
     */
    FormattedIO NOINLINE_DEBUG &reset() {
-      fWidth = 0;
+      fWidth   = 0;
       fPadding = Padding_None;
-      fRadix = Radix_10;
+      fRadix   = Radix_10;
+      return *this;
+   }
+
+   /**
+    * Null function (for debug)
+    *
+    * @return Reference to self
+    */
+   FormattedIO NOINLINE_DEBUG &null() {
       return *this;
    }
 
@@ -523,7 +535,7 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &write(const char *str) {
+   FormattedIO __attribute__((noinline)) &write(const char *str) {
       while (*str != '\0') {
          write(*str++);
       }
@@ -537,7 +549,7 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &writeln(const char *str) {
+   FormattedIO __attribute__((noinline)) &writeln(const char *str) {
       write(str);
       return writeln();
    }
@@ -549,7 +561,7 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &write(bool b) {
+   FormattedIO __attribute__((noinline)) &write(bool b) {
       return write(b?"true":"false");
    }
 
@@ -560,7 +572,7 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &writeln(bool b) {
+   FormattedIO __attribute__((noinline)) &writeln(bool b) {
       write(b);
       return writeln();
    }
@@ -569,11 +581,11 @@ public:
     * Write an unsigned long integer
     *
     * @param[in]  value Unsigned long to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 10)
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &write(unsigned long value, Radix radix=Radix_10) {
+   FormattedIO __attribute__((noinline)) &write(unsigned long value, Radix radix=Radix_10) {
       char buff[35];
       ultoa(buff, value, radix, fPadding, fWidth, false);
       return write(buff);
@@ -583,11 +595,11 @@ public:
     * Write a long integer
     *
     * @param[in]  value Long to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 10)
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &write(long value, Radix radix=Radix_10) {
+   FormattedIO __attribute__((noinline)) &write(long value, Radix radix=Radix_10) {
       char buff[35];
       bool isNegative = value < 0;
       if (isNegative) {
@@ -601,11 +613,11 @@ public:
     * Write an unsigned long integer with newline
     *
     * @param[in]  value Unsigned long to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 10)
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &writeln(unsigned long value, Radix radix=Radix_10) {
+   FormattedIO __attribute__((noinline)) &writeln(unsigned long value, Radix radix=Radix_10) {
       write(value, radix);
       return writeln();
    }
@@ -614,11 +626,11 @@ public:
     * Write an pointer value
     *
     * @param[in]  value Pointer value to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 16)
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &write(const void *value, Radix radix=Radix_10) {
+   FormattedIO __attribute__((noinline)) &write(const void *value, Radix radix=Radix_16) {
       return write((unsigned long) value, radix);
    }
 
@@ -626,11 +638,11 @@ public:
     * Write an pointer value with newline
     *
     * @param[in]  value Pointer value to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 16)
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &writeln(const void *value, Radix radix=Radix_10) {
+   FormattedIO NOINLINE_DEBUG &writeln(const void *value, Radix radix=Radix_16) {
       return writeln((unsigned long) value, radix);
    }
 
@@ -638,7 +650,7 @@ public:
     * Write a long integer with newline
     *
     * @param[in]  value Long to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 10)
     *
     * @return Reference to self
     */
@@ -651,7 +663,7 @@ public:
     * Write an unsigned integer
     *
     * @param[in]  value Unsigned to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 10)
     *
     * @return Reference to self
     */
@@ -663,7 +675,7 @@ public:
     * Write an unsigned integer with newline
     *
     * @param[in]  value Unsigned to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 10)
     *
     * @return Reference to self
     */
@@ -675,7 +687,7 @@ public:
     * Write an integer
     *
     * @param[in]  value Integer to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 10)
     *
     * @return Reference to self
     */
@@ -687,7 +699,7 @@ public:
     * Write an integer with newline
     *
     * @param[in]  value Integer to print
-    * @param[in]  radix Radix for conversion [2..16]
+    * @param[in]  radix Radix for conversion [2..16] (default 10)
     *
     * @return Reference to self
     */
@@ -720,7 +732,7 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &write(double value) {
+   FormattedIO __attribute__((noinline)) &write(double value) {
       char buff[20];
       if (value<0) {
          write('-');
@@ -740,7 +752,7 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &writeln(double value) {
+   FormattedIO __attribute__((noinline)) &writeln(double value) {
       write(value);
       return writeln();
    }
@@ -933,7 +945,7 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &skipWhiteSpace() {
+   FormattedIO __attribute__((noinline)) &skipWhiteSpace() {
       int ch;
       do {
          ch = readChar();
@@ -947,7 +959,7 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO NOINLINE_DEBUG &readln() {
+   FormattedIO __attribute__((noinline)) &readln() {
       while (readChar() != '\n') {
          __asm__("nop");
       }
@@ -972,7 +984,7 @@ public:
     * @return false No error
     * @return true  Operation failed since last checked e.g. illegal digit at start of number
     */
-   bool NOINLINE_DEBUG isError() {
+   bool __attribute__((noinline)) isError() {
       bool t = inErrorState;
       inErrorState = false;
       return t;
@@ -988,7 +1000,7 @@ public:
     *
     * @note Skips leading whitespace
     */
-   FormattedIO NOINLINE_DEBUG &read(unsigned long &value, Radix radix=Radix_10) {
+   FormattedIO __attribute__((noinline)) &read(unsigned long &value, Radix radix=Radix_10) {
       // Skip white space
       int ch;
       do {
@@ -1311,6 +1323,67 @@ public:
     *  Flush input data
     */
    virtual void flushInput() = 0;
+
+   /**
+    * Print an array as a hex table.
+    * The indexes shown are for byte offsets suitable for a memory dump.
+    *
+    * @param data          Array to print
+    * @param size          Size of array in elements
+    * @param visibleIndex The starting index to print for the array. Should be multiple of sizeof(data[]).
+    */
+   template <typename T>
+   void writeArray(T *data, uint32_t size, uint32_t visibleIndex=0) {
+      usbdm_assert((visibleIndex%sizeof(T))==0, "visibleIndex should be multiple of sizeof(data[])");
+      unsigned rowMask;
+      unsigned offset;
+
+      switch(sizeof(T)) {
+         case 1  :
+            offset = (visibleIndex/sizeof(T))&0xF;
+            visibleIndex &= ~0xF;
+            rowMask = 0xF;  break;
+         case 2  :
+            offset = (visibleIndex/sizeof(T))&0x7;
+            visibleIndex &= ~0xF;
+            rowMask = 0x7; break;
+         default :
+            offset = (visibleIndex/sizeof(T))&0x7;
+            visibleIndex &= ~0x1F;
+            rowMask = 0x7; break;
+      }
+      setPadding(Padding_TrailingSpaces).setWidth(2*sizeof(T));
+      write("          ");
+      for (unsigned index=0; index<=(rowMask*sizeof(T)); index+=sizeof(T)) {
+         write(index, Radix_16).write(" ");
+      }
+      writeln();
+      setPadding(Padding_LeadingZeroes);
+      bool needNewline = true;
+      size += offset;
+      for (unsigned index=0; index<size; index++) {
+         if (needNewline) {
+            setWidth(8);
+            write(visibleIndex+index*sizeof(T), Radix_16).write(": ");
+         }
+         if (index<offset) {
+            switch(sizeof(T)) {
+               case 1  : write("   ");       break;
+               case 2  : write("     ");     break;
+               default : write("         "); break;
+            }
+         }
+         else {
+            setWidth(2*sizeof(T));
+            write(data[index-offset], Radix_16).write(" ");
+         }
+         needNewline = (((index+1)&rowMask)==0);
+         if (needNewline) {
+            writeln();
+         }
+      }
+      writeln().reset();
+   }
 
 };
 

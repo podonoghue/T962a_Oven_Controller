@@ -10,7 +10,7 @@
    <i> In CMSIS this will determine the ISR stack size
    <0x0-0x8000> 
 */
-__stack_size = 0x200;
+__stack_size = 0x100;
 
 /* <o> Minimum Heap Size 
    <i> Actual heap may be larger as it fills all unused RAM up to STACK
@@ -65,7 +65,9 @@ MEMORY
  *  <o1> RAM    size    <constant>
  */
   ram            (rwx) : ORIGIN = 0x1FFFC000, LENGTH = 0x00008000
-  /* Guard region above stack for GDB */
+/*
+ * Guard region above stack for GDB 
+ */
   gdbGuard       (r)   : ORIGIN = 0x20004000, LENGTH = 0x00000020
 };
 

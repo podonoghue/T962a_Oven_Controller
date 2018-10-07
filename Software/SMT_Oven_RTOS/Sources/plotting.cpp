@@ -190,7 +190,7 @@ protected:
          return;
       case s_init:
          state = s_preheat;
-         // no break
+         /* Fall through - no break */
       case s_preheat:
          // Heat from ambient to start of soak temperature
          // A -> soakTemp1 over preheatTime

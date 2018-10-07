@@ -89,17 +89,12 @@ Convenience template for UART. Uses the following classes:\n
       console.writeln(integer);
    }
 
-   // Utility functions
-   Console::ultoa(100, buff);
-   console.write("ultoa(100, buff)  = ").writeln(buff);
-   Console::ltoa(-100, buff);
-   console.write("ltoa(-100, buff)  = ").writeln(buff);
-
-   char *ptr = buff;
-   ptr = Console::strcpy(ptr, "Console::ultoa(100, buff) = ");
-   ptr = Console::ultoa(100, ptr);
-   ptr = Console::strcpy(ptr, ", oh well!");
-   console.writeln(buff);
+   // String buffer example
+   // Used to write formatted strings
+   char buff[100];
+   StringFormatter sf(buff, sizeof(buff));
+   sf.write("This is a string and number(").write(3.3).write(") written to a char buffer (string)");
+   console.writeln(sf.toString());
  @endcode
 
 @page DMAExamples  Direct Memory Access Controller
@@ -371,9 +366,9 @@ The interface is divided into a number of templates:
 <li>USBDM::Ftm0
 <li>USBDM::Ftm1
 </ul>
-<li>USBDM::QuadEncoder_T Representing a FTM operating as a quadrature encoder.
+<li>USBDM::QuadDecoder_T Representing a FTM operating as a quadrature encoder.
 <ul>
-<li>USBDM::QuadEncoder1
+<li>USBDM::QuadDecoder1
 </ul>
 <li>USBDM::FtmChannel_T Representing individual channels of a single FTM.
 <ul>
@@ -443,26 +438,26 @@ This is a template class with static methods.\n
 
    // Use FTM1 as the quadrature encoder
    // Not all FTMs support this mode
-   using QuadEncoder = QuadEncoder1;
+   using QuadDecoder = QuadDecoder1;
 
    // Enable encoder
-   QuadEncoder::enable();
+   QuadDecoder::enable();
 
    // Set pin filters
-   QuadEncoder::enableFilter(15);
+   QuadDecoder::enableFilter(15);
 
    // Reset position to zero
    // Movement will be relative to this position
-   QuadEncoder::resetPosition();
+   QuadDecoder::resetPosition();
 
    // Set up callback for quadrature overflow or underflow
-   QuadEncoder::setTimerOverflowCallback(callBack);
-   QuadEncoder::enableTimerOverflowInterrupts();
-   QuadEncoder::enableNvicInterrupts();
+   QuadDecoder::setTimerOverflowCallback(callBack);
+   QuadDecoder::enableTimerOverflowInterrupts();
+   QuadDecoder::enableNvicInterrupts();
 
    for (;;) {
       // Report position
-      console.write("Shaft position = ").writeln(QuadEncoder::getPosition());
+      console.write("Shaft position = ").writeln(QuadDecoder::getPosition());
    }
 @endcode
 
@@ -564,20 +559,26 @@ This is a template class with static methods.\n
 
 @example analogue-comparison-example.cpp
 @example analogue-diff-example.cpp
+@example analogue-example.cpp
 @example analogue-interrupt-example.cpp
 @example analogue-joystick-example.cpp
 @example cmp-example.cpp
+@example cmt-example.cpp
 @example console-example.cpp
+@example crc-example.cpp
 @example dac-example.cpp
 @example digital-example1.cpp
 @example digital-example2.cpp
+@example digital-interrupt-example.cpp
+@example digital-rotary-encoder-example.cpp
 @example dma-memory-example.cpp
 @example dma-memory-template-example.cpp
 @example dma-spi-example.cpp
 @example dma-uart-example-mk20.cpp
 @example dma-uart-example-mk22f.cpp
 @example dma-uart-example-mk28f.cpp
-@example flash_programming_example.cpp
+@example ewm-example.cpp
+@example flash-programming-example.cpp
 @example ftm-ic-example.cpp
 @example ftm-oc-example.cpp
 @example ftm-pwm-example.cpp
@@ -594,27 +595,30 @@ This is a template class with static methods.\n
 @example llwu-example-mk22f.cpp
 @example lptmr-example.cpp
 @example mag3310-example.cpp
-@example mag3310.cpp
 @example mag3310.h
+@example mcg-run-mode-test-mk20.cpp
+@example mcg-run-mode-test-mk22f.cpp
+@example mcg-test.cpp
 @example mma845x-example.cpp
 @example mma845x.cpp
 @example mma845x.h
 @example mma8491q-example.cpp
 @example mma8491q.cpp
 @example mma8491q.h
-@example nonvolatile_example.cpp
+@example rnga-example.cpp
+@example nonvolatile-example.cpp
 @example pca9685-example.cpp
 @example pca9685.cpp
 @example pca9685.h
+@example pdb-example.cpp
 @example pit-example1.cpp
 @example pit-example2.cpp
 @example pit-example3.cpp
-@example pdb-example.cpp
+@example rcm-example.cpp
 @example rtc-example.cpp
 @example spi-example.cpp
-@example mcg-test.cpp
 @example tsi-mk-example.cpp
-@example usb.cpp
+@example uart-example.cpp
 @example usb_cdc_interface.cpp
 @example usb_cdc_interface.h
 @example usb_implementation.h
@@ -624,5 +628,9 @@ This is a template class with static methods.\n
 @example usb_implementation_cdc.h
 @example usb_implementation_composite.cpp
 @example usb_implementation_composite.h
+@example usb.cpp
+@example usbdcd-example.cpp
+@example vlpr-run-hsrun-example.cpp
+@example wdog-example.cpp
 
  */

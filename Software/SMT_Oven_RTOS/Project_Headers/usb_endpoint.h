@@ -112,7 +112,7 @@ public:
    /**
     * Flip active odd/even buffer state
     *
-    * @param[in]  usbStat Value from USB->STAT
+    * @param[in]  usbStat Value from USB_STAT
     */
     void flipOddEven(uint8_t usbStat) {
 
@@ -157,9 +157,12 @@ public:
    /** Size of end-point buffer */
    static constexpr int BUFFER_SIZE  = EP_MAXSIZE;
 
+   /** Hardware instance pointer */
+   static __attribute__((always_inline)) volatile USB_Type &usb() { return Info::usb(); }
+
 protected:
-   /** Pointer to hardware */
-   static constexpr USB_Type volatile *usb = Info::usb;
+   /** Clock register for peripheral */
+   static __attribute__((always_inline)) volatile uint32_t &clockReg() { return Info::clockReg(); }
 
    /** Buffer for Transmit & Receive data */
    uint8_t fDataBuffer[EP_MAXSIZE];
@@ -189,11 +192,12 @@ protected:
    void (*fCallback)(EndpointState endpointState);
 
    /**
-    *  Dummy callback used catch used of unset callback
+    *  Dummy callback used to catch use of unset callback
     *
     * @param[in]  endpointState State of endpoint before completion
     */
-   static void unsetHandlerCallback(EndpointState) {
+   static void unsetHandlerCallback(EndpointState endpointState) {
+      (void)endpointState;
       setAndCheckErrorCode(E_NO_HANDLER);
    }
 
@@ -260,14 +264,14 @@ public:
     */
    virtual void stall() override {
       state = EPStall;
-      usb->ENDPOINT[ENDPOINT_NUM].ENDPT |= USB_ENDPT_EPSTALL_MASK;
+      usb().ENDPOINT[ENDPOINT_NUM].ENDPT |= USB_ENDPT_EPSTALL_MASK;
    }
 
    /**
     * Clear Stall on endpoint
     */
    virtual void clearStall() override {
-      usb->ENDPOINT[ENDPOINT_NUM].ENDPT &= ~USB_ENDPT_EPSTALL_MASK;
+      usb().ENDPOINT[ENDPOINT_NUM].ENDPT &= ~USB_ENDPT_EPSTALL_MASK;
       state               = EPIdle;
       txData1             = DATA0;
       rxData1             = DATA0;
@@ -330,7 +334,7 @@ public:
 
       if ((endPointBdts[ENDPOINT_NUM].txEven.u.bits&BDTEntry_OWN_MASK) ||
           (endPointBdts[ENDPOINT_NUM].txOdd.u.bits&BDTEntry_OWN_MASK)) {
-         PRINTF("Opps-Tx\n");
+         console.WRITELN("Opps-Tx");
       }
       uint16_t size = fDataRemaining;
       if (size > EP_MAXSIZE) {
@@ -396,7 +400,7 @@ public:
       }
       if ((endPointBdts[ENDPOINT_NUM].rxEven.u.bits&BDTEntry_OWN_MASK) ||
           (endPointBdts[ENDPOINT_NUM].rxOdd.u.bits&BDTEntry_OWN_MASK)) {
-         PRINTF("Opps-Rx\n");
+         console.WRITELN("Opps-Rx\n");
       }
       // Set up to Receive packet
       // Always used maximum size even if expecting less data
@@ -437,7 +441,7 @@ public:
          fDataRemaining   -= size;
       }
       else {
-         PRINTF("RxSize = 0\n");
+         console.WRITELN("RxSize = 0\n");
       }
       return size;
    }
@@ -448,7 +452,6 @@ public:
     void handleOutToken() {
       uint8_t transferSize = 0;
 //      pushState('O');
-
       // Toggle DATA0/1 for next pkt
       rxData1 = !rxData1;
 
@@ -457,7 +460,7 @@ public:
             // Save the data from the Receive buffer
             transferSize = saveRxData();
 //            if (fEndpointNumber == 1) {
-//               PRINTF("ep1.handleOutToken() s=%d. size=%d, r=%d\n", state, transferSize, fDataRemaining);
+//               console.WRITELN("ep1.handleOutToken() s=%d. size=%d, r=%d\n", state, transferSize, fDataRemaining);
 //            }
             // Complete transfer on undersize packet or received expected number of bytes
             if ((transferSize < EP_MAXSIZE) || (fDataRemaining == 0)) {
@@ -484,7 +487,7 @@ public:
          case EPComplete:  // Not used
          case EPStall:     // Not used
          case EPThrottle:  // Not used
-            PRINTF("Unexpected OUT, ep=%d, s=%s\n", ENDPOINT_NUM, getStateName(state));
+            console.WRITE("Unexpected OUT, ep=").WRITE(ENDPOINT_NUM).WRITE(", s=").WRITELN(getStateName(state));
             state = EPIdle;
             break;
       }
@@ -497,7 +500,7 @@ public:
       // Toggle DATA0/1 for next packet
       txData1 = !txData1;
 
-      //   PUTS(fHardwareState[BDM_OUT_ENDPOINT].data0_1?"ep2HandleInToken-T-1\n":"ep2HandleInToken-T-0\n");
+      //   console.WRITELN(fHardwareState[BDM_OUT_ENDPOINT].data0_1?"ep2HandleInToken-T-1":"ep2HandleInToken-T-0");
 
       switch (state) {
          case EPDataIn:    // Doing a sequence of IN packets
@@ -526,7 +529,7 @@ public:
          case EPDataOut:   // Doing a sequence of OUT packets (until data count <= EP_MAXSIZE)
          case EPStatusOut: // Doing an OUT packet as a status handshake
          default:
-            PRINTF("Unexpected IN, ep=%d, s=%s\n", ENDPOINT_NUM, getStateName(state));
+            console.WRITE("Unexpected IN, ep=").WRITE(ENDPOINT_NUM).WRITE(", s=").WRITELN(getStateName(state));
             state = EPIdle;
             break;
       }
@@ -563,12 +566,12 @@ public:
     * Initialise endpoint
     *  - Internal state
     *  - BDTs
-    *  - usb->ENDPOINT[].ENDPT
+    *  - usb().ENDPOINT[].ENDPT
     */
     void initialise() {
       Endpoint_T<Info, 0, EP0_SIZE>::initialise();
       // Receive/Transmit/SETUP
-      usb->ENDPOINT[0].ENDPT = USB_ENDPT_EPRXEN_MASK|USB_ENDPT_EPTXEN_MASK|USB_ENDPT_EPHSHK_MASK;
+      usb().ENDPOINT[0].ENDPT = USB_ENDPT_EPRXEN_MASK|USB_ENDPT_EPTXEN_MASK|USB_ENDPT_EPHSHK_MASK;
    }
 
    /**
@@ -578,7 +581,7 @@ public:
    virtual void stall() {
       // TODO - consider removing (use usual stall handling)
 
-//      PRINTF("stall\n");
+//      console.WRITELN("stall\n");
       // Stall Transmit only
       BdtEntry *bdt = txOdd?&endPointBdts[0].txOdd:&endPointBdts[0].txEven;
       bdt->u.bits = BDTEntry_OWN_MASK|BDTEntry_STALL_MASK|BDTEntry_DTS_MASK;
@@ -589,7 +592,7 @@ public:
     */
    virtual void clearStall() {
       // TODO - consider removing (use usual stall handling)
-//      PRINTF("clearStall\n");
+//      console.WRITELN("clearStall\n");
       // Release BDT as SIE doesn't
       BdtEntry *bdt = txOdd?&endPointBdts[0].txOdd:&endPointBdts[0].txEven;
       bdt->u.bits   = 0;
@@ -642,12 +645,12 @@ public:
     * Initialise endpoint
     *  - Internal state
     *  - BDTs
-    *  - usb->ENDPOINT[].ENDPT
+    *  - usb().ENDPOINT[].ENDPT
     */
     void initialise() {
       Endpoint_T<Info, ENDPOINT_NUM, EP_MAXSIZE>::initialise();
       // Transmit only
-      usb->ENDPOINT[ENDPOINT_NUM].ENDPT = USB_ENDPT_EPTXEN_MASK|USB_ENDPT_EPHSHK_MASK;
+      usb().ENDPOINT[ENDPOINT_NUM].ENDPT = USB_ENDPT_EPTXEN_MASK|USB_ENDPT_EPHSHK_MASK;
    }
 };
 
@@ -679,12 +682,12 @@ public:
     * Initialise endpoint
     *  - Internal state
     *  - BDTs
-    *  - usb->ENDPOINT[].ENDPT
+    *  - usb().ENDPOINT[].ENDPT
     */
     void initialise() {
       Endpoint_T<Info, ENDPOINT_NUM, EP_MAXSIZE>::initialise();
       // Receive only
-      usb->ENDPOINT[ENDPOINT_NUM].ENDPT = USB_ENDPT_EPRXEN_MASK|USB_ENDPT_EPHSHK_MASK;
+      usb().ENDPOINT[ENDPOINT_NUM].ENDPT = USB_ENDPT_EPRXEN_MASK|USB_ENDPT_EPHSHK_MASK;
    }
 };
 

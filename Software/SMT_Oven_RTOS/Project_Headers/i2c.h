@@ -227,7 +227,7 @@ public:
     * Uses repeated-start.\n
     * Uses shared transmit and receive buffer
     *
-    * @param[in]  address  Address of slave to communicate with (should include LSB = R/W bit = 0)
+    * @param[in]    address  Address of slave to communicate with (should include LSB = R/W bit = 0)
     * @param[in]    txSize   Size of transmission data
     * @param[in]    rxSize   Size of reception data
     * @param[inout] data     Data for transmission and reception
@@ -343,12 +343,12 @@ public:
     * @param[in]  i2cMode    Mode of operation
     * @param[in]  myAddress  Address of this device on bus (not currently used)
     */
-   I2cBase_T(unsigned bps=400000, I2cMode i2cMode=I2cMode_Polled, uint8_t myAddress=0) : I2c(Info::i2c, i2cMode) {
+   I2cBase_T(unsigned bps=400000, I2cMode i2cMode=I2cMode_Polled, uint8_t myAddress=0) : I2c(&Info::i2c(), i2cMode) {
 
 #ifdef DEBUG_BUILD
       // Check pin assignments
-      static_assert(Info::info[0].gpioBit != UNMAPPED_PCR, "I2Cx_SCL has not been assigned to a pin");
-      static_assert(Info::info[1].gpioBit != UNMAPPED_PCR, "I2Cx_SDA has not been assigned to a pin");
+      static_assert(Info::info[0].gpioBit != UNMAPPED_PCR, "I2Cx_SCL has not been assigned to a pin - Modify Configure.usbdm");
+      static_assert(Info::info[1].gpioBit != UNMAPPED_PCR, "I2Cx_SDA has not been assigned to a pin - Modify Configure.usbdm");
 #endif
 
       busHangReset();
@@ -401,7 +401,7 @@ public:
    void init(const uint8_t myAddress) {
 
       // Enable clock to I2C interface
-      *Info::clockReg |= Info::clockMask;
+      Info::clockReg() |= Info::clockMask;
 
       thisPtr = this;
 
@@ -468,7 +468,7 @@ template<class Info> I2c *I2cBase_T<Info>::thisPtr = 0;
  * <b>Example</b>\n
  * Refer @ref I2cBase_T
  */
-using I2c0 = I2cBase_T<I2c0Info>;
+class I2c0 : public I2cBase_T<I2c0Info> {};
 #endif
 
 #if defined(USBDM_I2C1_IS_DEFINED)
@@ -478,7 +478,7 @@ using I2c0 = I2cBase_T<I2c0Info>;
  * <b>Example</b>
  * Refer @ref I2cBase_T
  */
-using I2c1 = I2cBase_T<I2c1Info>;
+class I2c1 : public I2cBase_T<I2c1Info> {};
 #endif
 
 #if defined(USBDM_I2C2_IS_DEFINED)
@@ -488,7 +488,7 @@ using I2c1 = I2cBase_T<I2c1Info>;
  * <b>Example</b>
  * Refer @ref I2cBase_T
  */
-using I2c2 = I2cBase_T<I2c2Info>;
+class I2c2 : public I2cBase_T<I2c2Info> {};
 #endif
 
 /**

@@ -47,21 +47,23 @@ constexpr PortInfo  __attribute__((unused)) PortDInfo {PORTD_BasePtr, PORTD_CLOC
 constexpr PortInfo  __attribute__((unused)) PortEInfo {PORTE_BasePtr, PORTE_CLOCK_MASK, PORTE_IRQn};
 
 
+/* Template:_common_settings.xml */
+
 /** Class to static check signal mapping is valid */
 template<class Info, int signalNum> class CheckSignal {
-#ifdef DEBUG_BUILD
    static_assert((signalNum<Info::numSignals), "Non-existent signal - Modify Configure.usbdm");
    static_assert((signalNum>=Info::numSignals)||(Info::info[signalNum].gpioBit != UNMAPPED_PCR), "Signal is not mapped to a pin - Modify Configure.usbdm");
    static_assert((signalNum>=Info::numSignals)||(Info::info[signalNum].gpioBit != INVALID_PCR),  "Signal doesn't exist in this device/package");
    static_assert((signalNum>=Info::numSignals)||((Info::info[signalNum].gpioBit == UNMAPPED_PCR)||(Info::info[signalNum].gpioBit == INVALID_PCR)||(Info::info[signalNum].gpioBit >= 0)), "Illegal signal");
-#endif
 };
 
 /** Enables mapping of all allocated pins during startup using mapAllPins() */
 static constexpr bool MAP_ALL_PINS = false;
 
-/** Map all allocated pins on a peripheral when peripheral is enabled */
-static constexpr bool MAP_ALL_PINS_ON_ENABLE = true;
+/** Used to configure pin-mapping before 1st use of peripherals */
+extern void mapAllPins();
+
+/* END Template:_common_settings.xml */
 
 /*
  * Peripheral Information Classes
@@ -71,7 +73,7 @@ static constexpr bool MAP_ALL_PINS_ON_ENABLE = true;
  * @brief Abstraction for Crystal Oscillator
  * @{
  */
-#define USBDM_OSC0_IS_DEFINED 
+#define USBDM_OSC0_IS_DEFINED
 /**
  * Peripheral information for OSC, Crystal Oscillator.
  * 
@@ -80,8 +82,13 @@ static constexpr bool MAP_ALL_PINS_ON_ENABLE = true;
  */
 class Osc0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = OSC0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile OSC_Type *osc   = (volatile OSC_Type *)OSC0_BasePtr;
+   __attribute__((always_inline)) static volatile OSC_Type &osc() {
+      return *(OSC_Type *)baseAddress;
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
@@ -91,7 +98,7 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Frequency of OSC Clock or Crystal
@@ -121,7 +128,7 @@ public:
     * @return Clock frequency as uint32_t in Hz
     */
    static uint32_t getOscerClock() {
-      return (osc->CR&OSC_CR_ERCLKEN_MASK)?osc_clock:0;
+      return (osc().CR&OSC_CR_ERCLKEN_MASK)?osc_clock:0;
    }
 
    /**
@@ -177,7 +184,7 @@ public:
  * @brief Abstraction for Real Time Clock
  * @{
  */
-#define USBDM_RTC_IS_DEFINED 
+#define USBDM_RTC_IS_DEFINED
 /**
  * Peripheral information for RTC, Real Time Clock.
  * 
@@ -186,14 +193,21 @@ public:
  */
 class RtcInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = RTC_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile RTC_Type *rtc   = (volatile RTC_Type *)RTC_BasePtr;
+   __attribute__((always_inline)) static volatile RTC_Type &rtc() {
+      return *(RTC_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_RTC_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
@@ -261,7 +275,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Time for cold start (corrected for 12 leap years since 1970)
    static constexpr uint32_t coldStartTime = 
@@ -277,7 +291,7 @@ public:
     */
    static uint32_t getInternalClock() {
       // RTC uses EXTAL32/XTAL32 clock
-      return (rtc->CR&RTC_CR_OSCE_MASK)?osc_input_freq:0;
+      return (rtc().CR&RTC_CR_OSCE_MASK)?osc_input_freq:0;
    }
 
    /**
@@ -286,7 +300,7 @@ public:
     * @return Clock frequency as uint32_t
     */
    static uint32_t getExternalClock() {
-      return (rtc->CR&RTC_CR_CLKO_MASK)?0:getInternalClock();
+      return (rtc().CR&RTC_CR_CLKO_MASK)?0:getInternalClock();
    }
 
    //! Number of signals available in info table
@@ -326,7 +340,7 @@ public:
  * @brief Abstraction for Multipurpose Clock Generator
  * @{
  */
-#define USBDM_MCG_IS_DEFINED 
+#define USBDM_MCG_IS_DEFINED
 /**
  * Peripheral information for MCG, Multipurpose Clock Generator.
  * 
@@ -335,8 +349,13 @@ public:
  */
 class McgInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = MCG_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile MCG_Type *mcg   = (volatile MCG_Type *)MCG_BasePtr;
+   __attribute__((always_inline)) static volatile MCG_Type &mcg() {
+      return *(MCG_Type *)baseAddress;
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -351,7 +370,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Indicates need for special handling of CLKDIV1 register
    static constexpr int ERRATA_E2448 = 0;
@@ -421,7 +440,7 @@ public:
     */
    static uint32_t getErcClock() {
    
-      switch((mcg->C7&MCG_C7_OSCSEL_MASK)) {
+      switch((mcg().C7&MCG_C7_OSCSEL_MASK)) {
          default               : return 0;
          case MCG_C7_OSCSEL(0) : return Osc0Info::getOscClock();
          case MCG_C7_OSCSEL(1) : return RtcInfo::getInternalClock();
@@ -434,9 +453,9 @@ public:
     * @return MCGIRCLK as uint32_t
     */
    static uint32_t getInternalIrcClock() {
-         if (mcg->C2&MCG_C2_IRCS_MASK) {
+         if (mcg().C2&MCG_C2_IRCS_MASK) {
    #ifdef MCG_SC_FCRDIV_MASK
-            return (system_fast_irc_clock/(1<<((mcg->SC&MCG_SC_FCRDIV_MASK)>>MCG_SC_FCRDIV_SHIFT)));
+            return (system_fast_irc_clock/(1<<((mcg().SC&MCG_SC_FCRDIV_MASK)>>MCG_SC_FCRDIV_SHIFT)));
    #else
             return system_fast_irc_clock;
    #endif
@@ -452,7 +471,7 @@ public:
     * @return MCGIRCLK as uint32_t
     */
    static uint32_t getMcgIrClock() {
-      if (mcg->C1&MCG_C1_IRCLKEN_MASK) {
+      if (mcg().C1&MCG_C1_IRCLKEN_MASK) {
          return getInternalIrcClock();
       }
       else {
@@ -471,7 +490,7 @@ public:
  * @brief Abstraction for System Integration Module
  * @{
  */
-#define USBDM_SIM_IS_DEFINED 
+#define USBDM_SIM_IS_DEFINED
 /**
  * Peripheral information for SIM, System Integration Module.
  * 
@@ -530,8 +549,13 @@ public:
 
 class SimInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = SIM_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile SIM_Type *sim   = (volatile SIM_Type *)SIM_BasePtr;
+   __attribute__((always_inline)) static volatile SIM_Type &sim() {
+      return *(SIM_Type *)baseAddress;
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
@@ -552,7 +576,7 @@ public:
     */
    static uint32_t getErc32kClock() {
    
-      switch(sim->SOPT1&SIM_SOPT1_OSC32KSEL_MASK) {
+      switch(sim().SOPT1&SIM_SOPT1_OSC32KSEL_MASK) {
          default                     : return 0;
          case SIM_SOPT1_OSC32KSEL(0) : return Osc0Info::getOsc32kClock();
          case SIM_SOPT1_OSC32KSEL(2) : return RtcInfo::getExternalClock();
@@ -566,7 +590,7 @@ public:
     * @param simPeripheralClockSource Clock source for peripheral clock
     */
    static void setPeripheralClock(SimPeripheralClockSource simPeripheralClockSource) {
-      sim->SOPT2 = (sim->SOPT2&~SIM_SOPT2_PLLFLLSEL_MASK) | simPeripheralClockSource;
+      sim().SOPT2 = (sim().SOPT2&~SIM_SOPT2_PLLFLLSEL_MASK) | simPeripheralClockSource;
    }
 
    /**
@@ -576,7 +600,7 @@ public:
     */
    static uint32_t getPeripheralClock() {
       
-      switch(sim->SOPT2&SIM_SOPT2_PLLFLLSEL_MASK) {
+      switch(sim().SOPT2&SIM_SOPT2_PLLFLLSEL_MASK) {
          default:                     return 0;
          case SIM_SOPT2_PLLFLLSEL(0): return SystemMcgFllClock;
          case SIM_SOPT2_PLLFLLSEL(1): return SystemMcgPllClock;
@@ -617,7 +641,7 @@ public:
     * @param simUsbFullSpeedClockSource Clock source for peripheral clock
     */
    static void setUsbFullSpeedClock(SimUsbFullSpeedClockSource simUsbFullSpeedClockSource) {
-      sim->SOPT2 = (sim->SOPT2&~SIM_SOPT2_USBSRC_MASK) | simUsbFullSpeedClockSource;
+      sim().SOPT2 = (sim().SOPT2&~SIM_SOPT2_USBSRC_MASK) | simUsbFullSpeedClockSource;
    }
 
    /**
@@ -626,12 +650,12 @@ public:
     * @return Clock frequency as a uint32_t in Hz
     */
    static uint32_t getUsbClock() {
-      switch ((sim->SOPT2&SIM_SOPT2_USBSRC_MASK)) {
+      switch ((sim().SOPT2&SIM_SOPT2_USBSRC_MASK)) {
          default:
          case SIM_SOPT2_USBSRC(0): return 48000000;
          case SIM_SOPT2_USBSRC(1): return  (getPeripheralClock()*
-            (((sim->CLKDIV2&SIM_CLKDIV2_USBFRAC_MASK)>>SIM_CLKDIV2_USBFRAC_SHIFT)+1))/
-            (((sim->CLKDIV2&SIM_CLKDIV2_USBDIV_MASK)>>SIM_CLKDIV2_USBDIV_SHIFT)+1);
+            (((sim().CLKDIV2&SIM_CLKDIV2_USBFRAC_MASK)>>SIM_CLKDIV2_USBFRAC_SHIFT)+1))/
+            (((sim().CLKDIV2&SIM_CLKDIV2_USBDIV_MASK)>>SIM_CLKDIV2_USBDIV_SHIFT)+1);
       }
    }
    #endif
@@ -758,7 +782,7 @@ public:
     * @param[in] simAdc0Trigger     Select the ADC0 Trigger source in STOP and VLPS modes, or when ADC0 Alternative Trigger is active.
     */
    static void setAdc0Triggers(SimAdc0AltTrigger simAdc0AltTrigger, SimAdc0Trigger simAdc0Trigger=SimAdc0Trigger_PdbExTrig) {
-      sim->SOPT7 = (sim->SOPT7&~(SIM_SOPT7_ADC0TRGSEL_MASK|SIM_SOPT7_ADC0ALTTRGEN_MASK))|simAdc0Trigger|simAdc0AltTrigger;
+      sim().SOPT7 = (sim().SOPT7&~(SIM_SOPT7_ADC0TRGSEL_MASK|SIM_SOPT7_ADC0ALTTRGEN_MASK))|simAdc0Trigger|simAdc0AltTrigger;
    };
 
    //! System Options Register 7
@@ -785,18 +809,18 @@ public:
    static void initRegs() {
    #ifdef SIM_SCGC4_USBOTG_MASK
       // The USB interface must be disabled for clock changes to have effect
-      sim->SCGC4 &= ~SIM_SCGC4_USBOTG_MASK;
+      sim().SCGC4 &= ~SIM_SCGC4_USBOTG_MASK;
    #endif
    
-      sim->SOPT1 = sopt1;
+      sim().SOPT1 = sopt1;
       // sim_sopt2_pllfllsel may also be altered by MCG clock code
-      sim->SOPT2 = sopt2;
-      sim->SOPT4 = sopt4;
-      sim->SOPT5 = sopt5;
-      sim->SOPT7 = sopt7;
+      sim().SOPT2 = sopt2;
+      sim().SOPT4 = sopt4;
+      sim().SOPT5 = sopt5;
+      sim().SOPT7 = sopt7;
    
    #ifdef SIM_CLKDIV2_USBDIV_MASK
-      sim->CLKDIV2 = clkdiv2;
+      sim().CLKDIV2 = clkdiv2;
    #endif
    }
 
@@ -811,7 +835,7 @@ public:
  * @brief Abstraction for Analogue Input
  * @{
  */
-#define USBDM_ADC0_IS_DEFINED 
+#define USBDM_ADC0_IS_DEFINED
 /**
  * Peripheral information for ADC, Analogue Input.
  * 
@@ -820,14 +844,21 @@ public:
  */
 class Adc0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = ADC0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile ADC_Type *adc   = (volatile ADC_Type *)ADC0_BasePtr;
+   __attribute__((always_inline)) static volatile ADC_Type &adc() {
+      return *(ADC_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_ADC0_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -839,16 +870,16 @@ public:
    // Template:adc0_diff_a
 
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue  = 0;
 
-   /** Map all allocated pins on a peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Default value for ADCx_CFG1 register
    static constexpr uint32_t cfg1  = 
@@ -927,6 +958,7 @@ public:
    static void clearPCRs() {
    }
 
+#define USBDM_ADC0_INFODP_IS_DEFINED
    class InfoDP {
    public:
       //! Number of signals available in info table
@@ -956,6 +988,7 @@ public:
 
    }; 
 
+#define USBDM_ADC0_INFODM_IS_DEFINED
    class InfoDM {
    public:
       //! Number of signals available in info table
@@ -996,7 +1029,7 @@ public:
  * @brief Abstraction for Analogue Comparator
  * @{
  */
-#define USBDM_CMP0_IS_DEFINED 
+#define USBDM_CMP0_IS_DEFINED
 /**
  * Peripheral information for CMP, Analogue Comparator.
  * 
@@ -1005,14 +1038,21 @@ public:
  */
 class Cmp0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = CMP0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile CMP_Type *cmp   = (volatile CMP_Type *)CMP0_BasePtr;
+   __attribute__((always_inline)) static volatile CMP_Type &cmp() {
+      return *(CMP_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_CMP_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -1024,9 +1064,9 @@ public:
    // Template:cmp0_pstm7
 
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue  = 0;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! CMP Control Register 0
@@ -1073,7 +1113,7 @@ public:
    static constexpr bool irqHandlerInstalled = (1 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 9;
@@ -1115,7 +1155,7 @@ public:
 
 };
 
-#define USBDM_CMP1_IS_DEFINED 
+#define USBDM_CMP1_IS_DEFINED
 /**
  * Peripheral information for CMP, Analogue Comparator.
  * 
@@ -1124,14 +1164,21 @@ public:
  */
 class Cmp1Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = CMP1_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile CMP_Type *cmp   = (volatile CMP_Type *)CMP1_BasePtr;
+   __attribute__((always_inline)) static volatile CMP_Type &cmp() {
+      return *(CMP_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_CMP_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -1143,9 +1190,9 @@ public:
    // Template:cmp0_pstm7
 
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue  = 0;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! CMP Control Register 0
@@ -1192,7 +1239,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 9;
@@ -1238,7 +1285,7 @@ public:
  * @brief Abstraction for Carrier Modulator Transmitter
  * @{
  */
-#define USBDM_CMT_IS_DEFINED 
+#define USBDM_CMT_IS_DEFINED
 /**
  * Peripheral information for CMT, Carrier Modulator Transmitter.
  * 
@@ -1247,14 +1294,21 @@ public:
  */
 class CmtInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = CMT_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile CMT_Type *cmt   = (volatile CMT_Type *)CMT_BasePtr;
+   __attribute__((always_inline)) static volatile CMT_Type &cmt() {
+      return *(CMT_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_CMT_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -1267,6 +1321,15 @@ public:
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+
+   //! Map all allocated pins on a peripheral when enabled
+   static constexpr bool mapPinsOnEnable = true;
+
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  7;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 1;
@@ -1304,7 +1367,7 @@ public:
  * @brief Abstraction for Control
  * @{
  */
-#define USBDM_CONTROL_IS_DEFINED 
+#define USBDM_CONTROL_IS_DEFINED
 /**
  * Peripheral information for CONTROL, Control.
  * 
@@ -1363,35 +1426,44 @@ public:
  * @}
  */
 /**
- * @addtogroup CRC_TODO_Group CRC, (Incomplete)
- * @brief Abstraction for (Incomplete)
+ * @addtogroup CRC_Group CRC, Cyclic Redundancy Check
+ * @brief Abstraction for Cyclic Redundancy Check
  * @{
  */
-#define USBDM_CRC0_IS_DEFINED 
+#define USBDM_CRC0_IS_DEFINED
 /**
- * Peripheral information for CRC, (Incomplete).
+ * Peripheral information for CRC, Cyclic Redundancy Check.
  * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
 class Crc0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = CRC0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile CRC_Type *crc   = (volatile CRC_Type *)CRC0_BasePtr;
+   __attribute__((always_inline)) static volatile CRC_Type &crc() {
+      return *(CRC_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_CRC_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
 
+   // Template:crc0_0x40032000
+
 };
 
 /** 
- * End group CRC_TODO_Group
+ * End group CRC_Group
  * @}
  */
 /**
@@ -1408,7 +1480,7 @@ public:
  * @brief Abstraction for Direct Memory Access (DMA)
  * @{
  */
-#define USBDM_DMA0_IS_DEFINED 
+#define USBDM_DMA0_IS_DEFINED
 /**
  * Peripheral information for DMA, Direct Memory Access (DMA).
  * 
@@ -1417,14 +1489,21 @@ public:
  */
 class Dma0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = DMA0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile DMA_Type *dma   = (volatile DMA_Type *)DMA0_BasePtr;
+   __attribute__((always_inline)) static volatile DMA_Type &dma() {
+      return *(DMA_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC7_DMA_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC7));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC7));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 17;
@@ -1443,7 +1522,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Number of DMA channels implemented
    static constexpr unsigned NumChannels = 16;
@@ -1462,7 +1541,7 @@ public:
  * @brief Abstraction for Direct Memory Access (DMA)
  * @{
  */
-#define USBDM_DMAMUX0_IS_DEFINED 
+#define USBDM_DMAMUX0_IS_DEFINED
 /**
  * Peripheral information for DMAMUX, Direct Memory Access (DMA).
  * 
@@ -1471,14 +1550,21 @@ public:
  */
 class Dmamux0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = DMAMUX0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile DMAMUX_Type *dmamux   = (volatile DMAMUX_Type *)DMAMUX0_BasePtr;
+   __attribute__((always_inline)) static volatile DMAMUX_Type &dmamux() {
+      return *(DMAMUX_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_DMAMUX0_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
@@ -1496,7 +1582,7 @@ public:
  * @brief Abstraction for External Watchdog Monitor
  * @{
  */
-#define USBDM_EWM_IS_DEFINED 
+#define USBDM_EWM_IS_DEFINED
 /**
  * Peripheral information for EWM, External Watchdog Monitor.
  * 
@@ -1505,22 +1591,42 @@ public:
  */
 class EwmInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = EWM_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile EWM_Type *ewm   = (volatile EWM_Type *)EWM_BasePtr;
+   __attribute__((always_inline)) static volatile EWM_Type &ewm() {
+      return *(EWM_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_EWM_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 0;
+   static constexpr uint32_t irqCount  = 1;
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = {
+      WDOG_IRQn, };
 
    // Template:ewm_int
 
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = 0;
+   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+
+   //! Map all allocated pins on a peripheral when enabled
+   static constexpr bool mapPinsOnEnable = true;
+
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  7;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 2;
@@ -1559,7 +1665,7 @@ public:
  * @brief Abstraction for Flash Memory Module
  * @{
  */
-#define USBDM_FTFL_IS_DEFINED 
+#define USBDM_FTFL_IS_DEFINED
 /**
  * Peripheral information for FTFL, Flash Memory Module.
  * 
@@ -1568,14 +1674,21 @@ public:
  */
 class FtflInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = FTFL_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile FTFL_Type *ftfl   = (volatile FTFL_Type *)FTFL_BasePtr;
+   __attribute__((always_inline)) static volatile FTFL_Type &ftfl() {
+      return *(FTFL_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_FTFL_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
@@ -1585,18 +1698,6 @@ public:
       FTF_Command_IRQn, FTF_ReadCollision_IRQn, };
 
    // Template:ftfl_64k_flexrom
-
-   // Sector size for program flash (minimum erase element)
-   static constexpr unsigned programFlashSectorSize = 2048;
-
-   // Phrase size for program flash (minimum programming element)
-   static constexpr unsigned programFlashPhraseSize = 4;
-
-   // Sector size for data flash (minimum erase element)
-   static constexpr unsigned dataFlashSectorSize = 2048;
-
-   // Phrase size for data flash (minimum programming element)
-   static constexpr unsigned dataFlashPhraseSize = 4;
 
    struct EepromSizes {
       const uint16_t size;    // EEPROM size
@@ -1632,49 +1733,49 @@ public:
 
    /** Selects EEPROM size */
    enum EepromSel {
-      eeprom32Bytes,
-      eeprom64Bytes,
-      eeprom128Bytes,
-      eeprom256Bytes,
-      eeprom512Bytes,
-      eeprom1KBytes,
-      eeprom2KBytes,
-      eeprom4KBytes,
+      EepromSel_32Bytes,
+      EepromSel_64Bytes,
+      EepromSel_128Bytes,
+      EepromSel_256Bytes,
+      EepromSel_512Bytes,
+      EepromSel_1KBytes,
+      EepromSel_2KBytes,
+      EepromSel_4KBytes,
    };
 
    /** Selects division of FlexNVM between flash and EEPROM backing storage */
    enum PartitionSel {
-      partition_flash64K_eeprom0K,
-      partition_flash32K_eeprom32K,
-      partition_flash0K_eeprom64K,
+      PartitionSel_flash64K_eeprom0K,
+      PartitionSel_flash32K_eeprom32K,
+      PartitionSel_flash0K_eeprom64K,
    
       // All EEPROM
-      partition_flash0K_eeprom_all = partition_flash0K_eeprom64K,
+      PartitionSel_flash0K_eeprom_all = PartitionSel_flash0K_eeprom64K,
    };
 
    /**
     * Selects division of the EEPROM into two regions 
     * This allows A/B regions to have different wear characteristics
     */
-   enum PartitionSplit {
-      partition_A1_B7_8ths = 0x00,                 //! A=1/8, B=7/8
-      partition_A2_B6_8ths = 0x10,                 //! A=2/8=1/4, B=6/8=3/4
-      partition_A4_B4_8ths = 0x30,                 //! A=4/8=1/2, B=4/8=1/2
-      partition_A1_B3_4ths = partition_A2_B6_8ths, //! A=2/8=1/4, B=6/8=3/4
-      partition_A1_B1_2ths = partition_A4_B4_8ths, //! A=4/8=1/2, B=4/8=1/2
+   enum SplitSel {
+      SplitSel_A1_B7_8ths = 0x00,                 //! A=1/8, B=7/8
+      SplitSel_A2_B6_8ths = 0x10,                 //! A=2/8=1/4, B=6/8=3/4
+      SplitSel_A4_B4_8ths = 0x30,                 //! A=4/8=1/2, B=4/8=1/2
+      SplitSel_A1_B3_4ths = SplitSel_A2_B6_8ths, //! A=2/8=1/4, B=6/8=3/4
+      SplitSel_A1_B1_2ths = SplitSel_A4_B4_8ths, //! A=4/8=1/2, B=4/8=1/2
    
       // Default - A = B = 1/2
-      partition_default=partition_A4_B4_8ths,      //! Equal partitions
+      SplitSel_default=SplitSel_A4_B4_8ths,      //! Equal partitions
    };
 
    //! FlexNVM - EEPROM size
-   static constexpr EepromSel eepromSel = eeprom2KBytes;
+   static constexpr EepromSel eepromSel = EepromSel_4KBytes;
 
    //! FlexNVM - Flash EEPROM partition
-   static constexpr PartitionSel partitionSel = partition_flash0K_eeprom64K;
+   static constexpr PartitionSel partitionSel = PartitionSel_flash0K_eeprom64K;
 
    //! FlexNVM - EEPROM partition
-   static constexpr PartitionSplit partitionSplit = partition_A4_B4_8ths;
+   static constexpr SplitSel partitionSplit = SplitSel_A4_B4_8ths;
 
 };
 
@@ -1683,13 +1784,13 @@ public:
  * @}
  */
 /**
- * @addtogroup FTM_Group FTM, Shared Resources
- * @brief Abstraction for Shared Resources
+ * @addtogroup FTM_Group FTM, PWM, Input capture and Output compare
+ * @brief Abstraction for PWM, Input capture and Output compare
  * @{
  */
-#define USBDM_FTM_IS_DEFINED 
+#define USBDM_FTM_IS_DEFINED
 /**
- * Peripheral information for FTM, Shared Resources.
+ * Peripheral information for FTM, PWM, Input capture and Output compare.
  * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
@@ -1729,7 +1830,7 @@ public:
 
 };
 
-#define USBDM_FTM0_IS_DEFINED 
+#define USBDM_FTM0_IS_DEFINED
 /**
  * Peripheral information for FTM, PWM, Input capture and Output compare.
  * 
@@ -1738,14 +1839,21 @@ public:
  */
 class Ftm0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = FTM0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile FTM_Type *ftm   = (volatile FTM_Type *)FTM0_BasePtr;
+   __attribute__((always_inline)) static volatile FTM_Type &ftm() {
+      return *(FTM_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_FTM0_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -1759,7 +1867,7 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Timer external input frequency 
@@ -1784,7 +1892,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    /** Minimum resolution for PWM interval */
    static constexpr uint32_t minimumResolution=50;
@@ -1799,7 +1907,7 @@ public:
     */
    static uint32_t getInputClockFrequency() {
    
-      switch(ftm->SC&FTM_SC_CLKS_MASK) {
+      switch(ftm().SC&FTM_SC_CLKS_MASK) {
       default:
       case FTM_SC_CLKS(0): return 0;
       case FTM_SC_CLKS(1): return SystemBusClock;
@@ -1845,6 +1953,7 @@ public:
       PORTC->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x18U);
    }
 
+#define USBDM_FTM0_INFOFAULT_IS_DEFINED
    class InfoFAULT {
    public:
       //! Number of signals available in info table
@@ -1879,7 +1988,7 @@ public:
 
 };
 
-#define USBDM_FTM1_IS_DEFINED 
+#define USBDM_FTM1_IS_DEFINED
 /**
  * Peripheral information for FTM, PWM, Input capture and Output compare.
  * 
@@ -1888,14 +1997,21 @@ public:
  */
 class Ftm1Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = FTM1_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile FTM_Type *ftm   = (volatile FTM_Type *)FTM1_BasePtr;
+   __attribute__((always_inline)) static volatile FTM_Type &ftm() {
+      return *(FTM_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_FTM1_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -1909,7 +2025,7 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Timer external input frequency 
@@ -1934,7 +2050,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    /** Minimum resolution for PWM interval */
    static constexpr uint32_t minimumResolution=100;
@@ -1949,7 +2065,7 @@ public:
     */
    static uint32_t getInputClockFrequency() {
    
-      switch(ftm->SC&FTM_SC_CLKS_MASK) {
+      switch(ftm().SC&FTM_SC_CLKS_MASK) {
       default:
       case FTM_SC_CLKS(0): return 0;
       case FTM_SC_CLKS(1): return SystemBusClock;
@@ -1984,6 +2100,7 @@ public:
    static void clearPCRs() {
    }
 
+#define USBDM_FTM1_INFOFAULT_IS_DEFINED
    class InfoFAULT {
    public:
       //! Number of signals available in info table
@@ -2013,6 +2130,7 @@ public:
 
    }; 
 
+#define USBDM_FTM1_INFOQUAD_IS_DEFINED
    class InfoQUAD {
    public:
       //! Number of signals available in info table
@@ -2054,7 +2172,7 @@ public:
  * @brief Abstraction for Digital Input/Output
  * @{
  */
-#define USBDM_GPIOA_IS_DEFINED 
+#define USBDM_GPIOA_IS_DEFINED
 /**
  * Peripheral information for GPIO, Digital Input/Output.
  * 
@@ -2071,11 +2189,11 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
 };
 
-#define USBDM_GPIOB_IS_DEFINED 
+#define USBDM_GPIOB_IS_DEFINED
 /**
  * Peripheral information for GPIO, Digital Input/Output.
  * 
@@ -2092,11 +2210,11 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
 };
 
-#define USBDM_GPIOC_IS_DEFINED 
+#define USBDM_GPIOC_IS_DEFINED
 /**
  * Peripheral information for GPIO, Digital Input/Output.
  * 
@@ -2113,11 +2231,11 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
 };
 
-#define USBDM_GPIOD_IS_DEFINED 
+#define USBDM_GPIOD_IS_DEFINED
 /**
  * Peripheral information for GPIO, Digital Input/Output.
  * 
@@ -2134,11 +2252,11 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
 };
 
-#define USBDM_GPIOE_IS_DEFINED 
+#define USBDM_GPIOE_IS_DEFINED
 /**
  * Peripheral information for GPIO, Digital Input/Output.
  * 
@@ -2155,7 +2273,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
 };
 
@@ -2168,7 +2286,7 @@ public:
  * @brief Abstraction for Inter-Integrated-Circuit Interface
  * @{
  */
-#define USBDM_I2C0_IS_DEFINED 
+#define USBDM_I2C0_IS_DEFINED
 /**
  * Peripheral information for I2C, Inter-Integrated-Circuit Interface.
  * 
@@ -2177,14 +2295,21 @@ public:
  */
 class I2c0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = I2C0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile I2C_Type *i2c   = (volatile I2C_Type *)I2C0_BasePtr;
+   __attribute__((always_inline)) static volatile I2C_Type &i2c() {
+      return *(I2C_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_I2C0_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -2198,14 +2323,14 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = I2C_DEFAULT_PCR;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    /**
     * Get input clock frequency
@@ -2253,7 +2378,7 @@ public:
  * @brief Abstraction for Synchronous Audio Interface
  * @{
  */
-#define USBDM_I2S0_IS_DEFINED 
+#define USBDM_I2S0_IS_DEFINED
 /**
  * Peripheral information for I2S, Synchronous Audio Interface.
  * 
@@ -2262,14 +2387,21 @@ public:
  */
 class I2s0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = I2S0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile I2S_Type *i2s   = (volatile I2S_Type *)I2S0_BasePtr;
+   __attribute__((always_inline)) static volatile I2S_Type &i2s() {
+      return *(I2S_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_I2S_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
@@ -2282,6 +2414,12 @@ public:
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = I2C_DEFAULT_PCR;
+
+   //! Map all allocated pins on a peripheral when enabled
+   static constexpr bool mapPinsOnEnable = true;
+
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 8;
@@ -2326,7 +2464,7 @@ public:
  * @brief Abstraction for Low-leakage Wake-up Unit
  * @{
  */
-#define USBDM_LLWU_IS_DEFINED 
+#define USBDM_LLWU_IS_DEFINED
 /**
  * Peripheral information for LLWU, Low-leakage Wake-up Unit.
  * 
@@ -2335,8 +2473,13 @@ public:
  */
 class LlwuInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = LLWU_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile LLWU_Type *llwu   = (volatile LLWU_Type *)LLWU_BasePtr;
+   __attribute__((always_inline)) static volatile LLWU_Type &llwu() {
+      return *(LLWU_Type *)baseAddress;
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -2361,7 +2504,7 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    // LLWU Pin Enable registers
@@ -2408,7 +2551,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 16;
@@ -2468,7 +2611,7 @@ public:
  * @brief Abstraction for Low Power Timer
  * @{
  */
-#define USBDM_LPTMR0_IS_DEFINED 
+#define USBDM_LPTMR0_IS_DEFINED
 /**
  * Peripheral information for LPTMR, Low Power Timer.
  * 
@@ -2477,14 +2620,21 @@ public:
  */
 class Lptmr0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = LPTMR0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile LPTMR_Type *lptmr   = (volatile LPTMR_Type *)LPTMR0_BasePtr;
+   __attribute__((always_inline)) static volatile LPTMR_Type &lptmr() {
+      return *(LPTMR_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC5_LPTMR_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC5));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC5));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -2499,7 +2649,7 @@ public:
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
    //! Default Timer Compare value
-   static constexpr uint32_t cmr = 0;
+   static constexpr uint32_t cmr = 65535;
 
    //! Default PSR value
    static constexpr uint32_t psr = 
@@ -2519,7 +2669,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    /**
     * Get input clock frequency
@@ -2528,7 +2678,7 @@ public:
     */
    static uint32_t getInputClockFrequency() {
    
-      switch(lptmr->PSR&LPTMR_PSR_PCS_MASK) {
+      switch(lptmr().PSR&LPTMR_PSR_PCS_MASK) {
       default:
       case LPTMR_PSR_PCS(0): return McgInfo::getMcgIrClock();
       case LPTMR_PSR_PCS(1): return SystemLpoClock;
@@ -2545,10 +2695,10 @@ public:
    static float getClockFrequencyF() {
    
       float freq = getInputClockFrequency();
-      if (lptmr->PSR&LPTMR_PSR_PBYP_MASK) {
+      if (lptmr().PSR&LPTMR_PSR_PBYP_MASK) {
          return freq;
       }
-      return freq/(1<<(((lptmr->PSR&LPTMR_PSR_PRESCALE_MASK)>>LPTMR_PSR_PRESCALE_SHIFT)+1));
+      return freq/(1<<(((lptmr().PSR&LPTMR_PSR_PRESCALE_MASK)>>LPTMR_PSR_PRESCALE_SHIFT)+1));
    }
 
    /**
@@ -2559,10 +2709,10 @@ public:
    static uint32_t getClockFrequency() {
    
       uint32_t freq = getInputClockFrequency();
-      if (lptmr->PSR&LPTMR_PSR_PBYP_MASK) {
+      if (lptmr().PSR&LPTMR_PSR_PBYP_MASK) {
          return freq;
       }
-      return freq/(1<<(((lptmr->PSR&LPTMR_PSR_PRESCALE_MASK)>>LPTMR_PSR_PRESCALE_SHIFT)+1));
+      return freq/(1<<(((lptmr().PSR&LPTMR_PSR_PRESCALE_MASK)>>LPTMR_PSR_PRESCALE_SHIFT)+1));
    }
 
    //! Number of signals available in info table
@@ -2603,7 +2753,7 @@ public:
  * @brief Abstraction for Programmable Delay Block
  * @{
  */
-#define USBDM_PDB0_IS_DEFINED 
+#define USBDM_PDB0_IS_DEFINED
 /**
  * Peripheral information for PDB, Programmable Delay Block.
  * 
@@ -2612,14 +2762,21 @@ public:
  */
 class Pdb0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = PDB0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile PDB_Type *pdb   = (volatile PDB_Type *)PDB0_BasePtr;
+   __attribute__((always_inline)) static volatile PDB_Type &pdb() {
+      return *(PDB_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_PDB_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -2628,7 +2785,7 @@ public:
    static constexpr IRQn_Type irqNums[]  = {
       PDB0_IRQn, };
 
-   // Template:pdb0_2ch_2trig_1dac_2po
+   // Template:pdb0_2ch_2pt_1dac_2po
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
@@ -2722,7 +2879,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 1;
@@ -2760,7 +2917,7 @@ public:
  * @brief Abstraction for Programmable Interrupt Timer
  * @{
  */
-#define USBDM_PIT_IS_DEFINED 
+#define USBDM_PIT_IS_DEFINED
 /**
  * Peripheral information for PIT, Programmable Interrupt Timer.
  * 
@@ -2769,14 +2926,21 @@ public:
  */
 class PitInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = PIT_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile PIT_Type *pit   = (volatile PIT_Type *)PIT_BasePtr;
+   __attribute__((always_inline)) static volatile PIT_Type &pit() {
+      return *(PIT_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_PIT_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 4;
@@ -2787,18 +2951,21 @@ public:
 
    // Template:pit_4ch_chain
 
+   //! Number of PIT channels
+   static constexpr uint32_t numChannels  = 4;
+
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
-   //! Default value for PIT->SC register
-   static constexpr uint32_t pit_ldval  = 10000;
+   //! Default value for PIT load value register
+   static constexpr uint32_t pit_ldval  = 4799;
 
    //! PIT operation in debug mode
    static constexpr uint32_t mcr = 
-      PIT_MCR_FRZ(1) |  // Freeze in debug mode
+      PIT_MCR_FRZ(0) |  // Freeze in debug mode
       PIT_MCR_MDIS(0);  // Disable
 
    /**
@@ -2821,7 +2988,7 @@ public:
  * @brief Abstraction for Power Management Controller
  * @{
  */
-#define USBDM_PMC_IS_DEFINED 
+#define USBDM_PMC_IS_DEFINED
 /**
  * Peripheral information for PMC, Power Management Controller.
  * 
@@ -2830,8 +2997,13 @@ public:
  */
 class PmcInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = PMC_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile PMC_Type *pmc   = (volatile PMC_Type *)PMC_BasePtr;
+   __attribute__((always_inline)) static volatile PMC_Type &pmc() {
+      return *(PMC_Type *)baseAddress;
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -2877,7 +3049,7 @@ public:
  * @brief Abstraction for Power
  * @{
  */
-#define USBDM_POWER_IS_DEFINED 
+#define USBDM_POWER_IS_DEFINED
 /**
  * Peripheral information for POWER, Power.
  * 
@@ -2917,7 +3089,7 @@ public:
  * @brief Abstraction for System Mode Controller
  * @{
  */
-#define USBDM_SMC_IS_DEFINED 
+#define USBDM_SMC_IS_DEFINED
 /**
  * Peripheral information for SMC, System Mode Controller.
  * 
@@ -2926,8 +3098,13 @@ public:
  */
 class SmcInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = SMC_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile SMC_Type *smc   = (volatile SMC_Type *)SMC_BasePtr;
+   __attribute__((always_inline)) static volatile SMC_Type &smc() {
+      return *(SMC_Type *)baseAddress;
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
@@ -2939,9 +3116,9 @@ public:
 #ifdef SMC_PMPROT_AHSRUN
       SMC_PMPROT_AHSRUN(0) |  // Allow High Speed Run mode
 #endif
-      SMC_PMPROT_AVLP(0) |  // Allow very low power modes
-      SMC_PMPROT_ALLS(0) |  // Allow low leakage stop mode
-      SMC_PMPROT_AVLLS(0);  // Allow very low leakage stop mode
+      SMC_PMPROT_AVLP(1) |  // Allow very low power modes
+      SMC_PMPROT_ALLS(1) |  // Allow low leakage stop mode
+      SMC_PMPROT_AVLLS(1);  // Allow very low leakage stop mode
 
 #ifdef SMC_PMCTRL_LPWUI
    // Power Mode Control Register
@@ -2974,7 +3151,7 @@ public:
  * @brief Abstraction for Serial Peripheral Interface
  * @{
  */
-#define USBDM_SPI0_IS_DEFINED 
+#define USBDM_SPI0_IS_DEFINED
 /**
  * Peripheral information for SPI, Serial Peripheral Interface.
  * 
@@ -2983,14 +3160,21 @@ public:
  */
 class Spi0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = SPI0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile SPI_Type *spi   = (volatile SPI_Type *)SPI0_BasePtr;
+   __attribute__((always_inline)) static volatile SPI_Type &spi() {
+      return *(SPI_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_SPI0_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -3004,14 +3188,14 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Default communication clock phase and clock polarity (CPHA+CPOL)
    static constexpr uint32_t mode = 
@@ -3079,7 +3263,7 @@ public:
  * @brief Abstraction for Universal Asynchronous Receiver/Transmitter
  * @{
  */
-#define USBDM_UART0_IS_DEFINED 
+#define USBDM_UART0_IS_DEFINED
 /**
  * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter.
  * 
@@ -3088,14 +3272,21 @@ public:
  */
 class Uart0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = UART0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile UART_Type *uart   = (volatile UART_Type *)UART0_BasePtr;
+   __attribute__((always_inline)) static volatile UART_Type &uart() {
+      return *(UART_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_UART0_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
@@ -3109,14 +3300,14 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
@@ -3175,7 +3366,7 @@ public:
 
 };
 
-#define USBDM_UART1_IS_DEFINED 
+#define USBDM_UART1_IS_DEFINED
 /**
  * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter.
  * 
@@ -3184,14 +3375,21 @@ public:
  */
 class Uart1Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = UART1_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile UART_Type *uart   = (volatile UART_Type *)UART1_BasePtr;
+   __attribute__((always_inline)) static volatile UART_Type &uart() {
+      return *(UART_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_UART1_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
@@ -3205,14 +3403,14 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
@@ -3265,7 +3463,7 @@ public:
 
 };
 
-#define USBDM_UART2_IS_DEFINED 
+#define USBDM_UART2_IS_DEFINED
 /**
  * Peripheral information for UART, Universal Asynchronous Receiver/Transmitter.
  * 
@@ -3274,14 +3472,21 @@ public:
  */
 class Uart2Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = UART2_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile UART_Type *uart   = (volatile UART_Type *)UART2_BasePtr;
+   __attribute__((always_inline)) static volatile UART_Type &uart() {
+      return *(UART_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_UART2_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
@@ -3295,14 +3500,14 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
@@ -3364,7 +3569,7 @@ public:
  * @brief Abstraction for USB OTG Controller
  * @{
  */
-#define USBDM_USB0_IS_DEFINED 
+#define USBDM_USB0_IS_DEFINED
 /**
  * Peripheral information for USB, USB OTG Controller.
  * 
@@ -3373,14 +3578,21 @@ public:
  */
 class Usb0Info {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = USB0_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile USB_Type *usb   = (volatile USB_Type *)USB0_BasePtr;
+   __attribute__((always_inline)) static volatile USB_Type &usb() {
+      return *(USB_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_USBOTG_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -3398,7 +3610,7 @@ public:
    static constexpr bool irqHandlerInstalled = (1 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  0;
+   static constexpr uint32_t irqLevel =  7;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 4;
@@ -3439,7 +3651,7 @@ public:
  * @brief Abstraction for USB Device Charger Detection
  * @{
  */
-#define USBDM_USBDCD_IS_DEFINED 
+#define USBDM_USBDCD_IS_DEFINED
 /**
  * Peripheral information for USBDCD, USB Device Charger Detection.
  * 
@@ -3448,14 +3660,21 @@ public:
  */
 class UsbdcdInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = USBDCD_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile USBDCD_Type *usbdcd   = (volatile USBDCD_Type *)USBDCD_BasePtr;
+   __attribute__((always_inline)) static volatile USBDCD_Type &usbdcd() {
+      return *(USBDCD_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC6_USBDCD_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
@@ -3465,6 +3684,15 @@ public:
       USBDCD_IRQn, };
 
    // Template:usbdcd_v1_1
+
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  7;
+
+   //! Base value for PCR (excluding MUX value)
+   static constexpr uint32_t defaultPcrValue  = 0;
 
 };
 
@@ -3477,7 +3705,7 @@ public:
  * @brief Abstraction for Voltage Reference
  * @{
  */
-#define USBDM_VREF_IS_DEFINED 
+#define USBDM_VREF_IS_DEFINED
 /**
  * Peripheral information for VREF, Voltage Reference.
  * 
@@ -3486,14 +3714,21 @@ public:
  */
 class VrefInfo {
 public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = VREF_BasePtr;
+
    //! Hardware base pointer
-   static constexpr volatile VREF_Type *vref   = (volatile VREF_Type *)VREF_BasePtr;
+   __attribute__((always_inline)) static volatile VREF_Type &vref() {
+      return *(VREF_Type *)baseAddress;
+   }
 
    //! Clock mask for peripheral
    static constexpr uint32_t clockMask = SIM_SCGC4_VREF_MASK;
 
    //! Address of clock register for peripheral
-   static constexpr volatile uint32_t *clockReg  = (volatile uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
+      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
+   }
 
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
@@ -3503,7 +3738,7 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
 
-   /** Map all allocated pins on peripheral when enabled */
+   //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
    static constexpr uint8_t vref_trm = 
@@ -3545,6 +3780,49 @@ public:
 
 /** 
  * End group VREF_Group
+ * @}
+ */
+/**
+ * @addtogroup WDOG_Group WDOG, Watchdog Timer
+ * @brief Abstraction for Watchdog Timer
+ * @{
+ */
+#define USBDM_WDOG_IS_DEFINED
+/**
+ * Peripheral information for WDOG, Watchdog Timer.
+ * 
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
+ */
+class WdogInfo {
+public:
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = WDOG_BasePtr;
+
+   //! Hardware base pointer
+   __attribute__((always_inline)) static volatile WDOG_Type &wdog() {
+      return *(WDOG_Type *)baseAddress;
+   }
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = 1;
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = {
+      WDOG_IRQn, };
+
+   // Template:wdog_mk
+
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = (0 == 1);
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  7;
+
+};
+
+/** 
+ * End group WDOG_Group
  * @}
  */
 /** 
@@ -3611,10 +3889,6 @@ using Gpio_p48             = const USBDM::GpioD<7>;
  * End group GPIO_Group
  * @}
  */
-/**
- * Used to configure pin-mapping before 1st use of peripherals
- */
-extern void mapAllPins();
 /** 
  * End group USBDM_Group
  * @}

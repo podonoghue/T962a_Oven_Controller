@@ -146,17 +146,18 @@ enum SmcPowerOnReset {
 };
 
 /**
- *  POR Power Option\n
- *  This bit controls whether the POR detect circuit is enabled in VLLS0 mode.
+ *  Sleep on exit from Interrupt Service Routine (ISR)\n
+ *  This option controls whether the processor re-enters sleep mode when exiting the\n
+ *  handler for the interrupt that awakened it.
  */
 enum SmcSleepOnExit {
-   SmcSleepOnExit_Disable = false,  //!< Processor does not enter SLEEP/DEEPSLEEP mode
-   SmcSleepOnExit_Enable  = true,   //!< Processor enters SLEEP/DEEPSLEEP mode on completion of interrupts
+   SmcSleepOnExit_Disable = 0,                       //!< Processor does not re-enter SLEEP/DEEPSLEEP mode on completion of interrupt.
+   SmcSleepOnExit_Enable  = SCB_SCR_SLEEPONEXIT_Msk, //!< Processor re-enters SLEEP/DEEPSLEEP mode on completion of interrupt.
 };
 
 /**
  *  VLS or VLLS Mode Control\n
- *  This field controls which LLS/VLLS sub-mode to enter if STOPM=LLS/VLLS\n
+ *  This field controls which LLS/VLLS sub-mode to enter if STOPM=LLS/VLLS
  *
  * @note Not all modes are supported on all processors
  */
@@ -223,7 +224,8 @@ template <class Info>
 class SmcBase_T {
 
 protected:
-   static constexpr volatile SMC_Type *smc = Info::smc;
+	   /** Hardware instance pointer */
+	   static __attribute__((always_inline)) volatile SMC_Type &smc() { return Info::smc(); }
 
 public:
 
@@ -268,8 +270,8 @@ public:
     * Configure with settings from <b>Configure.usbdmProject</b>.
     */
    static void defaultConfigure() {
-      smc->PMPROT   = Info::pmprot;
-      smc->STOPCTRL = Info::stopctrl;
+      smc().PMPROT   = Info::pmprot;
+      smc().STOPCTRL = Info::stopctrl;
    }
 
    /**
@@ -290,7 +292,7 @@ public:
          SmcHighSpeedRun         smcHighSpeedRun         = SmcHighSpeedRun_Disable ) {
 
       uint8_t mask = smcVeryLowPower|smcLowLeakageStop|smcVeryLowLeakageStop|smcHighSpeedRun;
-      smc->PMPROT = mask;
+      smc().PMPROT = mask;
       return E_NO_ERROR;
    }
 
@@ -308,7 +310,7 @@ public:
          SmcPartialStopMode      smcPartialStopMode      = SmcPartialStopMode_Normal,
          SmcLpoInLowLeakage      smcLpoInLowLeakage      = SmcLpoInLowLeakage_Disable) {
 
-      smc->STOPCTRL = smcPartialStopMode|smcPowerOnReset|smcLowLeakageStopMode|smcLpoInLowLeakage;
+      smc().STOPCTRL = smcPartialStopMode|smcPowerOnReset|smcLowLeakageStopMode|smcLpoInLowLeakage;
    }
 
    /**
@@ -318,7 +320,7 @@ public:
     */
    static SmcStatus getStatus() {
 
-      return (SmcStatus)(smc->PMSTAT);
+      return (SmcStatus)(smc().PMSTAT);
    }
 
    /**
@@ -338,7 +340,7 @@ public:
 #endif
       switch(smcRunMode) {
          case SmcRunMode_Normal:
-            smc->PMCTRL = (smc->PMCTRL&~SMC_PMCTRL_RUNM_MASK)|smcRunMode;
+            smc().PMCTRL = (smc().PMCTRL&~SMC_PMCTRL_RUNM_MASK)|smcRunMode;
             // Wait for power regulator status to change
             while ((PMC->REGSC & PMC_REGSC_REGONS_MASK) != PMC_REGSC_REGONS(1)) {
                __asm__("nop");
@@ -354,7 +356,7 @@ public:
                // Can only transition from RUN mode
                return setErrorCode(E_ILLEGAL_POWER_TRANSITION);
             }
-            smc->PMCTRL = (smc->PMCTRL&~SMC_PMCTRL_RUNM_MASK)|smcRunMode;
+            smc().PMCTRL = (smc().PMCTRL&~SMC_PMCTRL_RUNM_MASK)|smcRunMode;
             // Wait for power regulator status to change
             while ((PMC->REGSC & PMC_REGSC_REGONS_MASK) != PMC_REGSC_REGONS(1)) {
                __asm__("nop");
@@ -372,7 +374,7 @@ public:
                return setErrorCode(E_ILLEGAL_POWER_TRANSITION);
             }
 #endif
-            smc->PMCTRL = (smc->PMCTRL&~SMC_PMCTRL_RUNM_MASK)|smcRunMode;
+            smc().PMCTRL = (smc().PMCTRL&~SMC_PMCTRL_RUNM_MASK)|smcRunMode;
             // Wait for power regulator status to change
             while ((PMC->REGSC & PMC_REGSC_REGONS_MASK) != PMC_REGSC_REGONS(0)) {
                __asm__("nop");
@@ -394,7 +396,7 @@ public:
     * @param[in]  smcStopMode Stop mode to set
     */
    static void setStopMode(SmcStopMode smcStopMode) {
-      smc->PMCTRL = (smc->PMCTRL&~SMC_PMCTRL_STOPM_MASK)|smcStopMode;
+      smc().PMCTRL = (smc().PMCTRL&~SMC_PMCTRL_STOPM_MASK)|smcStopMode;
       // Make sure write completes
       __DSB();
    }
@@ -403,7 +405,7 @@ public:
     * Enter Stop Mode (STOP, VLPS, LLSx, VLLSx)
     * (ARM core DEEPSLEEP mode)
     *
-    * The processor will stop execution and enter the current STOP mode.\n
+    * The processor will stop execution and enter the currently configured STOP mode.\n
     * Peripherals affected will depend on the stop mode selected.\n
     * The stop mode to enter may be set by setStopMode().
     * Other options that affect stop mode may be set by setStopOptions().
@@ -422,7 +424,7 @@ public:
     * The processor will stop execution and enter the given STOP mode.\n
     * Peripherals affected will depend on the stop mode selected.
     *
-    * @param[in] smcStopMode Stop mode to set
+    * @param[in] smcStopMode Stop mode to set.  This will become the default STOP mode.
     */
    static void enterStopMode(SmcStopMode smcStopMode) {
       setStopMode(smcStopMode);
@@ -442,14 +444,13 @@ public:
     * Enter Wait Mode (WAIT, VLPW)\n
     * (ARM core SLEEP mode)
     *
-    * The processor will stop execution and enter SLEEP mode.\n
-    * In this mode the core clock is disabled (no code executing),
+    * The processor will stop execution and enter WAIT/VLPW mode.\n
+    * This function can be used to enter normal WAIT mode or VLPW mode
+    * depending upon current run mode.\n
+    * In wait mode the core clock is disabled (no code executing),
     * but bus clocks are enabled (peripheral modules are operational).
     *
-    * This function can be used to enter normal WAIT mode or VLPW mode
-    * depending upon current run mode.
-    *
-    * Mode transitions:
+    * Possible power mode transitions:
     * - RUN  -> WAIT
     * - VLPR -> VLPW
     *
@@ -499,9 +500,9 @@ public:
          // Can only change in RUN mode
          return setErrorCode(E_ILLEGAL_POWER_TRANSITION);
       }
-      smc->PMCTRL = (smc->PMCTRL&SMC_PMCTRL_STOPM_MASK) | smcExitVeryLowPowerOnInt;
+      smc().PMCTRL = (smc().PMCTRL&SMC_PMCTRL_STOPM_MASK) | smcExitVeryLowPowerOnInt;
       // Make sure write completes
-      (void)smc->PMCTRL;
+      (void)smc().PMCTRL;
       return E_NO_ERROR;
    }
 #else
@@ -541,7 +542,7 @@ public:
 /**
  * Class representing SMC
  */
-using Smc = SmcBase_T<SmcInfo>;
+class Smc : public SmcBase_T<SmcInfo> {};
 
 #endif
 

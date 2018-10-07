@@ -32,9 +32,8 @@ static uint8_t rxBufferCount = 0;
  * @return true => success
  */
 bool cdc_putRxBuffer(char ch) {
-
    // Lock while changes made
-   IrqProtect protect;
+   USBDM::CriticalSection protect;
 
    if (rxBufferCount >= CDC_RX_BUFFER_SIZE) {
       // Silently drop characters
@@ -54,9 +53,8 @@ bool cdc_putRxBuffer(char ch) {
  * @note Assumed called while interrupts blocked
  */
 uint8_t cdc_setRxBuffer(char *buffer) {
-   uint8_t temp;
    rxBuffer = buffer;
-   temp = rxBufferCount;
+   uint8_t temp = rxBufferCount;
    rxBufferCount = 0;
    return temp;
 }
@@ -100,7 +98,6 @@ bool cdc_putTxBuffer(char *source, uint8_t size) {
  *  -  +ve => char from queue
  */
 int cdc_getTxBuffer() {
-   uint8_t ch;
    if (txBufferCount == 0) {
       // Check data in USB buffer & restart USB Out if needed
       checkUsbCdcTxData();
@@ -109,7 +106,7 @@ int cdc_getTxBuffer() {
    if (txBufferCount == 0) {
       return -1;
    }
-   ch = txBuffer[txHead++];
+   uint8_t ch = txBuffer[txHead++];
    if (txHead >= txBufferCount)
       txBufferCount = 0;
    return ch;
@@ -150,7 +147,6 @@ void cdc_setLineCoding(const LineCodingStructure *lineCodingStructure) {
    cdcStatus  = SERIAL_STATE_CHANGE;
 
    (void)memcpy(&lineCoding, lineCodingStructure, sizeof(LineCodingStructure));
-
 }
 
 /**

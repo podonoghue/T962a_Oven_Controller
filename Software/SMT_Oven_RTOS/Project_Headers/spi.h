@@ -315,36 +315,42 @@ public:
    /**
     * Obtain SPI mutex and set SPI configuration
     *
-    * @param[in]  configuration  The configuration value to set for the transaction
+    * @param[in]  configuration  The configuration to set for the transaction
     * @param[in]  milliseconds   How long to wait in milliseconds. Use osWaitForever for indefinite wait
     *
-    * @return osOK: The mutex has been obtain.
-    * @return osErrorTimeoutResource: The mutex could not be obtained in the given time.
-    * @return osErrorResource: The mutex could not be obtained when no timeout was specified.
-    * @return osErrorParameter: The parameter mutex_id is incorrect.
-    * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
+    * @return osOK:                    The mutex has been obtain.
+    * @return osErrorTimeoutResource:  The mutex could not be obtained in the given time.
+    * @return osErrorResource:         The mutex could not be obtained when no timeout was specified.
+    * @return osErrorParameter:        The parameter mutex_id is incorrect.
+    * @return osErrorISR:              Cannot be called from interrupt service routines.
+    *
+    * @note The USBDM error code will also be set on error
     */
    virtual osStatus startTransaction(SpiConfig &configuration, int milliseconds=osWaitForever) = 0;
 
    /**
     * Obtain SPI mutex (SPI configuration unchanged)
     *
-    * @param[in]  milliseconds How long to wait in milliseconds. Use osWaitForever for indefinite wait
+    * @param[in]  milliseconds How long to wait in milliseconds. Use osWaitForever for indefinite wait.
     *
-    * @return osOK: The mutex has been obtain.
-    * @return osErrorTimeoutResource: The mutex could not be obtained in the given time.
-    * @return osErrorResource: The mutex could not be obtained when no timeout was specified.
-    * @return osErrorParameter: The parameter mutex_id is incorrect.
-    * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
+    * @return osOK:                    The mutex has been obtain.
+    * @return osErrorTimeoutResource:  The mutex could not be obtained in the given time.
+    * @return osErrorResource:         The mutex could not be obtained when no timeout was specified.
+    * @return osErrorParameter:        The parameter mutex_id is incorrect.
+    * @return osErrorISR:              Cannot be called from interrupt service routines.
+    *
+    * @note The USBDM error code will also be set on error
     */
    virtual osStatus startTransaction(int milliseconds=osWaitForever) = 0;
 
    /**
     * Release SPI mutex
     *
-    * @return osOK: the mutex has been correctly released.
-    * @return osErrorResource: the mutex was not obtained before.
-    * @return osErrorISR: osMutexRelease cannot be called from interrupt service routines.
+    * @return osOK:              The mutex has been correctly released.
+    * @return osErrorResource:   The mutex was not obtained before.
+    * @return osErrorISR:        Cannot be called from interrupt service routines.
+    *
+    * @note The USBDM error code will also be set on error
     */
    virtual osStatus endTransaction() = 0;
 #else
@@ -595,6 +601,25 @@ public:
 template<class Info>
 class SpiBase_T : public Spi {
 
+public:
+   /** Get reference to SPI hardware as struct */
+   static volatile SPI_Type &spiPtr() { return Info::spi(); }
+
+   /** Get base address of SPI hardware as uint32_t */
+   static constexpr uint32_t spiBase() { return Info::baseAddress; }
+   /** Get base address of SPI.MCR register as uint32_t */
+   static constexpr uint32_t spiMCR() { return spiBase() + offsetof(SPI_Type, MCR); }
+   /** Get base address of SPI.CR register as uint32_t */
+   static constexpr uint32_t spiCR() { return spiBase() + offsetof(SPI_Type, TCR); }
+   /** Get base address of SPI.CTAR[n] register as uint32_t */
+   static constexpr uint32_t spiCTAR(unsigned index) { return spiBase() + offsetof(SPI_Type, CTAR[index]); }
+   /** Get base address of SPI.SR register as uint32_t */
+   static constexpr uint32_t spiSR() { return spiBase() + offsetof(SPI_Type, SR); }
+   /** Get base address of SPI.PUSHR register as uint32_t */
+   static constexpr uint32_t spiPUSHR() { return spiBase() + offsetof(SPI_Type, PUSHR); }
+   /** Get base address of SPI.POPR register as uint32_t */
+   static constexpr uint32_t spiPOPR() { return spiBase() + offsetof(SPI_Type, POPR); }
+
 protected:
    /** Callback function for ISR */
    static SpiCallbackFunction callback;
@@ -643,11 +668,13 @@ public:
     * @param[in]  configuration  The configuration to set for the transaction
     * @param[in]  milliseconds   How long to wait in milliseconds. Use osWaitForever for indefinite wait
     *
-    * @return osOK: The mutex has been obtain.
-    * @return osErrorTimeoutResource: The mutex could not be obtained in the given time.
-    * @return osErrorResource: The mutex could not be obtained when no timeout was specified.
-    * @return osErrorParameter: The parameter mutex_id is incorrect.
-    * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
+    * @return osOK:                    The mutex has been obtain.
+    * @return osErrorTimeoutResource:  The mutex could not be obtained in the given time.
+    * @return osErrorResource:         The mutex could not be obtained when no timeout was specified.
+    * @return osErrorParameter:        The parameter mutex_id is incorrect.
+    * @return osErrorISR:              Cannot be called from interrupt service routines.
+    *
+    * @note The USBDM error code will also be set on error
     */
    virtual osStatus startTransaction(SpiConfig &configuration, int milliseconds=osWaitForever) override {
       // Obtain mutex
@@ -657,28 +684,33 @@ public:
          // Change configuration for this transaction
          setConfiguration(configuration);
       }
+      else {
+         setCmsisErrorCode(status);
+      }
       return status;
    }
 
    /**
     * Obtain SPI mutex (SPI configuration unchanged)
     *
-    * @param[in]  milliseconds How long to wait in milliseconds. Use osWaitForever for indefinite wait
+    * @param[in]  milliseconds How long to wait in milliseconds. Use osWaitForever for indefinite wait.
     *
-    * @return osOK: The mutex has been obtain.
-    * @return osErrorTimeoutResource: The mutex could not be obtained in the given time.
-    * @return osErrorResource: The mutex could not be obtained when no timeout was specified.
-    * @return osErrorParameter: The parameter mutex_id is incorrect.
-    * @return osErrorISR: osMutexWait cannot be called from interrupt service routines.
+    * @return osOK:                    The mutex has been obtain.
+    * @return osErrorTimeoutResource:  The mutex could not be obtained in the given time.
+    * @return osErrorResource:         The mutex could not be obtained when no timeout was specified.
+    * @return osErrorParameter:        The parameter mutex_id is incorrect.
+    * @return osErrorISR:              Cannot be called from interrupt service routines.
+    *
+    * @note The USBDM error code will also be set on error
     */
    virtual osStatus startTransaction(int milliseconds=osWaitForever) override {
       // Obtain mutex
       osStatus status = mutex().wait(milliseconds);
-      if (status != osOK) {
-         setCmsisErrorCode(status);
+      if (status == osOK) {
+         spi->MCR &= ~SPI_MCR_HALT_MASK;
       }
       else {
-         spi->MCR &= ~SPI_MCR_HALT_MASK;
+         setCmsisErrorCode(status);
       }
       return status;
    }
@@ -686,20 +718,24 @@ public:
    /**
     * Release SPI mutex
     *
-    * @return osOK: the mutex has been correctly released.
-    * @return osErrorResource: the mutex was not obtained before.
-    * @return osErrorISR: osMutexRelease cannot be called from interrupt service routines.
+    * @return osOK:              The mutex has been correctly released.
+    * @return osErrorResource:   The mutex was not obtained before.
+    * @return osErrorISR:        Cannot be called from interrupt service routines.
+    *
+    * @note The USBDM error code will also be set on error
     */
    virtual osStatus endTransaction() override {
       // Release mutex
       spi->MCR |= SPI_MCR_HALT_MASK;
-      return mutex().release();
+      osStatus status = mutex().release();
+      if (status != osOK) {
+         setCmsisErrorCode(status);
+      }
+      return status;
    }
 #endif
 
 public:
-   static constexpr volatile SPI_Type *SPI = Info::spi;
-
    // SPI SCK (clock) Pin
    using sckGpio  = GpioTable_T<Info, 0, ActiveHigh>;
 
@@ -758,13 +794,13 @@ public:
    /**
     * Constructor
     */
-   SpiBase_T() : Spi(reinterpret_cast<volatile SPI_Type*>(Info::spi)) {
+   SpiBase_T() : Spi(reinterpret_cast<volatile SPI_Type*>(&Info::spi())) {
 
 #ifdef DEBUG_BUILD
       // Check pin assignments
-      static_assert(Info::info[0].gpioBit != UNMAPPED_PCR, "SPIx_SCK has not been assigned to a pin");
-      static_assert(Info::info[1].gpioBit != UNMAPPED_PCR, "SPIx_SIN has not been assigned to a pin");
-      static_assert(Info::info[2].gpioBit != UNMAPPED_PCR, "SPIx_SOUT has not been assigned to a pin");
+      static_assert(Info::info[0].gpioBit != UNMAPPED_PCR, "SPIx_SCK has not been assigned to a pin - Modify Configure.usbdm");
+      static_assert(Info::info[1].gpioBit != UNMAPPED_PCR, "SPIx_SIN has not been assigned to a pin - Modify Configure.usbdm");
+      static_assert(Info::info[2].gpioBit != UNMAPPED_PCR, "SPIx_SOUT has not been assigned to a pin - Modify Configure.usbdm");
 #endif
 
       if (Info::mapPinsOnEnable) {
@@ -772,7 +808,7 @@ public:
       }
 
       // Enable SPI module clock
-      *Info::clockReg |= Info::clockMask;
+      Info::clockReg() |= Info::clockMask;
       __DMB();
 
       spi->MCR =
@@ -805,9 +841,9 @@ public:
     */
    static uint32_t __attribute__((always_inline)) getStatus() {
       // Capture interrupt status
-      uint32_t status = Info::spi->SR;
+      uint32_t status = Info::spi().SR;
       // Clear captured flags
-      Info::spi->SR = status;
+      Info::spi().SR = status;
       // Return status
       return status;
    }

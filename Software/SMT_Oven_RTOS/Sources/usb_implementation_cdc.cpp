@@ -211,8 +211,8 @@ ErrorCode Usb0::sofCallback() {
    // On                      - no USB activity, connected
    // Off, flash briefly on   - USB activity, not connected
    // On,  flash briefly off  - USB activity, connected
-   if (fUsb->FRMNUML==0) { // Every ~256 ms
-      switch (fUsb->FRMNUMH&0x03) {
+   if (fUsb().FRMNUML==0) { // Every ~256 ms
+      switch (fUsb().FRMNUMH&0x03) {
          case 0:
             if (fConnectionState == USBconfigured) {
                // Activity LED on when USB connection established
@@ -296,7 +296,7 @@ void Usb0::startCdcIn() {
 void Usb0::handleTokenComplete() {
 
    // Status from Token
-   uint8_t   usbStat  = fUsb->STAT;
+   uint8_t   usbStat  = fUsb().STAT;
 
    // Endpoint number
    uint8_t   endPoint = ((uint8_t)usbStat)>>4;
@@ -396,7 +396,7 @@ void Usb0::initialise() {
  * CDC Set line coding handler
  */
 void Usb0::handleSetLineCoding() {
-//   PRINTF("handleSetLineCoding()\n");
+//   console.write("handleSetLineCoding()\n");
    static LineCodingStructure lineCoding;
 
    // Call-back to do after transaction complete
@@ -416,7 +416,7 @@ void Usb0::handleSetLineCoding() {
  * CDC Get line coding handler
  */
 void Usb0::handleGetLineCoding() {
-//   PRINTF("handleGetLineCoding()\n");
+//   console.write("handleGetLineCoding()\n");
    // Send packet
    ep0StartTxTransaction( sizeof(LineCodingStructure), (const uint8_t*)&cdcInterface::getLineCoding());
 }
@@ -425,7 +425,7 @@ void Usb0::handleGetLineCoding() {
  * CDC Set line state handler
  */
 void Usb0::handleSetControlLineState() {
-//   PRINTF("handleSetControlLineState(%X)\n", ep0SetupBuffer.wValue.lo());
+//   console.write("handleSetControlLineState(%X)\n", ep0SetupBuffer.wValue.lo());
    cdcInterface::setControlLineState(fEp0SetupBuffer.wValue.lo());
    // Tx empty Status packet
    ep0StartTxTransaction( 0, nullptr );
@@ -435,7 +435,7 @@ void Usb0::handleSetControlLineState() {
  * CDC Send break handler
  */
 void Usb0::handleSendBreak() {
-//   PRINTF("handleSendBreak()\n");
+//   console.write("handleSendBreak()\n");
    cdcInterface::sendBreak(fEp0SetupBuffer.wValue);
    // Tx empty Status packet
    ep0StartTxTransaction( 0, nullptr );
@@ -449,7 +449,7 @@ void Usb0::handleSendBreak() {
  * @note Provides CDC extensions
  */
 ErrorCode Usb0::handleUserEp0SetupRequests(const SetupPacket &setup) {
-   //PRINTF("handleUserEp0SetupRequests()\n");
+   //console.write("handleUserEp0SetupRequests()\n");
    switch(REQ_TYPE(setup.bmRequestType)) {
       case REQ_TYPE_CLASS :
          // Class requests

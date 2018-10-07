@@ -76,7 +76,7 @@ void initialise() {
    Buzzer::init();
    OvenFanLed::init();
    HeaterLed::init();
-   Spare::enable();
+   Spare::Ftm::enable();
    Spare::setDutyCycle(0);
    ovenControl.initialise();
 }

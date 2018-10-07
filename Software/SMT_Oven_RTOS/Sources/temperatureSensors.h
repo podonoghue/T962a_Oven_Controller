@@ -53,7 +53,8 @@ public:
    /**
     * Destructor
     */
-   virtual ~TemperatureSensors() {}
+   virtual ~TemperatureSensors() {
+   }
 
    /**
     * Update current readings from thermocouples

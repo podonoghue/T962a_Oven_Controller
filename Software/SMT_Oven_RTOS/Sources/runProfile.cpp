@@ -137,7 +137,11 @@ static void handler(const void *) {
    }
 #endif
 
-   PRINTF("%3d, %10s: TO=%3d, T=%4.1f, SP=%4.1f\n", time, Reporter::getStateName(state), timeout, currentTemperature, setpoint);
+   console.
+      WRITE(time).WRITE(", ").WRITE(Reporter::getStateName(state)).
+      WRITE(": TO=").WRITE(timeout).
+      WRITE(", T =").WRITE(currentTemperature).
+      WRITE(", SP=").WRITELN(setpoint);
 
    // Handle state
    switch (state) {
@@ -169,8 +173,9 @@ static void handler(const void *) {
          // Calculate maximum time for preheat ramp to complete (10% over)
          timeout = (int)round(1.1*currentProfile->preheatTime);
 
-         PRINTF("Starting sequence, Ta=%f\n", ambient);
-         // no break
+         console.WRITE("Starting sequence, Ta=").WRITELN(ambient);
+         /* Fall through - no break */
+
       case s_preheat:
          /*
           * Set-point follows profile temperature from ambient to start of soak temperature/time

@@ -72,6 +72,14 @@ int console_rxChar(void) {
 }
 
 /**
+ * Print simple log message to console
+ *
+ * @param msg Message to print
+ */
+void log_error(const char *msg) {
+   console.writeln(msg);
+}
+/**
  * @}
  */
 

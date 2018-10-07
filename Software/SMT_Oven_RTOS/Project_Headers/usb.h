@@ -17,12 +17,12 @@
  * This file is generated automatically.
  * Any manual changes will be lost.
  */
-#include <stdio.h>
 #include <cstring>
 #include "hardware.h"
 #include "usb_defs.h"
 #include "utilities.h"
 #include "usb_endpoint.h"
+#include "stringFormatter.h"
 
 namespace USBDM {
 
@@ -194,6 +194,14 @@ template <class Info, int EP0_SIZE>
 class UsbBase_T : public UsbBase {
 
 protected:
+   /** Clock register for peripheral */
+   static __attribute__((always_inline)) volatile uint32_t &fClockReg() { return Info::clockReg(); }
+
+public:
+   /** Hardware instance pointer */
+   static __attribute__((always_inline)) volatile USB_Type &fUsb() { return Info::usb(); }
+
+protected:
    /** USB Control endpoint number - must be zero */
    static constexpr int CONTROL_ENDPOINT = 0;
 
@@ -225,12 +233,6 @@ protected:
 
    /** USB Device status */
    static DeviceStatus fDeviceStatus;
-
-   /** Pointer to USB hardware */
-   static constexpr volatile USB_Type *fUsb = Info::usb;
-
-   /** Pointer to USB clock register */
-   static constexpr volatile uint32_t *fClockReg = Info::clockReg;
 
    /** Buffer for EP0 Setup packet (copied from USB RAM) */
    static SetupPacket fEp0SetupBuffer;
@@ -268,7 +270,7 @@ protected:
 
    /** Used to record Suspend/Resume events */
    static int fSuspendCounter;
-   
+
 public:
    /**
     * Configures all mapped pins associated with this peripheral
@@ -283,7 +285,7 @@ public:
     * Configures all USB pins
     */
    static void enable() {
-      *fClockReg |= Info::clockMask;
+      fClockReg() |= Info::clockMask;
       __DMB();
 
       configureAllPins();
@@ -314,7 +316,7 @@ public:
     * @param[in]  mask Mask of interrupts to enable e.g. USB_INTEN_SOFTOKEN_MASK, USB_INTEN_STALLEN_MASK etc
     */
    static void enableInterrupts(uint8_t mask=0xFF) {
-      fUsb->INTEN = mask;
+      fUsb().INTEN = mask;
    }
 
    /**
@@ -323,7 +325,7 @@ public:
     * @param[in]  mask Mask of interrupts to enable e.g. USB_OTGICR_IDEN_MASK, USB_OTGICR_ONEMSECEN_MASK etc
     */
    static void enableOtgInterrupts(uint8_t mask=0xFF) {
-      fUsb->OTGICR = mask;
+      fUsb().OTGICR = mask;
    }
 
    /**
@@ -459,7 +461,7 @@ protected:
     */
    static void setUSBdefaultState() {
       fConnectionState      = USBdefault;
-      fUsb->ADDR            = 0;
+      fUsb().ADDR            = 0;
       fDeviceConfiguration  = 0;
       fSuspendCounter       = 0;
    }
@@ -476,7 +478,7 @@ protected:
       }
       else {
          fConnectionState       = USBaddressed;
-         fUsb->ADDR             = address;
+         fUsb().ADDR             = address;
          fDeviceConfiguration   = 0;
       }
    }
@@ -489,7 +491,7 @@ protected:
    static void setUSBconfiguredState( uint8_t config ) {
       if (config == 0) {
          // unconfigure
-         setUSBaddressedState(fUsb->ADDR);
+         setUSBaddressedState(fUsb().ADDR);
       }
       else {
          fConnectionState      = USBconfigured;
@@ -560,7 +562,7 @@ protected:
     */
    static void handleUnexpectedSetup() {
       if (fUnhandledSetupCallback(fEp0SetupBuffer) != E_NO_ERROR) {
-         PRINTF("handleUnexpectedSetup(%s)\n", reportSetupPacket(&fEp0SetupBuffer));
+         console.WRITE("handleUnexpectedSetup(").WRITE(reportSetupPacket(&fEp0SetupBuffer)).WRITELN(")");
          fControlEndpoint.stall();
       }
    }
@@ -613,7 +615,7 @@ protected:
       // Setup callback to update address at end of transaction
       static auto callback = []() {
          setUSBaddressedState(newAddress);
-         //PRINTF("setAddresscb - %d\n", newAddress);
+         //console.WRITE("setAddress-cb - ).WRITELN(newAddress, Radix_16);
       };
       setSetupCompleteCallback(callback);
 
@@ -646,7 +648,7 @@ protected:
    static void handleGetInterface() {
       static const uint8_t interfaceAltSetting = 0;
 
-      //   PUTS("getInterface");
+      //   console.WRITELN("getInterface");
 
       if ((fEp0SetupBuffer.bmRequestType != (EP_IN|RT_INTERFACE)) || // NOT In,Standard,Interface
             (fEp0SetupBuffer.wLength != 1)) {                        // NOT correct length
@@ -792,7 +794,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleSetupToken() {
    // Call-backs only persist during a SETUP transaction
    setSetupCompleteCallback(nullptr);
 
-//   PRINTF("handleSetupToken(%s)\n", reportSetupPacket(&fEp0SetupBuffer));
+//   console.WRITE("handleSetupToken - ").WRITELN(reportSetupPacket(&fEp0SetupBuffer));
 
    switch(REQ_TYPE(fEp0SetupBuffer.bmRequestType)) {
       case REQ_TYPE_STANDARD :
@@ -823,13 +825,13 @@ void UsbBase_T<Info, EP0_SIZE>::handleSetupToken() {
          switch (fEp0SetupBuffer.bRequest) {
 #ifdef MS_COMPATIBLE_ID_FEATURE
             case MS_VENDOR_CODE :
-               //               PUTS("REQ_TYPE_VENDOR - VENDOR_CODE");
+               //               console.WRITELN("REQ_TYPE_VENDOR - VENDOR_CODE");
                if (fEp0SetupBuffer.wIndex == 0x0004) {
-                  //                  PUTS("REQ_TYPE_VENDOR - MS_CompatibleIdFeatureDescriptor");
+                  //                  console.WRITELN("REQ_TYPE_VENDOR - MS_CompatibleIdFeatureDescriptor");
                   ep0StartTxTransaction(sizeof(MS_CompatibleIdFeatureDescriptor), (const uint8_t *)&msCompatibleIdFeatureDescriptor);
                }
                else if (fEp0SetupBuffer.wIndex == 0x0005) {
-                  //                  PUTS("REQ_TYPE_VENDOR - MS_PropertiesFeatureDescriptor");
+                  //                  console.WRITELN("REQ_TYPE_VENDOR - MS_PropertiesFeatureDescriptor");
                   ep0StartTxTransaction(sizeof(MS_PropertiesFeatureDescriptor), (const uint8_t *)&msPropertiesFeatureDescriptor);
                }
                else {
@@ -852,7 +854,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleSetupToken() {
    fControlEndpoint.initialiseBdtRx();
 
    // Allow transactions post SETUP packet (clear TXSUSPENDTOKENBUSY)
-   fUsb->CTL = USB_CTL_USBENSOFEN_MASK;
+   fUsb().CTL = USB_CTL_USBENSOFEN_MASK;
 }
 
 /**
@@ -865,7 +867,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleSetupToken() {
 template<class Info, int EP0_SIZE>
 bool UsbBase_T<Info, EP0_SIZE>::handleTokenComplete() {
    // Status from Token
-   uint8_t usbStat  = fUsb->STAT;
+   uint8_t usbStat  = fUsb().STAT;
 
    // Endpoint number
    uint8_t endPoint = ((uint8_t)usbStat)>>4;
@@ -882,15 +884,15 @@ bool UsbBase_T<Info, EP0_SIZE>::handleTokenComplete() {
    // Control - Accept SETUP, IN or OUT token
 #if 0
    if (bdt->u.result.tok_pid == SETUPToken) {
-      PUTS("\n=====");
+      console.WRITELN("\n=====");
    }
-   PRINTF("\nTOKEN=%s, STATE=%s, size=%d, %s, %s, %s\n",
-         getTokenName(bdt->u.result.tok_pid),
-         getStateName(fControlEndpoint.getHardwareState().state),
-         bdt->bc,
-         (usbStat&USB_STAT_TX_MASK)?"Tx":"Rx",
-               bdt->u.result.data0_1?"DATA1":"DATA0",
-                     (usbStat&USB_STAT_ODD_MASK)?"Odd":"Even");
+   console.
+      WRITE("\nTOKEN=").WRITE(getTokenName(bdt->u.result.tok_pid)).
+      WRITE(", STATE=").WRITE(getStateName(fControlEndpoint.getHardwareState().state)).
+      WRITE(", size=").WRITE(bdt->bc).
+      WRITE((usbStat&USB_STAT_TX_MASK)?", Tx":", Rx").
+      WRITE(bdt->u.result.data0_1?", DATA1":", DATA0").
+      WRITELN((usbStat&USB_STAT_ODD_MASK)?", Odd":", Even");
 #endif
    switch (bdt->u.result.tok_pid) {
       case SETUPToken:
@@ -903,7 +905,7 @@ bool UsbBase_T<Info, EP0_SIZE>::handleTokenComplete() {
          fControlEndpoint.handleOutToken();
          break;
       default:
-         PRINTF("Unexpected token on EP0 = %s\n", getTokenName(bdt->u.result.tok_pid));
+         console.WRITE("Unexpected token on EP0 = ").WRITELN(getTokenName(bdt->u.result.tok_pid));
          break;
    }
    // Indicate processed
@@ -916,18 +918,18 @@ bool UsbBase_T<Info, EP0_SIZE>::handleTokenComplete() {
  */
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleUSBReset() {
-//   PUTS("\nReset");
+//   console.WRITELN("\nReset");
 
    // Disable all interrupts
-   fUsb->INTEN = 0x00;
-   fUsb->ERREN = 0x00;
+   fUsb().INTEN = 0x00;
+   fUsb().ERREN = 0x00;
 
    // Clear USB error flags
-   fUsb->ERRSTAT = 0xFF;
+   fUsb().ERRSTAT = 0xFF;
 
    // Clear most USB interrupt flags
-   fUsb->ISTAT = (uint8_t)~USB_ISTAT_TOKDNE_MASK;
-   
+   fUsb().ISTAT = (uint8_t)~USB_ISTAT_TOKDNE_MASK;
+
    // Set initial USB state
    setUSBdefaultState();
 
@@ -935,8 +937,8 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBReset() {
    initialiseEndpoints();
 
    // Enable various interrupts
-   fUsb->INTEN = USB_INTMASKS|USB_INTEN_ERROREN_MASK;
-   fUsb->ERREN = 0xFF;
+   fUsb().INTEN = USB_INTMASKS|USB_INTEN_ERROREN_MASK;
+   fUsb().ERREN = 0xFF;
 }
 
 /*
@@ -949,7 +951,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBReset() {
  */
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleUSBSuspend() {
-//   PUTS("Suspend");
+//   console.WRITELN("Suspend");
    if (fConnectionState != USBconfigured) {
       // Ignore if not configured
       return;
@@ -961,10 +963,10 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBSuspend() {
 
    // Asynchronous Resume Interrupt Enable (USB->CPU)
    // Only enable if transceiver is disabled
-   //   fUsb->USBTRC0  |= USB_USBTRC0_USBRESMEN_MASK;
+   //   fUsb().USBTRC0  |= USB_USBTRC0_USBRESMEN_MASK;
 
    // Enable resume detection or reset interrupts from the USB
-   fUsb->INTEN   |= (USB_INTEN_RESUMEEN_MASK|USB_INTEN_USBRSTEN_MASK);
+   fUsb().INTEN   |= (USB_INTEN_RESUMEEN_MASK|USB_INTEN_USBRSTEN_MASK);
    fConnectionState = USBsuspended;
 
    // Notify user level (to enter Low power later!!!)
@@ -979,7 +981,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBSuspend() {
  */
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleUSBResume() {
-//   PUTS("Resume");
+//   console.WRITELN("Resume");
 
    if (--fSuspendCounter>0) {
       // Ignore as may be noise
@@ -988,7 +990,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBResume() {
    fSuspendCounter = 0;
 
    // Mask further resume interrupts
-   fUsb->INTEN   &= ~USB_INTEN_RESUMEEN_MASK;
+   fUsb().INTEN   &= ~USB_INTEN_RESUMEEN_MASK;
 
    if (fConnectionState != USBsuspended) {
       // Ignore if not suspended
@@ -1005,7 +1007,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleUSBResume() {
    UsbImplementation::initialiseEndpoints();
 
    // Enable the transmit or receive of packets
-   fUsb->CTL = USB_CTL_USBENSOFEN_MASK;
+   fUsb().CTL = USB_CTL_USBENSOFEN_MASK;
 }
 
 /**
@@ -1041,7 +1043,7 @@ void UsbBase_T<Info, EP0_SIZE>::ep0TransactionCallback(EndpointState state) {
          ep0ConfigureSetupTransaction();
          break;
       default:
-         PRINTF("Unhandled %d\n", state);
+         console.WRITE("Unhandled ").WRITELN(getStateName(state));
          break;
    }
 
@@ -1064,20 +1066,20 @@ void UsbBase_T<Info, EP0_SIZE>::initialise() {
    // Make sure no interrupt during setup
    enableNvicInterrupts(false);
 
-   fUsb->OTGISTAT = 0;
-   fUsb->OTGICR   = 0;
-   fUsb->OTGCTL   = 0;
-   fUsb->INTEN    = 0;
-   fUsb->ERRSTAT  = 0;
-   fUsb->ERREN    = 0;
-   fUsb->CTL      = 0;
-   fUsb->ADDR     = 0;
-   for (unsigned i=0; i<(sizeof(fUsb->ENDPOINT)/sizeof(fUsb->ENDPOINT[0])); i++) {
-      fUsb->ENDPOINT[i].ENDPT = 0;
+   fUsb().OTGISTAT = 0;
+   fUsb().OTGICR   = 0;
+   fUsb().OTGCTL   = 0;
+   fUsb().INTEN    = 0;
+   fUsb().ERRSTAT  = 0;
+   fUsb().ERREN    = 0;
+   fUsb().CTL      = 0;
+   fUsb().ADDR     = 0;
+   for (unsigned i=0; i<(sizeof(fUsb().ENDPOINT)/sizeof(fUsb().ENDPOINT[0])); i++) {
+      fUsb().ENDPOINT[i].ENDPT = 0;
    }
-   fUsb->USBCTRL = 0;
-   fUsb->CONTROL = 0;
-   fUsb->USBTRC0 = 0;
+   fUsb().USBCTRL = 0;
+   fUsb().CONTROL = 0;
+   fUsb().USBTRC0 = 0;
 
 #ifdef MPU_CESR_VLD_MASK
    // Disable MPU & clear errors
@@ -1090,10 +1092,10 @@ void UsbBase_T<Info, EP0_SIZE>::initialise() {
 
 #ifdef USB_CLK_RECOVER_IRC_EN_IRC_EN
    // IRC clock enable
-   fUsb->CLK_RECOVER_IRC_EN = Usb0Info::clk_recovery_irc_en;
+   fUsb().CLK_RECOVER_IRC_EN = Usb0Info::clk_recovery_irc_en;
 
    // Clock recovery options
-   fUsb->CLK_RECOVER_CTRL = Usb0Info::clk_recovery_ctrl;
+   fUsb().CLK_RECOVER_CTRL = Usb0Info::clk_recovery_ctrl;
 #endif
 
 #if 0
@@ -1111,27 +1113,27 @@ void UsbBase_T<Info, EP0_SIZE>::initialise() {
 #endif
 
    // This bit is undocumented but seems to be necessary
-   fUsb->USBTRC0 = 0x40;
+   fUsb().USBTRC0 = 0x40;
 
    // Point USB at BDT array
-   fUsb->BDTPAGE3 = (uint8_t) (((unsigned)endPointBdts)>>24);
-   fUsb->BDTPAGE2 = (uint8_t) (((unsigned)endPointBdts)>>16);
-   fUsb->BDTPAGE1 = (uint8_t) (((unsigned)endPointBdts)>>8);
+   fUsb().BDTPAGE3 = (uint8_t) (((unsigned)endPointBdts)>>24);
+   fUsb().BDTPAGE2 = (uint8_t) (((unsigned)endPointBdts)>>16);
+   fUsb().BDTPAGE1 = (uint8_t) (((unsigned)endPointBdts)>>8);
 
    // Clear all pending interrupts
-   fUsb->ISTAT = 0xFF;
+   fUsb().ISTAT = 0xFF;
 
    // Enable fUsb reset interrupt
-   fUsb->INTEN = USB_INTEN_USBRSTEN_MASK|USB_INTEN_SLEEPEN_MASK;
+   fUsb().INTEN = USB_INTEN_USBRSTEN_MASK|USB_INTEN_SLEEPEN_MASK;
 
    // Weak pull downs
-   fUsb->USBCTRL = USB_USBCTRL_PDE_MASK;
+   fUsb().USBCTRL = USB_USBCTRL_PDE_MASK;
 
    // Enable Pull-up
-   fUsb->CONTROL = USB_CONTROL_DPPULLUPNONOTG_MASK;
+   fUsb().CONTROL = USB_CONTROL_DPPULLUPNONOTG_MASK;
 
    // Enable interface
-   fUsb->CTL = USB_CTL_USBENSOFEN_MASK;
+   fUsb().CTL = USB_CTL_USBENSOFEN_MASK;
 
    // Set initial USB state
    setUSBdefaultState();
@@ -1160,14 +1162,14 @@ void UsbBase_T<Info, EP0_SIZE>::addEndpoint(Endpoint *endpoint) {
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::initialiseEndpoints() {
 
-   //   PUTS("initialiseEndpoints()");
+   //   console.WRITELN("initialiseEndpoints()");
 
    // Clear all BDTs
    memset((uint8_t*)(endPointBdts), 0, sizeof(EndpointBdtEntry[UsbImplementation::NUMBER_OF_ENDPOINTS]));
 
    // Clear odd/even bits & enable USB device
-   fUsb->CTL = USB_CTL_USBENSOFEN_MASK|USB_CTL_ODDRST_MASK;
-   fUsb->CTL = USB_CTL_USBENSOFEN_MASK;
+   fUsb().CTL = USB_CTL_USBENSOFEN_MASK|USB_CTL_ODDRST_MASK;
+   fUsb().CTL = USB_CTL_USBENSOFEN_MASK;
 
    fControlEndpoint.initialise();
 
@@ -1183,7 +1185,7 @@ void UsbBase_T<Info, EP0_SIZE>::initialiseEndpoints() {
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleGetStatus() {
 
-//   PRINTF("handleGetStatus()\n");
+//   console.WRITELN("handleGetStatus()\n");
 
    static const uint8_t        zeroReturn[]    = {0,0};
    static const EndpointStatus epStatusStalled = {1,0,0};
@@ -1207,7 +1209,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleGetStatus() {
       case EP_IN|RT_ENDPOINT : // Endpoint Status
       epNum = fEp0SetupBuffer.wIndex&0x07;
       if (epNum <= UsbImplementation::NUMBER_OF_ENDPOINTS) {
-         if (fUsb->ENDPOINT[epNum].ENDPT&USB_ENDPT_EPSTALL_MASK) {
+         if (fUsb().ENDPOINT[epNum].ENDPT&USB_ENDPT_EPSTALL_MASK) {
             dataPtr = (uint8_t*)&epStatusStalled;
          }
          else {
@@ -1251,7 +1253,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleClearFeature() {
                (epNum >= UsbImplementation::NUMBER_OF_ENDPOINTS))  { // or illegal EP# (ignores direction)
             break;
          }
-         assert(fEndPoints[epNum] != nullptr);
+         usbdm_assert(fEndPoints[epNum] != nullptr, "NULL Endpoint");
          fEndPoints[epNum]->clearStall();
          okResponse = true;
       }
@@ -1295,7 +1297,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleSetFeature() {
                (epNum >= UsbImplementation::NUMBER_OF_ENDPOINTS))  {                   // or illegal EP# (ignores direction)
             break;
          }
-         assert(fEndPoints[epNum] != nullptr);
+         usbdm_assert(fEndPoints[epNum] != nullptr, "NULL Endpoint");
          fEndPoints[epNum]->stall();
          okResponse = true;
       }
@@ -1321,7 +1323,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleGetDescriptor() {
    uint16_t        dataSize = 0;
    const uint8_t  *dataPtr = nullptr;
 
-//   PRINTF("handleGetDescriptor(%d:%d)\n", fEp0SetupBuffer.wValue.hi(), fEp0SetupBuffer.wValue.lo());
+//   console.WRITE("handleGetDescriptor").WRITE(fEp0SetupBuffer.wValue.hi()).WRITE(":").WRITELN(fEp0SetupBuffer.wValue.lo());
 
    if (fEp0SetupBuffer.bmRequestType != (EP_IN|RT_DEVICE)) {
       // Must be In,Standard,Device
@@ -1331,12 +1333,12 @@ void UsbBase_T<Info, EP0_SIZE>::handleGetDescriptor() {
    switch (fEp0SetupBuffer.wValue.hi()) {
 
       case DT_DEVICE: // Get Device Descriptor - 1
-         //      PUTS("getDescriptor-device - ");
+         //      console.WRITELN("getDescriptor-device - ");
          dataPtr  = (uint8_t *) &UsbImplementation::deviceDescriptor;
          dataSize = sizeof(UsbImplementation::deviceDescriptor);
          break;
       case DT_CONFIGURATION: // Get Configuration Descriptor - 2
-         //      PUTS("getDescriptor-config - ");
+         //      console.WRITELN("getDescriptor-config - ");
          if (fEp0SetupBuffer.wValue.lo() != 0) {
             fControlEndpoint.stall();
             return;
@@ -1345,14 +1347,14 @@ void UsbBase_T<Info, EP0_SIZE>::handleGetDescriptor() {
          dataSize = sizeof(UsbImplementation::otherDescriptors);
          break;
       case DT_DEVICEQUALIFIER: // Get Device Qualifier Descriptor
-         //      PUTS("getDescriptor-deviceQ - ");
+         //      console.WRITELN("getDescriptor-deviceQ - ");
          fControlEndpoint.stall();
          return;
       case DT_STRING: // Get String Desc.- 3
-         //      PRINTF("getDescriptor-string - %d\n", descriptorIndex);
+         //      console.WRITE("getDescriptor-string - ).WRITELN(descriptorIndex);
 #ifdef MS_COMPATIBLE_ID_FEATURE
          if (descriptorIndex == 0xEE) {
-            //         PUTS("getDescriptor-string - MS_COMPATIBLE_ID_FEATURE");
+            //         console.WRITELN("getDescriptor-string - MS_COMPATIBLE_ID_FEATURE");
             dataPtr  = fMsOsStringDescriptor;
             dataSize = *dataPtr;
             break;
@@ -1369,16 +1371,16 @@ void UsbBase_T<Info, EP0_SIZE>::handleGetDescriptor() {
          }
 #if defined(UNIQUE_ID)
          else if (descriptorIndex == UsbImplementation::s_serial_index) {
-            uint8_t utf8Buff[sizeof(SERIAL_NO)+10];
+            char utf8Buff[sizeof(SERIAL_NO)+10];
 
             // Generate Semi-unique Serial number
             uint32_t uid = SIM->UIDH^SIM->UIDMH^SIM->UIDML^SIM->UIDL;
-//            FormattedIO::ltoa(uid, utf8Buff, Radix_10);
-            snprintf((char *)utf8Buff, sizeof(utf8Buff), SERIAL_NO, uid);
+            StringFormatter sf(utf8Buff, sizeof(utf8Buff));
+            sf.setPadding(Padding_LeadingZeroes).setWidth(6).write(SERIAL_NO).write(uid, Radix_16);
 
             // Use end-point internal buffer directly - may result in truncation
             dataPtr = fControlEndpoint.getBuffer();
-            utf8ToStringDescriptor(fControlEndpoint.getBuffer(), utf8Buff, fControlEndpoint.BUFFER_SIZE);
+            utf8ToStringDescriptor(fControlEndpoint.getBuffer(), (uint8_t *)utf8Buff, fControlEndpoint.BUFFER_SIZE);
          }
 #endif
          else {
@@ -1425,7 +1427,7 @@ void UsbBase_T<Info, EP0_SIZE>::handleSetConfiguration() {
  */
 template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::handleSetInterface() {
-   PUTS("setInterface");
+   console.WRITELN("setInterface");
 
    if ((fEp0SetupBuffer.bmRequestType != (EP_OUT|RT_INTERFACE)) || // NOT In,Standard,Interface
          (fEp0SetupBuffer.wLength != 0) ||                         // NOT correct length
@@ -1455,19 +1457,19 @@ template<class Info, int EP0_SIZE>
 void UsbBase_T<Info, EP0_SIZE>::irqHandler() {
 
    //   if (interruptFlags&~USB_ISTAT_SOFTOK_MASK) {
-   //      PRINTF("ISTAT=%2X\n", interruptFlags);
+   //      console.WRITE("ISTAT=").WRITELN(interruptFlags, Radix_16);
    //   }
 
    do {
       // Get active and enabled flags only
-      uint8_t pendingInterruptFlags = fUsb->ISTAT & fUsb->INTEN;
+      uint8_t pendingInterruptFlags = fUsb().ISTAT & fUsb().INTEN;
 
       if (pendingInterruptFlags == 0) {
          return;
       }
       if ((pendingInterruptFlags&USB_ISTAT_USBRST_MASK) != 0) {
          // Reset signaled on Bus
-         fUsb->ISTAT = USB_ISTAT_USBRST_MASK; // Clear source
+         fUsb().ISTAT = USB_ISTAT_USBRST_MASK; // Clear source
          handleUSBReset();
          return;
       }
@@ -1481,38 +1483,38 @@ void UsbBase_T<Info, EP0_SIZE>::irqHandler() {
           *  Clear source
           *  Must be done after processing token as pops USB0_STAT register
           */
-         fUsb->ISTAT = USB_ISTAT_TOKDNE_MASK;
+         fUsb().ISTAT = USB_ISTAT_TOKDNE_MASK;
       }
       if ((pendingInterruptFlags&USB_ISTAT_RESUME_MASK) != 0) {
          // Resume signaled on Bus
          handleUSBResume();
          // Clear source
-         fUsb->ISTAT = USB_ISTAT_RESUME_MASK;
+         fUsb().ISTAT = USB_ISTAT_RESUME_MASK;
       }
       if ((pendingInterruptFlags&USB_ISTAT_STALL_MASK) != 0) {
          // Stall sent
          handleStallComplete();
          // Clear source
-         fUsb->ISTAT = USB_ISTAT_STALL_MASK;
+         fUsb().ISTAT = USB_ISTAT_STALL_MASK;
       }
       if ((pendingInterruptFlags&USB_ISTAT_SOFTOK_MASK) != 0) {
          // SOF Token
          handleSOFToken();
-         fUsb->ISTAT = USB_ISTAT_SOFTOK_MASK; // Clear source
+         fUsb().ISTAT = USB_ISTAT_SOFTOK_MASK; // Clear source
       }
       if ((pendingInterruptFlags&USB_ISTAT_SLEEP_MASK) != 0) {
          // Bus Idle 3ms => sleep
-         //      PUTS("Suspend");
+         //      console.WRITELN("Suspend");
          handleUSBSuspend();
          // Clear source
-         fUsb->ISTAT = USB_ISTAT_SLEEP_MASK;
+         fUsb().ISTAT = USB_ISTAT_SLEEP_MASK;
       }
       if ((pendingInterruptFlags&USB_ISTAT_ERROR_MASK) != 0) {
          // Any Error
-         PRINTF("Error s=0x%02X\n", fUsb->ERRSTAT);
-         fUsb->ERRSTAT = 0xFF;
+         console.WRITE("Error s=0x").WRITELN(fUsb().ERRSTAT);
+         fUsb().ERRSTAT = 0xFF;
          // Clear source
-         fUsb->ISTAT = USB_ISTAT_ERROR_MASK;
+         fUsb().ISTAT = USB_ISTAT_ERROR_MASK;
       }
    } while(true);
 }

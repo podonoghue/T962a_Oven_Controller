@@ -1,0 +1,24 @@
+SMT_Oven_stubs.elf  :
+section              size        addr
+.interrupts          1040           0
+.text              108216        1040
+.ARM.exidx              8      109256
+.bdts                 512   536854528
+.data                 872   536855040
+.bss                22632   536855912
+.flexRAM              704   335544320
+.bitband           524288   570425344
+.ARM.attributes        42           0
+.comment              112           0
+.svc_table              4           0
+.debug_info        570798           0
+.debug_abbrev       68294           0
+.debug_aranges      10784           0
+.debug_ranges       10104           0
+.debug_macro        98160           0
+.debug_line        103523           0
+.debug_str         442872           0
+.debug_frame        42500           0
+Total             2005465
+
+

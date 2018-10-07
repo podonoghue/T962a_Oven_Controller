@@ -59,13 +59,13 @@ namespace USBDM {
 //======================================================================
 // Maximum packet sizes for each endpoint
 //
-static constexpr uint  CONTROL_EP_MAXSIZE           = 64; //!< Control in/out
+static constexpr unsigned  CONTROL_EP_MAXSIZE           = 64; //!< Control in/out
 /*
  *  TODO Define additional end-point sizes
  */
-static constexpr uint  CDC_NOTIFICATION_EP_MAXSIZE  = 16; //!< CDC notification
-static constexpr uint  CDC_DATA_OUT_EP_MAXSIZE      = 16; //!< CDC data out
-static constexpr uint  CDC_DATA_IN_EP_MAXSIZE       = 16; //!< CDC data in
+static constexpr unsigned  CDC_NOTIFICATION_EP_MAXSIZE  = 16; //!< CDC notification
+static constexpr unsigned  CDC_DATA_OUT_EP_MAXSIZE      = 16; //!< CDC data out
+static constexpr unsigned  CDC_DATA_IN_EP_MAXSIZE       = 16; //!< CDC data in
 
 #ifdef USBDM_USB0_IS_DEFINED
 /**
