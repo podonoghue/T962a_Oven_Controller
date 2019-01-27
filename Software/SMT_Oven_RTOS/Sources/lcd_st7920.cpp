@@ -4,7 +4,7 @@
  *  Created on: 18 Sep 2016
  *      Author: podonoghue
  */
-
+#include <stdio.h>
 #include "lcd_st7920.h"
 
 /**

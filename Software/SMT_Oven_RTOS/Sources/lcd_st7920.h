@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include "fonts.h"
 #include "hardware.h"
 #include "spi.h"
@@ -23,7 +22,7 @@
 class LCD_ST7920 {
 
 protected:
-   constexpr static USBDM::Font &font = USBDM::smallFont;
+   constexpr static USBDM::Font &font = USBDM::fontSmall;
 
 public:
    /** Width of LCD in pixels */

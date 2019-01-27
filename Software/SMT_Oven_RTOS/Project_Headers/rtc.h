@@ -50,16 +50,17 @@ template <class Info>
 class RtcBase_T {
 
 public:
-   static void unhandledInterrupt(uint32_t) {
+   /** Handler for unexpected interrupts */
+   static void unhandledCallback(uint32_t) {
       setAndCheckErrorCode(E_NO_HANDLER);
    }
 
 protected:
    /** Callback function for alarm ISR */
-   static RTCCallbackFunction alarmCallback;
+   static RTCCallbackFunction sAlarmCallback;
 
    /** Callback function for seconds ISR */
-   static RTCCallbackFunction secondsCallback;
+   static RTCCallbackFunction sSecondsCallback;
 
 public:
    /**
@@ -69,7 +70,7 @@ public:
       // Clear alarm
       RtcBase_T<Info>::rtc().TAR   = 0;
       // Call handler
-      alarmCallback(RtcBase_T<Info>::rtc().TSR);
+      sAlarmCallback(RtcBase_T<Info>::rtc().TSR);
    }
 
    /**
@@ -77,7 +78,7 @@ public:
     */
    static void irqSecondsHandler(void) {
       // Call handler
-      secondsCallback(RtcBase_T<Info>::rtc().TSR);
+      sSecondsCallback(RtcBase_T<Info>::rtc().TSR);
    }
 
    /**
@@ -109,26 +110,29 @@ public:
    /**
     * Set Alarm callback function
     *
-    *   @param[in]  callback - Callback function to be executed on RTC alarm interrupt
+    *  @param[in]  callback  Callback function to be executed on alarm interrupt.\n
+    *                        Use nullptr to remove callback.
     */
    static void setAlarmCallback(RTCCallbackFunction callback) {
+      usbdm_assert(Info::irqHandlerInstalled, "RTC not configure for interrupts");
       if (callback == nullptr) {
-         alarmCallback = unhandledInterrupt;
-         return;
+         callback = unhandledCallback;
       }
-      alarmCallback = callback;
+      sAlarmCallback = callback;
    }
+
    /**
     * Set Seconds callback function
     *
-    *   @param[in]  callback - Callback function to be executed on RTC alarm interrupt
+    *  @param[in]  callback  Callback function to be executed on seconds interrupt.\n
+    *                        Use nullptr to remove callback.
     */
    static void setSecondsCallback(RTCCallbackFunction callback) {
+      usbdm_assert(Info::irqHandlerInstalled, "RTC not configure for interrupts");
       if (callback == nullptr) {
-         secondsCallback = unhandledInterrupt;
-         return;
+         callback = unhandledCallback;
       }
-      secondsCallback = callback;
+      sSecondsCallback = callback;
    }
 
 
@@ -136,9 +140,6 @@ protected:
    /** Hardware instance */
    static volatile RTC_Type &rtc()      { return Info::rtc(); }
    
-   /** Clock register */
-   static volatile uint32_t &clockReg() { return Info::clockReg(); }
-
 public:
    /**
     * Configures all mapped pins associated with this peripheral
@@ -156,13 +157,14 @@ public:
 
       // Enable clock to RTC interface
       // (RTC used its own clock internally)
-      clockReg()  |= Info::clockMask;
-      __DMB();
+      Info::enableClock();
 
+#ifdef RTC_CR_OSCE_MASK
       if ((Info::cr&RTC_CR_OSCE_MASK) == 0) {
          // RTC disabled
          return;
       }
+#endif
 
       configureAllPins();
 
@@ -224,27 +226,36 @@ public:
    }
 
    /**
-    * Enable/disable interrupts in NVIC
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicInterrupts() {
+      enableNvicInterrupt(Info::irqNums[0]);
+      if (Info::irqCount>1) {
+         enableNvicInterrupt(Info::irqNums[1]);
+      }
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
     *
-    * @param[in]  enable        True => enable, False => disable
     * @param[in]  nvicPriority  Interrupt priority
     */
-   static void enableNvicInterrupts(bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
-      // Clear pending to avoid POR interrupt
-      NVIC_ClearPendingIRQ(Info::irqNums[0]);
-      if (enable) {
-         enableNvicInterrupt(Info::irqNums[0], nvicPriority);
-         if (Info::irqCount>1) {
-            enableNvicInterrupt(Info::irqNums[1], nvicPriority);
-         }
+   static void enableNvicInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(Info::irqNums[0], nvicPriority);
+      if (Info::irqCount>1) {
+         enableNvicInterrupt(Info::irqNums[1], nvicPriority);
       }
-      else {
-         // Disable interrupts
-         NVIC_DisableIRQ(Info::irqNums[0]);
-         if (Info::irqCount>1) {
-            // Disable interrupts
-            NVIC_DisableIRQ(Info::irqNums[1]);
-         }
+   }
+
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicInterrupts() {
+      NVIC_DisableIRQ(Info::irqNums[0]);
+      if (Info::irqCount>1) {
+         NVIC_DisableIRQ(Info::irqNums[1]);
       }
    }
 
@@ -288,8 +299,8 @@ public:
 
 };
 
-template<class Info> RTCCallbackFunction RtcBase_T<Info>::alarmCallback   = unhandledInterrupt;
-template<class Info> RTCCallbackFunction RtcBase_T<Info>::secondsCallback = unhandledInterrupt;
+template<class Info> RTCCallbackFunction RtcBase_T<Info>::sAlarmCallback   = unhandledCallback;
+template<class Info> RTCCallbackFunction RtcBase_T<Info>::sSecondsCallback = unhandledCallback;
 
 #ifdef USBDM_RTC_IS_DEFINED
 /**

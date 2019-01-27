@@ -284,7 +284,32 @@ public:
    static I2c *thisPtr;
 
    /** Callback function for ISR */
-   static I2cCallbackFunction callback;
+   static I2cCallbackFunction sCallback;
+
+   /**
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicInterrupts() {
+      enableNvicInterrupt(Info::irqNums[0]);
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    *
+    * @param[in]  nvicPriority  Interrupt priority
+    */
+   static void enableNvicInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(Info::irqNums[0], nvicPriority);
+   }
+
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicInterrupts() {
+      NVIC_DisableIRQ(Info::irqNums[0]);
+   }
 
 #ifdef __CMSIS_RTOS
 protected:
@@ -371,15 +396,15 @@ public:
     * This callback is executed when the I2C state machine returns to the IDLE state
     * at the end of a transaction.
     *
-    * @param[in] theCallback Callback function to execute on interrupt.\n
-    *                        nullptr to indicate none
+    * @param[in] callback Callback function to execute on interrupt.\n
+    *                     Use nullptr to remove callback.
     */
-   static __attribute__((always_inline)) void setCallback(I2cCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
+   static __attribute__((always_inline)) void setCallback(I2cCallbackFunction callback) {
+      usbdm_assert(Info::irqHandlerInstalled, "I2C not configured for interrupts");
+      if (callback == nullptr) {
          callback = I2c::unhandledCallback;
-         return;
       }
-      callback = theCallback;
+      sCallback = callback;
    }
 
    /**
@@ -401,7 +426,7 @@ public:
    void init(const uint8_t myAddress) {
 
       // Enable clock to I2C interface
-      Info::clockReg() |= Info::clockMask;
+      Info::enableClock();
 
       thisPtr = this;
 
@@ -451,12 +476,12 @@ public:
    static void irqHandler() {
       thisPtr->poll();
       if (thisPtr->state == I2C_State::i2c_idle) {
-         callback();
+         sCallback();
       }
    }
 };
 
-template<class Info> I2cCallbackFunction I2cBase_T<Info>::callback = I2c::unhandledCallback;
+template<class Info> I2cCallbackFunction I2cBase_T<Info>::sCallback = I2c::unhandledCallback;
 
 /** Used by ISR to obtain handle of object */
 template<class Info> I2c *I2cBase_T<Info>::thisPtr = 0;
@@ -468,7 +493,7 @@ template<class Info> I2c *I2cBase_T<Info>::thisPtr = 0;
  * <b>Example</b>\n
  * Refer @ref I2cBase_T
  */
-class I2c0 : public I2cBase_T<I2c0Info> {};
+using I2c0 = I2cBase_T<I2c0Info>;
 #endif
 
 #if defined(USBDM_I2C1_IS_DEFINED)
@@ -478,7 +503,7 @@ class I2c0 : public I2cBase_T<I2c0Info> {};
  * <b>Example</b>
  * Refer @ref I2cBase_T
  */
-class I2c1 : public I2cBase_T<I2c1Info> {};
+using I2c1 = I2cBase_T<I2c1Info>;
 #endif
 
 #if defined(USBDM_I2C2_IS_DEFINED)
@@ -488,7 +513,7 @@ class I2c1 : public I2cBase_T<I2c1Info> {};
  * <b>Example</b>
  * Refer @ref I2cBase_T
  */
-class I2c2 : public I2cBase_T<I2c2Info> {};
+using I2c2 = I2cBase_T<I2c2Info>;
 #endif
 
 /**

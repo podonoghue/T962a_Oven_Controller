@@ -28,26 +28,78 @@ namespace USBDM {
  * @brief Hardware Peripheral Interface and library
  * @{
  */
+/* Template:_common_settings.xml */
+
+#if defined(PCC)
+
 /** Dummy port information for pins without an associated PCR */
 constexpr PortInfo  __attribute__((unused)) NoPortInfo {0, 0, (IRQn_Type)-1};
 
+#if defined(PCC_PCC_PORTA_CGC_MASK)
 /** Port information for PORTA*/
-constexpr PortInfo  __attribute__((unused)) PortAInfo {PORTA_BasePtr, PORTA_CLOCK_MASK, PORTA_IRQn};
+constexpr PortInfo  __attribute__((unused)) PortAInfo {PORTA_BasePtr, (uint32_t)(PCC_BasePtr+offsetof(PCC_Type, PCC_PORTA)), PORTA_IRQn};
+#endif
 
+#if defined(PCC_PCC_PORTB_CGC_MASK)
 /** Port information for PORTB*/
-constexpr PortInfo  __attribute__((unused)) PortBInfo {PORTB_BasePtr, PORTB_CLOCK_MASK, PORTB_IRQn};
+constexpr PortInfo  __attribute__((unused)) PortBInfo {PORTB_BasePtr, (uint32_t)(PCC_BasePtr+offsetof(PCC_Type, PCC_PORTB)), PORTB_IRQn};
+#endif
 
+#if defined(PCC_PCC_PORTC_CGC_MASK)
 /** Port information for PORTC*/
-constexpr PortInfo  __attribute__((unused)) PortCInfo {PORTC_BasePtr, PORTC_CLOCK_MASK, PORTC_IRQn};
+constexpr PortInfo  __attribute__((unused)) PortCInfo {PORTC_BasePtr, (uint32_t)(PCC_BasePtr+offsetof(PCC_Type, PCC_PORTC)), PORTC_IRQn};
+#endif
 
+#if defined(PCC_PCC_PORTD_CGC_MASK)
 /** Port information for PORTD*/
-constexpr PortInfo  __attribute__((unused)) PortDInfo {PORTD_BasePtr, PORTD_CLOCK_MASK, PORTD_IRQn};
+constexpr PortInfo  __attribute__((unused)) PortDInfo {PORTD_BasePtr, (uint32_t)(PCC_BasePtr+offsetof(PCC_Type, PCC_PORTD)), PORTD_IRQn};
+#endif
 
+#if defined(PCC_PCC_PORTE_CGC_MASK)
 /** Port information for PORTE*/
-constexpr PortInfo  __attribute__((unused)) PortEInfo {PORTE_BasePtr, PORTE_CLOCK_MASK, PORTE_IRQn};
+constexpr PortInfo  __attribute__((unused)) PortEInfo {PORTE_BasePtr, (uint32_t)(PCC_BasePtr+offsetof(PCC_Type, PCC_PORTE)), PORTE_IRQn};
+#endif
 
+#if defined(PCC_PCC_PORTF_CGC_MASK)
+/** Port information for PORTF*/
+constexpr PortInfo  __attribute__((unused)) PortFInfo {PORTF_BasePtr, (uint32_t)(PCC_BasePtr+offsetof(PCC_Type, PCC_PORTF)), PORTF_IRQn};
+#endif
 
-/* Template:_common_settings.xml */
+#if defined(PCC_PCC_PORTG_CGC_MASK)
+/** Port information for PORTG*/
+constexpr PortInfo  __attribute__((unused)) PortGInfo {PORTG_BasePtr, (uint32_t)(PCC_BasePtr+offsetof(PCC_Type, PCC_PORTG)), PORTG_IRQn};
+#endif
+
+#else // defined(PCC)
+/** Dummy port information for pins without an associated PCR */
+constexpr PortInfo  __attribute__((unused)) NoPortInfo {0, 0, (IRQn_Type)-1};
+
+#ifdef SIM_SCGC5_PORTA_MASK
+/** Port information for PORTA */
+constexpr PortInfo  __attribute__((unused)) PortAInfo {PORTA_BasePtr, SIM_SCGC5_PORTA_MASK, PORTA_IRQn};
+#endif
+
+#ifdef SIM_SCGC5_PORTB_MASK
+/** Port information for PORTB */
+constexpr PortInfo  __attribute__((unused)) PortBInfo {PORTB_BasePtr, SIM_SCGC5_PORTB_MASK, PORTB_IRQn};
+#endif
+
+#ifdef SIM_SCGC5_PORTC_MASK
+/** Port information for PORTC */
+constexpr PortInfo  __attribute__((unused)) PortCInfo {PORTC_BasePtr, SIM_SCGC5_PORTC_MASK, PORTC_IRQn};
+#endif
+
+#ifdef SIM_SCGC5_PORTD_MASK
+/** Port information for PORTD */
+constexpr PortInfo  __attribute__((unused)) PortDInfo {PORTD_BasePtr, SIM_SCGC5_PORTD_MASK, PORTD_IRQn};
+#endif
+
+#ifdef SIM_SCGC5_PORTE_MASK
+/** Port information for PORTE */
+constexpr PortInfo  __attribute__((unused)) PortEInfo {PORTE_BasePtr, SIM_SCGC5_PORTE_MASK, PORTE_IRQn};
+#endif
+
+#endif // defined(PCC)
 
 /** Class to static check signal mapping is valid */
 template<class Info, int signalNum> class CheckSignal {
@@ -159,8 +211,11 @@ public:
     * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTA = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTA_CLOCK_MASK);
-
+#endif
       PORTA->GPCHR = pcrValue|PORT_PCR_MUX(0)|PORT_GPCHR_GPWE(0x000CUL);
    }
 
@@ -168,8 +223,11 @@ public:
     * Resets pins used by peripheral
     */
    static void clearPCRs() {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTA = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTA_CLOCK_MASK);
-
+#endif
       PORTA->GPCHR = PORT_PCR_MUX(0)|PORT_GPCHR_GPWE(0xCU);
    }
 
@@ -199,14 +257,6 @@ public:
    //! Hardware base pointer
    __attribute__((always_inline)) static volatile RTC_Type &rtc() {
       return *(RTC_Type *)baseAddress;
-   }
-
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_RTC_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
    }
 
    //! Number of IRQs for hardware
@@ -284,6 +334,29 @@ public:
                (1+12-1))*24 +
               (12))*60 +
              (0))*60;
+
+   /** 
+    *  Enable clock to Rtc
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableRtcClock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_RTC_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Rtc
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableRtcClock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_RTC_MASK;
+#endif
+   }
+
    /**
     * Get RTC clock frequency (internal, not masked by RTC_CR_CLKO)
     *
@@ -367,7 +440,7 @@ public:
    // Template:mcg_mk
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -515,7 +588,7 @@ public:
    };
 
    /**
-    * Select the ADC0 Trigger source in STOP and VLPS modes, or when ADC0 Alternative Trigger is active.
+    * Selects the ADC0 Trigger source in STOP and VLPS modes, or when ADC0 Alternative Trigger is active.
     */
    enum SimAdc0Trigger {
       SimAdc0Trigger_PdbExTrig    = SIM_SOPT7_ADC0TRGSEL(0),   //!< External Trigger Source PDBx_EXTRG
@@ -537,14 +610,16 @@ public:
    };
 
    /**
-    * Select the ADC0 Alternative Trigger sources.
-    * If PDB is selected then Pre-trigger 0/1 is determined by the PDB setup
-    * otherwise Pre-trigger 0/1 is determined by this selection.
+    * Selects the ADC0 trigger mode.
+    * 
+    *    _Pdb              - ADC is triggered by PDB which selects the pretrigger (SC1[0..n]/R[0..n]
+    *    _Alt_PreTrigger_0 - ADC is triggered by SimAdc0Trigger selection and uses pretrigger 0 = A (SC1[0]/R[0])
+    *    _Alt_PreTrigger_1 - ADC is triggered by SimAdc0Trigger selection and uses pretrigger 1 = B (SC1[1]/R[1])
     */
-   enum SimAdc0AltTrigger {
-      SimAdc0AltTrigger_Pdb           = SIM_SOPT7_ADC0ALTTRGEN(0),                              //!< PDB trigger
-      SimAdc0AltTrigger_PreTrigger_0  = SIM_SOPT7_ADC0ALTTRGEN(1)|SIM_SOPT7_ADC0PRETRGSEL(0),   //!< Pre-trigger 0 = A (SC1[0])
-      SimAdc0AltTrigger_PreTrigger_1  = SIM_SOPT7_ADC0ALTTRGEN(1)|SIM_SOPT7_ADC0PRETRGSEL(1),   //!< Pre-trigger 1 = B (SC1[1])
+   enum SimAdc0TriggerMode {
+      SimAdc0TriggerMode_Pdb               = SIM_SOPT7_ADC0ALTTRGEN(0),                              //!< PDB trigger
+      SimAdc0TriggerMode_Alt_PreTrigger_0  = SIM_SOPT7_ADC0ALTTRGEN(1)|SIM_SOPT7_ADC0PRETRGSEL(0),   //!< Pre-trigger 0 = A (SC1[0])
+      SimAdc0TriggerMode_Alt_PreTrigger_1  = SIM_SOPT7_ADC0ALTTRGEN(1)|SIM_SOPT7_ADC0PRETRGSEL(1),   //!< Pre-trigger 1 = B (SC1[1])
    };
 
 class SimInfo {
@@ -775,14 +850,14 @@ public:
     * 
     * If PDB is selected by SimAdc0Trigger then Pre-trigger 0/1 is determined by the PDB setup,
     * otherwise Pre-trigger 0/1 is determined by this parameter.
-    * For example, setAdc0Triggers(SimAdc0AltTrigger_PreTrigger_1, SimAdc0Trigger_PitCh0) will set the trigger source
+    * For example, setAdc0Triggers(SimAdc0TriggerMode_Alt_PreTrigger_1, SimAdc0Trigger_PitCh0) will set the trigger source
     * to PIT channel 0 and conversion will use SC1[1]/R[1]. 
     *
-    * @param[in] simAdc0AltTrigger  Select the ADC0 Alternative Trigger sources 
+    * @param[in] simAdc0TriggerMode Select ADC0 Trigger mode 
     * @param[in] simAdc0Trigger     Select the ADC0 Trigger source in STOP and VLPS modes, or when ADC0 Alternative Trigger is active.
     */
-   static void setAdc0Triggers(SimAdc0AltTrigger simAdc0AltTrigger, SimAdc0Trigger simAdc0Trigger=SimAdc0Trigger_PdbExTrig) {
-      sim().SOPT7 = (sim().SOPT7&~(SIM_SOPT7_ADC0TRGSEL_MASK|SIM_SOPT7_ADC0ALTTRGEN_MASK))|simAdc0Trigger|simAdc0AltTrigger;
+   static void setAdc0Triggers(SimAdc0TriggerMode simAdc0TriggerMode, SimAdc0Trigger simAdc0Trigger=SimAdc0Trigger_PdbExTrig) {
+      sim().SOPT7 = (sim().SOPT7&~(SIM_SOPT7_ADC0TRGSEL_MASK|SIM_SOPT7_ADC0ALTTRGEN_MASK))|simAdc0Trigger|simAdc0TriggerMode;
    };
 
    //! System Options Register 7
@@ -852,14 +927,6 @@ public:
       return *(ADC_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_ADC0_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -873,10 +940,10 @@ public:
    static constexpr uint32_t defaultPcrValue  = 0;
 
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -910,6 +977,28 @@ public:
 
    //! Default value for ADCx_CV2 register
    static constexpr uint32_t cv2  = 0;
+
+   /** 
+    *  Enable clock to Adc0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableAdc0Clock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_ADC0_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Adc0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableAdc0Clock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_ADC0_MASK;
+#endif
+   }
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 23;
@@ -1046,14 +1135,6 @@ public:
       return *(CMP_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_CMP_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -1066,8 +1147,11 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
 
+   //! Pin number in Info table for comparator output
+   static constexpr int outputPin  = 8;
+
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    //! CMP Control Register 0
    static constexpr uint32_t cr0 =
@@ -1109,8 +1193,30 @@ public:
       CMP_MUXCR_PSEL(1)| // Plus Input Mux Control
       CMP_MUXCR_MSEL(7); // Minus Input Mux Control
 
+   /** 
+    *  Enable clock to Cmp0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableCmp0Clock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_CMP_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Cmp0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableCmp0Clock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_CMP_MASK;
+#endif
+   }
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (1 == 1);
+   static constexpr bool irqHandlerInstalled = 1;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -1139,8 +1245,11 @@ public:
     * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTC = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTC_CLOCK_MASK);
-
+#endif
       PORTC->GPCLR = pcrValue|PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x0080UL);
    }
 
@@ -1148,8 +1257,11 @@ public:
     * Resets pins used by peripheral
     */
    static void clearPCRs() {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTC = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTC_CLOCK_MASK);
-
+#endif
       PORTC->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x80U);
    }
 
@@ -1172,14 +1284,6 @@ public:
       return *(CMP_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_CMP_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -1192,8 +1296,11 @@ public:
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
 
+   //! Pin number in Info table for comparator output
+   static constexpr int outputPin  = 8;
+
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    //! CMP Control Register 0
    static constexpr uint32_t cr0 =
@@ -1235,8 +1342,30 @@ public:
       CMP_MUXCR_PSEL(0)| // Plus Input Mux Control
       CMP_MUXCR_MSEL(0); // Minus Input Mux Control
 
+   /** 
+    *  Enable clock to Cmp1
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableCmp1Clock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_CMP_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Cmp1
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableCmp1Clock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_CMP_MASK;
+#endif
+   }
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -1302,14 +1431,6 @@ public:
       return *(CMT_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_CMT_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -1323,13 +1444,35 @@ public:
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
+
+   /** 
+    *  Enable clock to Cmt
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableCmtClock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_CMT_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Cmt
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableCmtClock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_CMT_MASK;
+#endif
+   }
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 1;
@@ -1405,8 +1548,11 @@ public:
     * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTA = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTA_CLOCK_MASK);
-
+#endif
       PORTA->GPCLR = pcrValue|PORT_PCR_MUX(7)|PORT_GPCLR_GPWE(0x0009UL);
    }
 
@@ -1414,8 +1560,11 @@ public:
     * Resets pins used by peripheral
     */
    static void clearPCRs() {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTA = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTA_CLOCK_MASK);
-
+#endif
       PORTA->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x9U);
    }
 
@@ -1447,18 +1596,34 @@ public:
       return *(CRC_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_CRC_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
 
    // Template:crc0_0x40032000
+
+   static constexpr uint32_t gpoly =  0;
+
+   /** 
+    *  Enable clock to Crc0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableCrc0Clock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_CRC_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Crc0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableCrc0Clock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_CRC_MASK;
+#endif
+   }
 
 };
 
@@ -1495,14 +1660,6 @@ public:
    //! Hardware base pointer
    __attribute__((always_inline)) static volatile DMA_Type &dma() {
       return *(DMA_Type *)baseAddress;
-   }
-
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC7_DMA_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC7));
    }
 
    //! Number of IRQs for hardware
@@ -1558,14 +1715,6 @@ public:
       return *(DMAMUX_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_DMAMUX0_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
 
@@ -1599,14 +1748,6 @@ public:
       return *(EWM_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_EWM_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -1620,13 +1761,35 @@ public:
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
+
+   /** 
+    *  Enable clock to Ewm
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableEwmClock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_EWM_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Ewm
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableEwmClock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_EWM_MASK;
+#endif
+   }
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 2;
@@ -1680,14 +1843,6 @@ public:
    //! Hardware base pointer
    __attribute__((always_inline)) static volatile FTFL_Type &ftfl() {
       return *(FTFL_Type *)baseAddress;
-   }
-
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_FTFL_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
    }
 
    //! Number of IRQs for hardware
@@ -1777,6 +1932,28 @@ public:
    //! FlexNVM - EEPROM partition
    static constexpr SplitSel partitionSplit = SplitSel_A4_B4_8ths;
 
+   /** 
+    *  Enable clock to Ftfl
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableFtflClock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_FTFL_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Ftfl
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableFtflClock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_FTFL_MASK;
+#endif
+   }
+
 };
 
 /** 
@@ -1847,14 +2024,6 @@ public:
       return *(FTM_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_FTM0_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -1864,11 +2033,17 @@ public:
 
    // Template:ftm0_8ch
 
+   //! Map all allocated pins on a peripheral when enabled
+   static constexpr bool mapPinsOnEnable = false;
+
+   //! Number of channels implemented
+   static constexpr unsigned NumChannels = 8;
+
+   //! Number of channel event vectors implemented
+   static constexpr unsigned NumChannelVectors = 1;
+
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
-
-   //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
 
    //! Timer external input frequency 
    static constexpr uint32_t ftmExternalClock =  0;
@@ -1889,7 +2064,7 @@ public:
        FTM_EXTTRIG_INITTRIGEN(0);    // Initialization Trigger Enable 
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -1916,6 +2091,28 @@ public:
       }
    }
 
+   /** 
+    *  Enable clock to Ftm0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableFtm0Clock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_FTM0_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Ftm0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableFtm0Clock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
+#endif
+   }
+
    //! Number of signals available in info table
    static constexpr int numSignals  = 8;
 
@@ -1939,8 +2136,11 @@ public:
     * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTC = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTC_CLOCK_MASK);
-
+#endif
       PORTC->GPCLR = pcrValue|PORT_PCR_MUX(4)|PORT_GPCLR_GPWE(0x0018UL);
    }
 
@@ -1948,8 +2148,11 @@ public:
     * Resets pins used by peripheral
     */
    static void clearPCRs() {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTC = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTC_CLOCK_MASK);
-
+#endif
       PORTC->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x18U);
    }
 
@@ -2005,14 +2208,6 @@ public:
       return *(FTM_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_FTM1_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -2022,11 +2217,17 @@ public:
 
    // Template:ftm1_2ch
 
+   //! Map all allocated pins on a peripheral when enabled
+   static constexpr bool mapPinsOnEnable = false;
+
+   //! Number of channels implemented
+   static constexpr unsigned NumChannels = 2;
+
+   //! Number of channel event vectors implemented
+   static constexpr unsigned NumChannelVectors = 1;
+
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
-
-   //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
 
    //! Timer external input frequency 
    static constexpr uint32_t ftmExternalClock =  0;
@@ -2047,7 +2248,7 @@ public:
        FTM_EXTTRIG_INITTRIGEN(0);    // Initialization Trigger Enable 
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -2072,6 +2273,28 @@ public:
       case FTM_SC_CLKS(2): return SystemMcgffClock;
       case FTM_SC_CLKS(3): return ftmExternalClock;
       }
+   }
+
+   /** 
+    *  Enable clock to Ftm1
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableFtm1Clock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_FTM1_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Ftm1
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableFtm1Clock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
+#endif
    }
 
    //! Number of signals available in info table
@@ -2303,14 +2526,6 @@ public:
       return *(I2C_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_I2C0_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -2327,7 +2542,7 @@ public:
    static constexpr bool mapPinsOnEnable = true;
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -2339,6 +2554,28 @@ public:
     */
    static uint32_t getInputClockFrequency() {
       return SystemBusClock;
+   }
+
+   /** 
+    *  Enable clock to I2c0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableI2c0Clock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_I2C0_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to I2c0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableI2c0Clock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_I2C0_MASK;
+#endif
    }
 
    //! Number of signals available in info table
@@ -2395,14 +2632,6 @@ public:
       return *(I2S_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_I2S_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
 
@@ -2420,6 +2649,28 @@ public:
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
+
+   /** 
+    *  Enable clock to I2s0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableI2s0Clock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_I2S_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to I2s0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableI2s0Clock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_I2S_MASK;
+#endif
+   }
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 8;
@@ -2505,7 +2756,7 @@ public:
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    // LLWU Pin Enable registers
    static constexpr uint8_t pe1 = 
@@ -2548,7 +2799,7 @@ public:
       LLWU_RST_RSTFILT(0);  // Digital Filter On RESET Pin
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -2584,8 +2835,12 @@ public:
     * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTB = PCC_PCCn_CGC_MASK;
+      PCC->PCC_PORTC = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTB_CLOCK_MASK|PORTC_CLOCK_MASK);
-
+#endif
       PORTB->GPCLR = pcrValue|PORT_PCR_MUX(1)|PORT_GPCLR_GPWE(0x0001UL);
       PORTC->GPCLR = pcrValue|PORT_PCR_MUX(1)|PORT_GPCLR_GPWE(0x0062UL);
    }
@@ -2594,8 +2849,12 @@ public:
     * Resets pins used by peripheral
     */
    static void clearPCRs() {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTB = PCC_PCCn_CGC_MASK;
+      PCC->PCC_PORTC = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTB_CLOCK_MASK|PORTC_CLOCK_MASK);
-
+#endif
       PORTB->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x1U);
       PORTC->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x62U);
    }
@@ -2628,14 +2887,6 @@ public:
       return *(LPTMR_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC5_LPTMR_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC5));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -2647,6 +2898,9 @@ public:
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+
+   //! Map all allocated pins on a peripheral when enabled
+   static constexpr bool mapPinsOnEnable = false;
 
    //! Default Timer Compare value
    static constexpr uint32_t cmr = 65535;
@@ -2715,6 +2969,28 @@ public:
       return freq/(1<<(((lptmr().PSR&LPTMR_PSR_PRESCALE_MASK)>>LPTMR_PSR_PRESCALE_SHIFT)+1));
    }
 
+   /** 
+    *  Enable clock to Lptmr0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableLptmr0Clock();
+#else
+      SIM->SCGC5 |= SIM_SCGC5_LPTMR_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Lptmr0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableLptmr0Clock();
+#else
+      SIM->SCGC5 &= ~SIM_SCGC5_LPTMR_MASK;
+#endif
+   }
+
    //! Number of signals available in info table
    static constexpr int numSignals  = 3;
 
@@ -2770,14 +3046,6 @@ public:
       return *(PDB_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_PDB_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -2789,6 +3057,9 @@ public:
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+
+   //! Map all allocated pins on a peripheral when enabled
+   static constexpr bool mapPinsOnEnable = false;
 
    static constexpr uint32_t pdb_sc = 
       PDB_SC_MULT(0) |      // Multiplication Factor Select for Prescaler
@@ -2876,10 +3147,32 @@ public:
    }
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
+
+   /** 
+    *  Enable clock to Pdb0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enablePdb0Clock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_PDB_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Pdb0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disablePdb0Clock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_PDB_MASK;
+#endif
+   }
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 1;
@@ -2934,14 +3227,6 @@ public:
       return *(PIT_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_PIT_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 4;
 
@@ -2952,7 +3237,7 @@ public:
    // Template:pit_4ch_chain
 
    //! Number of PIT channels
-   static constexpr uint32_t numChannels  = 4;
+   static constexpr uint32_t NumChannels  = 4;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
@@ -2975,6 +3260,28 @@ public:
     */
    static __attribute__((always_inline)) uint32_t getClockFrequency() {
       return SystemBusClock;
+   }
+
+   /** 
+    *  Enable clock to Pit
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enablePitClock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Pit
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disablePitClock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_PIT_MASK;
+#endif
    }
 
 };
@@ -3016,24 +3323,28 @@ public:
 
    //! Default value for Low Voltage Detect Status And Control 1 register
    static constexpr uint32_t pmc_lvdsc1  = 
+   #ifdef PMC_LVDSC1_LVDV
+      PMC_LVDSC1_LVDV(0)   | // Low-Voltage Detect Voltage Select
+   #endif
       PMC_LVDSC1_LVDIE(0) | // Low-Voltage Detect Interrupt Enable
-      PMC_LVDSC1_LVDRE(0) | // Low-Voltage Detect Reset Enable
-      PMC_LVDSC1_LVDV(0);   // Low-Voltage Detect Voltage Select   
+      PMC_LVDSC1_LVDRE(0);  // Low-Voltage Detect Reset Enable
 
    //! Default value for Low Voltage Detect Status And Control 2 register
    static constexpr uint32_t pmc_lvdsc2  = 
-      PMC_LVDSC2_LVWIE(0) | // Low-Voltage Warning Interrupt Enable
-      PMC_LVDSC2_LVWV(0);   // Low-Voltage Warning Voltage Select   
+   #ifdef PMC_LVDSC2_LVWV
+      PMC_LVDSC2_LVWV(0)   | // Low-Voltage Warning Voltage Select
+   #endif
+      PMC_LVDSC2_LVWIE(0);  // Low-Voltage Warning Interrupt Enable
 
+   #ifdef PMC_REGSC_BGEN
    //! Default value for Regulator Status And Control register
    static constexpr uint32_t pmc_regsc  = 
-   #ifdef PMC_REGSC_BGEN
       PMC_REGSC_BGEN(0) | // Bandgap Enable In VLPx Operation
-   #endif
       PMC_REGSC_BGBE(0);  // Bandgap Buffer Enable   
 
+   #endif
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
@@ -3168,14 +3479,6 @@ public:
       return *(SPI_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_SPI0_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -3192,10 +3495,32 @@ public:
    static constexpr bool mapPinsOnEnable = true;
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
+
+   /** 
+    *  Enable clock to Spi0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableSpi0Clock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_SPI0_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Spi0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableSpi0Clock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_SPI0_MASK;
+#endif
+   }
 
    //! Default communication clock phase and clock polarity (CPHA+CPOL)
    static constexpr uint32_t mode = 
@@ -3236,8 +3561,12 @@ public:
     * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTC = PCC_PCCn_CGC_MASK;
+      PCC->PCC_PORTD = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTC_CLOCK_MASK|PORTD_CLOCK_MASK);
-
+#endif
       PORTC->GPCLR = pcrValue|PORT_PCR_MUX(2)|PORT_GPCLR_GPWE(0x0001UL);
       PORTD->GPCLR = pcrValue|PORT_PCR_MUX(2)|PORT_GPCLR_GPWE(0x007FUL);
    }
@@ -3246,8 +3575,12 @@ public:
     * Resets pins used by peripheral
     */
    static void clearPCRs() {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTC = PCC_PCCn_CGC_MASK;
+      PCC->PCC_PORTD = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTC_CLOCK_MASK|PORTD_CLOCK_MASK);
-
+#endif
       PORTC->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x1U);
       PORTD->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x7FU);
    }
@@ -3280,14 +3613,6 @@ public:
       return *(UART_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_UART0_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
 
@@ -3301,13 +3626,35 @@ public:
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
+
+   /** 
+    *  Enable clock to Uart0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableUart0Clock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_UART0_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Uart0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableUart0Clock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_UART0_MASK;
+#endif
+   }
 
    //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
@@ -3350,8 +3697,11 @@ public:
     * @param pcrValue PCR value controlling pin options
     */
    static void initPCRs(uint32_t pcrValue=defaultPcrValue) {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTA = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTA_CLOCK_MASK);
-
+#endif
       PORTA->GPCLR = pcrValue|PORT_PCR_MUX(2)|PORT_GPCLR_GPWE(0x0006UL);
    }
 
@@ -3359,8 +3709,11 @@ public:
     * Resets pins used by peripheral
     */
    static void clearPCRs() {
+#ifdef PCC_PCCn_CGC_MASK
+      PCC->PCC_PORTA = PCC_PCCn_CGC_MASK;
+#else
       enablePortClocks(PORTA_CLOCK_MASK);
-
+#endif
       PORTA->GPCLR = PORT_PCR_MUX(0)|PORT_GPCLR_GPWE(0x6U);
    }
 
@@ -3383,14 +3736,6 @@ public:
       return *(UART_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_UART1_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
 
@@ -3404,13 +3749,35 @@ public:
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
+
+   /** 
+    *  Enable clock to Uart1
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableUart1Clock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_UART1_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Uart1
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableUart1Clock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_UART1_MASK;
+#endif
+   }
 
    //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
@@ -3480,14 +3847,6 @@ public:
       return *(UART_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_UART2_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 2;
 
@@ -3501,13 +3860,35 @@ public:
    static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
 
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
+
+   /** 
+    *  Enable clock to Uart2
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableUart2Clock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_UART2_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Uart2
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableUart2Clock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_UART2_MASK;
+#endif
+   }
 
    //! Indicates whether the UART needs a write to clear status errors
    static constexpr bool statusNeedsWrite = false;
@@ -3586,14 +3967,6 @@ public:
       return *(USB_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_USBOTG_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -3607,10 +3980,32 @@ public:
    static constexpr uint32_t defaultPcrValue  = 0;
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (1 == 1);
+   static constexpr bool irqHandlerInstalled = 1;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  1;
+
+   /** 
+    *  Enable clock to Usb0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableUsb0Clock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_USBOTG_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Usb0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableUsb0Clock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_USBOTG_MASK;
+#endif
+   }
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 4;
@@ -3668,14 +4063,6 @@ public:
       return *(USBDCD_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC6_USBDCD_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC6));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 1;
 
@@ -3686,13 +4073,35 @@ public:
    // Template:usbdcd_v1_1
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
+
+   /** 
+    *  Enable clock to Usbdcd
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableUsbdcdClock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_USBDCD_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Usbdcd
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableUsbdcdClock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_USBDCD_MASK;
+#endif
+   }
 
 };
 
@@ -3722,14 +4131,6 @@ public:
       return *(VREF_Type *)baseAddress;
    }
 
-   //! Clock mask for peripheral
-   static constexpr uint32_t clockMask = SIM_SCGC4_VREF_MASK;
-
-   //! Address of clock register for peripheral
-   __attribute__((always_inline)) static volatile uint32_t &clockReg() {
-      return *(uint32_t *)(SIM_BasePtr+offsetof(SIM_Type,SCGC4));
-   }
-
    //! Number of IRQs for hardware
    static constexpr uint32_t irqCount  = 0;
 
@@ -3739,7 +4140,7 @@ public:
    static constexpr uint32_t defaultPcrValue  = 0;
 
    //! Map all allocated pins on a peripheral when enabled
-   static constexpr bool mapPinsOnEnable = true;
+   static constexpr bool mapPinsOnEnable = false;
 
    static constexpr uint8_t vref_trm = 
        VREF_TRM_CHOPEN(1) | // Chop oscillator enable
@@ -3750,6 +4151,28 @@ public:
        VREF_SC_REGEN(1) |    // Regulator enable
        VREF_SC_ICOMPEN(1) |  // Second order curvature compensation enable
        VREF_SC_MODE_LV(1);   // Buffer Mode selection 
+
+   /** 
+    *  Enable clock to Vref
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableVrefClock();
+#else
+      SIM->SCGC4 |= SIM_SCGC4_VREF_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Vref
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableVrefClock();
+#else
+      SIM->SCGC4 &= ~SIM_SCGC4_VREF_MASK;
+#endif
+   }
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 1;
@@ -3814,7 +4237,7 @@ public:
    // Template:wdog_mk
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  7;

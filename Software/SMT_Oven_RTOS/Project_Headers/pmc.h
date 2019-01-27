@@ -50,6 +50,7 @@ enum PmcLowVoltageDetectAction {
    PmcLowVoltageDetectAction_Reset     = PMC_LVDSC1_LVDRE(0)|PMC_LVDSC1_LVDIE(0),//!< Reset on Low Voltage Detect
 };
 
+#ifdef PMC_LVDSC1_LVDV
 /**
  * Level at which Low Voltage Detect operates
  */
@@ -59,6 +60,7 @@ enum PmcLowVoltageDetectLevel {
 //   PmcLowVoltageDetectLevel_Reserved1  = PMC_LVDSC1_LVDV(2),//!< Reserved
 //   PmcLowVoltageDetectLevel_Reserved2  = PMC_LVDSC1_LVDV(3),//!< Reserved
 };
+#endif
 
 /**
  * Action to take on Low Voltage Warning
@@ -68,6 +70,7 @@ enum PmcLowVoltageWarningAction {
    PmcLowVoltageWarningAction_Interrupt = PMC_LVDSC2_LVWIE(1),//!< Interrupt on Low Voltage Warning
 };
 
+#ifdef PMC_LVDSC2_LVWV
 /**
  * Level at which Low Voltage Warning operates
  */
@@ -77,7 +80,9 @@ enum PmcLowVoltageWarningLevel {
    PmcLowVoltageWarningLevel_Mid2   = PMC_LVDSC2_LVWV(2), //!< High middle - Vlvw3
    PmcLowVoltageWarningLevel_High   = PMC_LVDSC2_LVWV(3), //!< Highest level - Vlvw4
 };
+#endif
 
+#ifdef PMC_REGSC_BGBE
 /**
  * Controls whether the band-gap reference is available to internal devices e.g. CMP etc
  */
@@ -85,21 +90,20 @@ enum PmcBandgapBuffer {
    PmcBandgapBuffer_Off   = PMC_REGSC_BGBE(0),  //!< Buffer off, band-gap unavailable to peripherals
    PmcBandgapBuffer_On    = PMC_REGSC_BGBE(1),  //!< Buffer on, band-gap available to peripherals
 };
+#endif
 
+#ifdef PMC_REGSC_BGEN
 /**
  * Controls operation of the band-gap in low power modes
  */
 enum PmcBandgapLowPowerEnable {
-#ifdef PMC_REGSC_BGEN
    PmcBandgapLowPowerEnable_Off       = PMC_REGSC_BGEN(0),                    //!< Band-gap off in VLPx, LLSx and VLLSx
    PmcBandgapLowPowerEnable_On        = PMC_REGSC_BGEN(1),                    //!< Band-gap on, in VLPx, LLSx and VLLSx
 #ifdef PMC_REGSC_VLPO_MASK
    PmcBandgapLowPowerEnable_HighSpeed = PMC_REGSC_BGEN(1)|PMC_REGSC_VLPO(1),  //!< High-speed operation with band-gap on in VLPx, LLSx and VLLSx
 #endif
-#else
-   PmcBandgapLowPowerEnable_Off = 0,    //!< Band-gap use unsupported in VLPx, LLSx and VLLSx
-#endif
 };
+#endif
 
 /**
  * Template class providing interface to Power Management Controller
@@ -118,9 +122,10 @@ class PmcBase_T {
 
 protected:
    /** Callback function for ISR */
-   static PMCCallbackFunction callback;
+   static PMCCallbackFunction sCallback;
+
    /** Handler for unexpected interrupts */
-   static void illegalInterruptHandler(PmcInterruptReason) {
+   static void unhandledCallback(PmcInterruptReason) {
       setAndCheckErrorCode(E_NO_HANDLER);
    }
 public:
@@ -134,7 +139,7 @@ public:
 
          // LVDF enabled and detected
          PmcBase_T<Info>::pmc().LVDSC1 |= PMC_LVDSC1_LVDF_MASK;
-         callback(PmcInterruptReason_LowVoltageDetect);
+         sCallback(PmcInterruptReason_LowVoltageDetect);
          return;
       }
       if ((PmcBase_T<Info>::pmc().LVDSC2 & (PMC_LVDSC2_LVWF_MASK|PMC_LVDSC2_LVWIE_MASK)) ==
@@ -142,7 +147,7 @@ public:
 
          // LVWF enabled and detected
          PmcBase_T<Info>::pmc().LVDSC2 |= PMC_LVDSC2_LVWF_MASK;
-         callback(PmcInterruptReason_LowVoltageWarning);
+         sCallback(PmcInterruptReason_LowVoltageWarning);
          return;
       }
 #ifdef DEBUG_BUILD
@@ -154,14 +159,15 @@ public:
    /**
     * Set Callback function
     *
-    *   @param[in]  theCallback - Callback function to be executed on PMC interrupt
+    *  @param[in]  callback  Callback function to be executed on interrupt.\n
+    *                        Use nullptr to remove callback.
     */
-   static void setCallback(PMCCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         callback = illegalInterruptHandler;
-         return;
+   static void setCallback(PMCCallbackFunction callback) {
+      usbdm_assert(Info::irqHandlerInstalled, "PMC not configure for interrupts");
+      if (callback == nullptr) {
+         callback = unhandledCallback;
       }
-      callback = theCallback;
+      sCallback = callback;
    }
 
 
@@ -192,6 +198,7 @@ public:
       enableNvicInterrupts();
    }
 
+#ifdef PMC_LVDSC1_LVDV
    /**
     * Set action and level for Low Voltage Detect
     *
@@ -205,6 +212,19 @@ public:
       pmc().LVDSC1 = pmcLowVoltageDetectAction|pmcLowVoltageDetectLevel;
    }
 
+#else
+   /**
+    * Set action and level for Low Voltage Detect
+    *
+    * @param[in] pmcLowVoltageDetectAction Action to take on Low Voltage Detect
+    */
+   static void setResetAction (PmcLowVoltageDetectAction pmcLowVoltageDetectAction = PmcLowVoltageDetectAction_None) {
+      pmc().LVDSC1 = pmcLowVoltageDetectAction;
+   }
+
+#endif
+
+#ifdef PMC_LVDSC2_LVWV
    /**
     * Set action and level for Low Voltage Warning
     *
@@ -218,13 +238,30 @@ public:
       pmc().LVDSC2 = pmcLowVoltageWarningAction|pmcLowVoltageWarningLevel;
    }
 
+#else
+   /**
+    * Set action and level for Low Voltage Warning
+    *
+    * @param[in] pmcLowVoltageWarningAction   Action to take on Low Voltage Warning
+    */
+   static void setWarningAction (
+         PmcLowVoltageWarningAction pmcLowVoltageWarningAction = PmcLowVoltageWarningAction_None
+         ) {
+      pmc().LVDSC2 = pmcLowVoltageWarningAction;
+   }
+
+#endif
+
+#ifdef PMC_REGSC_ACKISO_MASK
    /**
     * Release pins after VLLSx exit
     */
    static void releasePins () {
       pmc().REGSC |= PMC_REGSC_ACKISO_MASK;
    }
+#endif
 
+#ifdef PMC_REGSC_BGEN
    /**
     * Determines availability of Band-gap reference
     *
@@ -236,22 +273,136 @@ public:
          PmcBandgapLowPowerEnable   pmcBandgapLowPowerEnable=PmcBandgapLowPowerEnable_Off) {
       pmc().REGSC = pmcBandgapBuffer|pmcBandgapLowPowerEnable;
    }
+#endif
+
+#ifdef PMC_REGSC_BIASEN
+   /**
+    * Enables source and well biasing for the core logic in low power mode.
+    *
+    * In full performance mode this option has no effect.
+    * This is useful to further reduce MCU power consumption in low power mode.
+    * This bit must be enabled when using VLP* modes.
+    *
+    * Biasing enabled => Core logic is slower and there are restrictions in allowed system clock speed
+    */
+   static void enableCoreBias() {
+      pmc().REGSC |= PMC_REGSC_BIASEN_MASK;
+   }
 
    /**
-    * Enable/disable interrupts in NVIC
+    * Disables source and well biasing for the core logic in low power mode.
     *
-    * @param[in]  enable        True => enable, False => disable
+    * Biasing disabled => Core logic can run in full performance
+    */
+   static void disableCoreBias() {
+      pmc().REGSC &= ~PMC_REGSC_BIASEN_MASK;
+   }
+#endif
+
+#ifdef PMC_REGSC_CLKBIASDIS
+   /**
+    * Enables the bias currents and reference voltages for some clock modules.
+    *
+    * Disabling clock bias reduces power consumption in VLPS mode.
+    *
+    * Enabled  - No effect
+    */
+   static void enableClockBias() {
+      pmc().REGSC &= ~PMC_REGSC_CLKBIASDIS_MASK;
+   }
+
+   /**
+    * Disables the bias currents and reference voltages for some clock modules.
+    *
+    * Disabling clock bias further reduce power consumption in VLPS mode.
+    * While using this option, it must be ensured that respective clock modules are
+    * disabled in VLPS mode otherwise severe malfunction of clock modules will occur.
+    *
+    * Disabled - In VLPS mode, the bias currents and reference voltages for the 
+    *            following clock modules are disabled: SIRC, FIRC, PLL.
+    */
+   static void disableClockBias() {
+      pmc().REGSC |= PMC_REGSC_CLKBIASDIS_MASK;
+   }
+#endif
+
+#ifdef PMC_REGSC_LPODIS
+   /**
+    * Enable low power oscillator (LPO)
+    *
+    * Controls operation of the low power oscillator.
+    *
+    * @note After disabling the LPO a time of 2 LPO clock cycles is required before 
+    *       it is allowed to enable it again. Violating this waiting time of 2 cycles
+    *       can result in malfunction of the LPO.
+    */
+   static void enableLowPowerOscillator() {
+      pmc().REGSC &= ~PMC_REGSC_LPODIS_MASK;
+   }
+
+   /**
+    * Disable low power oscillator (LPO)
+    *
+    * Controls operation of the low power oscillator.
+    *
+    * @note After disabling the LPO a time of 2 LPO clock cycles is required before
+    *       it is allowed to enable it again. Violating this waiting time of 2 cycles
+    *       can result in malfunction of the LPO.
+    */
+   static void disableLowPowerOscillator() {
+      pmc().REGSC |= PMC_REGSC_LPODIS_MASK;
+   }
+#endif
+
+#ifdef PMC_REGSC_LPOSTAT
+   /**
+    * Get Low Power Oscillator (LPO) state
+    *
+    * @return true  => LPO is currently in high state
+    * @return false => LPO is currently in low state
+    */
+   static bool getLowpowerOscillatorStatus() {
+      return (pmc().REGSC & PMC_REGSC_LPOSTAT_MASK)?true:false;
+   }
+#endif
+
+#ifdef PMC_LPOTRIM_LPOTRIM
+   static void setLowpowerOscillatorTrim(int trimValue) {
+      pmc().LPOTRIM = PMC_LPOTRIM_LPOTRIM(trimValue);
+   }
+   static int getLowpowerOscillatorTrim() {
+      int trim = pmc().LPOTRIM&PMC_LPOTRIM_LPOTRIM_MASK;
+      if (((unsigned)trim)>(PMC_LPOTRIM_LPOTRIM_MASK>>1)) {
+         // Sign extend -ve values
+         trim -= PMC_LPOTRIM_LPOTRIM_MASK+1;
+      }
+      return trim;
+   }
+#endif
+
+   /**
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicInterrupts() {
+      enableNvicInterrupt(Info::irqNums[0]);
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    *
     * @param[in]  nvicPriority  Interrupt priority
     */
-   static void enableNvicInterrupts(bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
+   static void enableNvicInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(Info::irqNums[0], nvicPriority);
+   }
 
-      if (enable) {
-         enableNvicInterrupt(Info::irqNums[0], nvicPriority);
-      }
-      else {
-         // Disable interrupts
-         NVIC_DisableIRQ(Info::irqNums[0]);
-      }
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicInterrupts() {
+      NVIC_DisableIRQ(Info::irqNums[0]);
    }
 
 #ifdef PMC_SRAMCTL_VLLS2PD_MASK
@@ -266,7 +417,7 @@ public:
 #endif
 };
 
-template<class Info> PMCCallbackFunction PmcBase_T<Info>::callback = PmcBase_T<Info>::illegalInterruptHandler;
+template<class Info> PMCCallbackFunction PmcBase_T<Info>::sCallback = PmcBase_T<Info>::unhandledCallback;
 
 #ifdef USBDM_PMC_IS_DEFINED
 /**

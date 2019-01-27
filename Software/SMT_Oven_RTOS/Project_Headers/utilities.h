@@ -4,8 +4,8 @@
  * @version  V4.12.1.160
  * @date     13 May 2013
  */
-#ifndef UTILTIES_H_
-#define UTILTIES_H_
+#ifndef PROJECT_HEADERS_UTILTIES_H_
+#define PROJECT_HEADERS_UTILTIES_H_
 
 #include <stdint.h>
 
@@ -119,7 +119,7 @@
 #error "Unexpected __BYTE_ORDER__ value"
 #endif
 
-// Variable Argument Macro (VA_MACRO) upto 6 arguments
+// Variable Argument Macro (VA_MACRO) up to 3 arguments
 #define NUM_ARGS_(_1, _2, _3, _4, _5, _6, TOTAL, ...) TOTAL
 #define NUM_ARGS(...) NUM_ARGS_(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
 
@@ -135,9 +135,9 @@
 #define WRITE1(_1)           write(_1)
 #define WRITE2(_1, _2)       write(_1,_2)
 #define WRITE3(_1, _2, _3)   write(_1,_2,_3)
-#define WRITELN1(_1)         write(_1)
-#define WRITELN2(_1, _2)     write(_1,_2)
-#define WRITELN3(_1, _2, _3) write(_1,_2,_3)
+#define WRITELN1(_1)         writeln(_1)
+#define WRITELN2(_1, _2)     writeln(_1,_2)
+#define WRITELN3(_1, _2, _3) writeln(_1,_2,_3)
 #else
 #define WRITE1(_1)           null()
 #define WRITE2(_1, _2)       null()
@@ -338,4 +338,4 @@ void unpack16BE(uint32_t data, uint8_t ar[2]) {
 
 #endif /* __cplusplus */
 
-#endif /* UTILTIES_H_ */
+#endif /* PROJECT_HEADERS_UTILTIES_H_ */

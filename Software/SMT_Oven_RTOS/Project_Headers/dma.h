@@ -22,6 +22,8 @@
  */
 namespace USBDM {
 
+enum PitChannelNum : unsigned;
+
 /**
  * @addtogroup DMA_Group DMA, Direct Memory Access (DMA)
  * @brief Support for DMA operations
@@ -32,7 +34,7 @@ namespace USBDM {
  * Controls operation of DMA-MUX channel.
  */
 enum DmaMuxEnable {
-   DmaMuxEnable_Disable    = DMAMUX_CHCFG_ENBL(0),                      //!< DMA channel is disabled
+   DmaMuxEnable_Disabled   = DMAMUX_CHCFG_ENBL(0),                      //!< DMA channel is disabled
    DmaMuxEnable_Continuous = DMAMUX_CHCFG_ENBL(1)|DMAMUX_CHCFG_TRIG(0), //!< DMA channel is enabled continuously
    DmaMuxEnable_Triggered  = DMAMUX_CHCFG_ENBL(1)|DMAMUX_CHCFG_TRIG(1), //!< DMA channel is enabled and triggered by PIT channel
 };
@@ -85,7 +87,7 @@ enum DmaMinorLoopMapping {
 /**
  * Channel numbers.
  */
-enum DmaChannelNum {
+enum DmaChannelNum : unsigned {
    DmaChannelNum_0,      //!< Channel  0
    DmaChannelNum_1,      //!< Channel  1
    DmaChannelNum_2,      //!< Channel  2
@@ -176,16 +178,16 @@ enum DmaModulo {
  * Controls whether a channel can be suspended by a higher priority channel.
  */
 enum DmaCanBePreempted {
-   DmaCanBePreempted_Disable = DMA_DCHPRI_ECP(0), //!< Channel N cannot be suspended by a higher priority channel's service request
-   DmaCanBePreempted_Enable  = DMA_DCHPRI_ECP(1), //!< Channel N can be temporarily suspended by the service request of a higher priority channel
+   DmaCanBePreempted_Disabled = DMA_DCHPRI_ECP(0), //!< Channel N cannot be suspended by a higher priority channel's service request
+   DmaCanBePreempted_Enabled  = DMA_DCHPRI_ECP(1), //!< Channel N can be temporarily suspended by the service request of a higher priority channel
 };
 
 /**
  * Controls whether a channel can suspend a lower priority channel.
  */
 enum DmaCanPreemptLower {
-   DmaCanPreemptLower_Enable  = DMA_DCHPRI_DPA(0), //!< Channel N can suspend a lower priority channel
-   DmaCanPreemptLower_Disable = DMA_DCHPRI_DPA(1), //!< Channel N cannot suspend a lower priority channel
+   DmaCanPreemptLower_Enabled  = DMA_DCHPRI_DPA(0), //!< Channel N can suspend a lower priority channel
+   DmaCanPreemptLower_Disabled = DMA_DCHPRI_DPA(1), //!< Channel N cannot suspend a lower priority channel
 };
 
 /**
@@ -234,14 +236,52 @@ typedef void (*DmaErrorCallbackFunction)(uint32_t errorFlags);
  *
  * @return one of the DmaSize_xxxx values
  */
-template <class Td>
-static constexpr DmaSize dmaSize(const Td &obj) {
+template <class T>
+static constexpr DmaSize dmaSize(const T &obj) {
    static_assert(((sizeof(obj)==1)||(sizeof(obj)==2)||(sizeof(obj)==4)||(sizeof(obj)==16)||(sizeof(obj)==32)), "Illegal DMA transfer size");
    return
       (sizeof(obj)==1) ?DmaSize_8bit:
       (sizeof(obj)==2) ?DmaSize_16bit:
       (sizeof(obj)==4) ?DmaSize_32bit:
       (sizeof(obj)==16)?DmaSize_16byte:
+      /*          ==32*/DmaSize_32byte;
+}
+
+/**
+ * Get DMA size of object.
+ * For use in TCD.SMOD, TCD.DMOD value
+ *
+ * @param[in] obj Object to obtain DMA size value for
+ *
+ * @return one of the DmaSize_xxxx values
+ */
+template <class T>
+static constexpr DmaSize dmaSize(const T *obj) {
+   static_assert(((sizeof(*obj)==1)||(sizeof(*obj)==2)||(sizeof(*obj)==4)||(sizeof(*obj)==16)||(sizeof(*obj)==32)), "Illegal DMA transfer size");
+   return
+      (sizeof(*obj)==1) ?DmaSize_8bit:
+      (sizeof(*obj)==2) ?DmaSize_16bit:
+      (sizeof(*obj)==4) ?DmaSize_32bit:
+      (sizeof(*obj)==16)?DmaSize_16byte:
+      /*          ==32*/DmaSize_32byte;
+}
+
+/**
+ * Get DMA size of object.
+ * For use in TCD.SMOD, TCD.DMOD value
+ *
+ * @tparam T Type to get DMA size of
+ *
+ * @return one of the DmaSize_xxxx values
+ */
+template <class T>
+static constexpr DmaSize dmaSize() {
+   static_assert(((sizeof(T)==1)||(sizeof(T)==2)||(sizeof(T)==4)||(sizeof(T)==16)||(sizeof(T)==32)), "Illegal DMA transfer size");
+   return
+      (sizeof(T)==1) ?DmaSize_8bit:
+      (sizeof(T)==2) ?DmaSize_16bit:
+      (sizeof(T)==4) ?DmaSize_32bit:
+      (sizeof(T)==16)?DmaSize_16byte:
       /*          ==32*/DmaSize_32byte;
 }
 
@@ -523,8 +563,8 @@ struct __attribute__((__packed__)) DmaTcd {
     * @param interruptOnMajorHalfComplete Interrupt request on on major loop half completion
     * @param bandwidthControl             Control how channel monopolises the bus
     * @param enableScatterGather          Enable Scatter/Gather operations
-    * @param enableChannelLinking         Enable linking to another channel
-    * @param linkChannelNumber            Channel to link to if linking is enabled
+    * @param enableMajorChannelLinking    Enable linking to another channel
+    * @param majorLinkChannelNumber       Channel to link to if linking is enabled
     */
    constexpr DmaTcd(
          uint32_t      sourceAddress,
@@ -570,7 +610,7 @@ struct __attribute__((__packed__)) DmaTcd {
 
    /**
     * Constructor.
-    * This constructor should be used if minor loops are enabled (DmaMinorLoopMapping_enabled).
+    * This constructor should be used if minor loops are enabled (DmaMinorLoopMapping_Enabled).
     *
     * @param sourceAddress                Starting source address
     * @param sourceOffset                 Source address offset applied after each read
@@ -596,8 +636,8 @@ struct __attribute__((__packed__)) DmaTcd {
     * @param interruptOnMajorHalfComplete Interrupt request on on major loop half completion
     * @param bandwidthControl             Control how channel monopolises the bus
     * @param enableScatterGather          Enable Scatter/Gather operations
-    * @param enableChannelLinking         Enable linking to another channel
-    * @param linkChannelNumber            Channel to link to if linking is enabled
+    * @param enableMajorChannelLinking    Enable linking to another channel
+    * @param majorLinkChannelNumber       Channel to link to if linking is enabled
     */
    constexpr DmaTcd(
          uint32_t                  sourceAddress,
@@ -658,9 +698,7 @@ struct __attribute__((__packed__)) DmaTcd {
  */
 constexpr uint32_t dmaNBytes(uint32_t nBytes) {
    return
-#ifdef DEBUG_BUILD
          usbdm_assert((nBytes<(1<<30)), "nBytes is too large"),
-#endif
          DMA_NBYTES_MLOFFNO_NBYTES(nBytes);
 }
 
@@ -674,9 +712,7 @@ constexpr uint32_t dmaNBytes(uint32_t nBytes) {
  */
 constexpr uint16_t dmaCiter(uint16_t citer) {
    return
-#ifdef DEBUG_BUILD
          usbdm_assert((citer<(1<<15)), "CITER is too large"),
-#endif
          DMA_CITER_ELINKNO_CITER(citer);
 }
 
@@ -691,9 +727,7 @@ constexpr uint16_t dmaCiter(uint16_t citer) {
  */
 constexpr uint16_t dmaCiter(DmaChannelNum dmaChannelNum, uint16_t citer) {
    return
-#ifdef DEBUG_BUILD
          usbdm_assert((citer<(1<<9)), "citer is too large"),
-#endif
          DMA_CITER_ELINKNO_ELINK(1)|DMA_CITER_ELINKYES_LINKCH(dmaChannelNum)|DMA_CITER_ELINKYES_CITER(citer);
 }
 
@@ -722,23 +756,27 @@ public:
     * @param[in] dmaMuxEnable    The mode for the channel
     */
    static void configure(DmaChannelNum dmaChannelNum, DmaSlot dmaSlot, DmaMuxEnable dmaMuxEnable=DmaMuxEnable_Continuous) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum >= NumChannels) {
-         // Channel doesn't exists
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-      if ((dmaMuxEnable == DmaMuxEnable_Triggered) && (dmaChannelNum>USBDM::PitInfo::numChannels)) {
-         // PIT triggering only available on channels corresponding to PIT channels
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-      if (((dmaChannelNum>=16)&&(dmaSlot<64))||((dmaChannelNum<16)&&(dmaSlot>=64))) {
-         // DmaSlots 0-63 must associate with DMA channels 0-15
-         // DmaSlots 64-128 must associate with DMA channels 15-31
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
+
+      usbdm_assert(dmaChannelNum<NumChannels, "Illegal DMA channel");
+
+#ifdef USBDM_PIT_IS_DEFINED
+      // Throttled DMA channels limited by PIT channels available
+      usbdm_assert((dmaMuxEnable != DmaMuxEnable_Triggered) || (dmaChannelNum<=USBDM::PitInfo::NumChannels),
+            "Illegal PIT throttled channel");
 #endif
+
+#ifdef USBDM_LPIT0_IS_DEFINED
+      usbdm_assert((dmaMuxEnable != DmaMuxEnable_Triggered) || (dmaChannelNum<=USBDM::Lpit0Info::NumChannels),
+            "Illegal PIT throttled channel");
+#endif
+
+      // DmaSlots 0-63 must associate with DMA channels 0-15
+      // DmaSlots 64-128 must associate with DMA channels 15-31
+      usbdm_assert(((dmaChannelNum<16)||(dmaSlot>=64))&&((dmaChannelNum>=16)||(dmaSlot<64)),
+            "Illegal PIT channel");
+
       // Enable clock to peripheral
-      DmaMuxInfo::clockReg()  |= DmaMuxInfo::clockMask;
+      DmaMuxInfo::enableClock();
 
       // Configure channel - must be disabled to change
       DmaMuxInfo::dmamux().CHCFG[dmaChannelNum] = 0;
@@ -751,13 +789,11 @@ public:
     * @param dmaChannelNum Channel to modify
     */
    static void disable(DmaChannelNum dmaChannelNum) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<NumChannels, "Illegal DMA channel");
+
       // Enable clock to peripheral
-      DmaMuxInfo::clockReg()  |= DmaMuxInfo::clockMask;
+      DmaMuxInfo::enableClock();
 
       // Disable channel
       DmaMuxInfo::dmamux().CHCFG[dmaChannelNum] = 0;
@@ -778,11 +814,8 @@ protected:
    /** Hardware instance pointer */
    static __attribute__((always_inline)) volatile DMA_Type &dmac() { return Info::dma(); }
 
-   /** Clock register mask for peripheral */
-   static __attribute__((always_inline)) volatile uint32_t &clockReg() { return Info::clockReg(); }
-
    /** Callback functions for ISRs */
-   static DmaCallbackFunction callbacks[Info::NumVectors];
+   static DmaCallbackFunction sCallbacks[Info::NumVectors];
 
    /** Bit-mask of allocated channels */
    static uint32_t allocatedChannels;
@@ -802,7 +835,7 @@ protected:
 
 public:
    /** DMA interrupt handler -  Error callback */
-   static void irqErrorHandler() {
+   static void errorIrqHandler() {
 
       // Capture error status
       uint32_t errorFlags = dmac().ES;
@@ -813,84 +846,13 @@ public:
       errorCallback(errorFlags);
    }
 
-   /** DMA interrupt handler -  Calls DMA 0 callback */
-   static void irq0Handler() {
-      callbacks[0](DmaChannelNum_0);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 1 callback */
-   static void irq1Handler() {
-      callbacks[1](DmaChannelNum_1);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 2 callback */
-   static void irq2Handler() {
-      callbacks[2](DmaChannelNum_2);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 3 callback */
-   static void irq3Handler() {
-      callbacks[3](DmaChannelNum_3);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 4 callback */
-   static void irq4Handler() {
-      callbacks[4](DmaChannelNum_4);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 5 callback */
-   static void irq5Handler() {
-      callbacks[5](DmaChannelNum_5);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 6 callback */
-   static void irq6Handler() {
-      callbacks[6](DmaChannelNum_6);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 7 callback */
-   static void irq7Handler() {
-      callbacks[7](DmaChannelNum_7);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 8 callback */
-   static void irq8Handler() {
-      callbacks[8](DmaChannelNum_8);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 9 callback */
-   static void irq9Handler() {
-      callbacks[9](DmaChannelNum_9);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 10 callback */
-   static void irq10Handler() {
-      callbacks[10](DmaChannelNum_10);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 11 callback */
-   static void irq11Handler() {
-      callbacks[11](DmaChannelNum_11);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 12 callback */
-   static void irq12Handler() {
-      callbacks[12](DmaChannelNum_12);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 13 callback */
-   static void irq13Handler() {
-      callbacks[13](DmaChannelNum_13);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 14 callback */
-   static void irq14Handler() {
-      callbacks[14](DmaChannelNum_14);
-   }
-
-   /** DMA interrupt handler -  Calls DMA 15 callback */
-   static void irq15Handler() {
-      callbacks[15](DmaChannelNum_15);
+   /** DMA interrupt handler - Calls DMA callback
+    *
+    * @tparam channel Channel number
+    */
+   template<unsigned channel>
+   static void irqHandler() {
+      sCallbacks[channel]((DmaChannelNum)channel);
    }
 
    /**
@@ -906,24 +868,25 @@ public:
    static void configure(
          DmaOnError           dmaOnError=DmaOnError_Halt,
          DmaMinorLoopMapping  dmaMinorLoopMapping=DmaMinorLoopMapping_Disabled,
-         DmaContinuousLink    dmaLink=DmaContinuousLink_Disabled,
+         DmaContinuousLink    dmaContinuousLink=DmaContinuousLink_Disabled,
          DmaArbitration       dmaArbitration=DmaArbitration_RoundRobin,
          DmaGroupArbitration  dmaGroupArbitration=DmaGroupArbitration_RoundRobin
          ) {
+
       // Enable clock to DMAC
-      clockReg()  |= MuxInfo::clockMask;
+      Info::enableClock();
 
       // Set shared control options
-      dmac().CR = dmaArbitration|dmaOnError|dmaLink|dmaMinorLoopMapping|dmaGroupArbitration|DMA_CR_EDBG(1);
+      dmac().CR = dmaArbitration|dmaOnError|dmaContinuousLink|dmaMinorLoopMapping|dmaGroupArbitration|DMA_CR_EDBG(1);
 
       // Clear call-backs and TCDs
       for (unsigned channel=0; channel<Info::NumVectors; channel++) {
          static const DmaTcd emptyTcd;
-         callbacks[channel] = noHandlerCallback;
+         sCallbacks[channel] = noHandlerCallback;
          configureTransfer((DmaChannelNum)channel, emptyTcd);
       }
       // Reset record of allocated channels
-      allocatedChannels = 0;
+      allocatedChannels = -1;
    }
 
    /**
@@ -987,6 +950,27 @@ public:
    }
 
    /**
+    * Allocate Periodic DMA channel associated with given PIT channel.
+    * This is a channel that may be throttled by the associated PIT channel.
+    *
+    * @param pitChannelNum PIT channel being used.
+    * @return DmaChannelNum_None - No suitable channel available.  Error code set.
+    * @return Channel number     - Number of allocated channel
+    */
+   static DmaChannelNum allocatePitAssociatedChannel(PitChannelNum pitChannelNum) {
+      const uint32_t channelMask = (1<<pitChannelNum);
+      usbdm_assert(pitChannelNum<Info::NumChannels,        "No DMA channel associated with PIT channel");
+      usbdm_assert((allocatedChannels & channelMask) != 0, "DMA channel already allocated");
+      if ((allocatedChannels & channelMask) == 0) {
+         setErrorCode(E_NO_RESOURCE);
+         return DmaChannelNum_None;
+      }
+      allocatedChannels &= ~channelMask;
+      return (DmaChannelNum) pitChannelNum;
+   }
+
+#ifdef USBDM_LPIT0_IS_DEFINED
+   /**
     * Allocate Periodic DMA channel.
     * This is a channel that may be throttled by an associated PIT channel.
     *
@@ -995,13 +979,33 @@ public:
     */
    static DmaChannelNum allocatePeriodicChannel() {
       unsigned channelNum = __builtin_ffs(allocatedChannels);
-      if ((channelNum == 0)||(--channelNum>=Info::NumChannels)||(channelNum>=USBDM::PitInfo::numChannels)) {
+      if ((channelNum == 0)||(--channelNum>=Info::NumChannels)||(channelNum>=USBDM::Lpit0Info::NumChannels)) {
          setErrorCode(E_NO_RESOURCE);
          return DmaChannelNum_None;
       }
       allocatedChannels &= ~(1<<channelNum);
       return (DmaChannelNum) channelNum;
    }
+#endif
+
+#ifdef USBDM_PIT_IS_DEFINED
+   /**
+    * Allocate Periodic DMA channel.
+    * This is a channel that may be throttled by an associated PIT channel.
+    *
+    * @return Error DmaChannelNum_None - No suitable channel available.  Error code set.
+    * @return Channel number           - Number of allocated channel
+    */
+   static DmaChannelNum allocatePeriodicChannel() {
+      unsigned channelNum = __builtin_ffs(allocatedChannels);
+      if ((channelNum == 0)||(--channelNum>=Info::NumChannels)||(channelNum>=USBDM::PitInfo::NumChannels)) {
+         setErrorCode(E_NO_RESOURCE);
+         return DmaChannelNum_None;
+      }
+      allocatedChannels &= ~(1<<channelNum);
+      return (DmaChannelNum) channelNum;
+   }
+#endif
 
    /**
     * Free DMA channel.
@@ -1009,12 +1013,10 @@ public:
     * @param dmaChannelNum Channel to release
     */
    static void freeChannel(DmaChannelNum dmaChannelNum) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
-      allocatedChannels |= (1<<dmaChannelNum);
+      const uint32_t channelMask = (1<<dmaChannelNum);
+      usbdm_assert(dmaChannelNum<Info::NumChannels,        "Illegal DMA channel");
+      usbdm_assert((allocatedChannels & channelMask) == 0, "Freeing unallocated DMA channel");
+      allocatedChannels |= channelMask;
    }
 
    /**
@@ -1031,13 +1033,11 @@ public:
    static void setChannelPriority(
          DmaChannelNum      dmaChannelNum,
          int                priority,
-         DmaCanBePreempted  dmaCanBePreempted=DmaCanBePreempted_Enable,
-         DmaCanPreemptLower dmaCanPreemptLower=DmaCanPreemptLower_Enable) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+         DmaCanBePreempted  dmaCanBePreempted=DmaCanBePreempted_Enabled,
+         DmaCanPreemptLower dmaCanPreemptLower=DmaCanPreemptLower_Enabled) {
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       int index = (dmaChannelNum&0xFC)|(3-(dmaChannelNum&0x03));
       constexpr volatile uint8_t *priorities = &dmac().DCHPRI3;
       priorities[index] = dmaCanBePreempted|dmaCanPreemptLower|DMA_DCHPRI_CHPRI(priority);
@@ -1050,11 +1050,9 @@ public:
     * @param[in] tcd           DMA TCD block describing the transfer
     */
    static void configureTransfer(DmaChannelNum dmaChannelNum, const DmaTcd &tcd) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       dmac().TCD[dmaChannelNum].SADDR           = tcd.SADDR;
       dmac().TCD[dmaChannelNum].SOFF            = tcd.SOFF;
       dmac().TCD[dmaChannelNum].ATTR            = tcd.ATTR.data;
@@ -1083,11 +1081,9 @@ public:
     * @param[in] dmaChannelNum DMA channel number
     */
    static void waitUntilComplete(DmaChannelNum dmaChannelNum) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       int lastCiter = dmac().TCD[dmaChannelNum].CITER_ELINKNO;
       while ((dmac().TCD[dmaChannelNum].CSR & DMA_CSR_DONE_MASK) == 0) {
          int currentCiter = dmac().TCD[dmaChannelNum].CITER_ELINKNO;
@@ -1113,11 +1109,9 @@ public:
     *        the transfer starts.
     */
    static void __attribute__((always_inline)) startSoftwareRequest(DmaChannelNum dmaChannelNum) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       dmac().SSRT = dmaChannelNum;
    }
 
@@ -1127,15 +1121,11 @@ public:
     *
     * @param[in]  dmaChannelMask Mask for channels being modified
     * @param[in]  enable         True => enable, False => disable
-    *
-    * @note May use DmaChannelNum_All to apply to all channels
     */
    static void __attribute__((always_inline)) enableMultipleRequests(uint32_t dmaChannelMask, bool enable=true) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelMask&~((1<<Info::NumChannels)-1)) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert((dmaChannelMask&~((1<<Info::NumChannels)-1)) != 0, "Illegal DMA channel");
+
       if (enable) {
          dmac().ERQ |= dmaChannelMask;
       }
@@ -1154,11 +1144,9 @@ public:
     * @note May use DmaChannelNum_All to apply to all channels
     */
    static void __attribute__((always_inline)) enableRequests(DmaChannelNum dmaChannelNum, bool enable=true) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       if (enable) {
          dmac().SERQ = dmaChannelNum;
       }
@@ -1176,11 +1164,9 @@ public:
     * @param[in]  enable        True => enable, False => disable
     */
    static void __attribute__((always_inline)) enableAsynchronousRequests(DmaChannelNum dmaChannelNum, bool enable=true) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       if (enable) {
          dmac().EARS |= (1<<dmaChannelNum);
       }
@@ -1197,11 +1183,9 @@ public:
     * @param[in]  enable         True => enable, False => disable
     */
    static void __attribute__((always_inline)) enableMultipleErrorInterrupts(uint32_t dmaChannelMask, bool enable=true) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelMask&~((1<<Info::NumChannels)-1)) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert((dmaChannelMask&~((1<<Info::NumChannels)-1)) != 0, "Illegal DMA channel");
+
       if (enable) {
          dmac().EEI |= dmaChannelMask;
       }
@@ -1219,11 +1203,9 @@ public:
     * @note May use DmaChannelNum_All to apply to all channels
     */
    static void __attribute__((always_inline)) enableErrorInterrupts(DmaChannelNum dmaChannelNum, bool enable=true) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       if (enable) {
          dmac().SEEI = dmaChannelNum;
       }
@@ -1240,11 +1222,9 @@ public:
     * @note May use DmaChannelNum_All to apply to all channels
     */
    static void __attribute__((always_inline)) clearDoneFlag(DmaChannelNum dmaChannelNum) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       dmac().CDNE = dmaChannelNum;
    }
 
@@ -1255,11 +1235,9 @@ public:
     * @param[in]  enable         True => enable, False => disable
     */
    static void __attribute__((always_inline)) clearMultipleInterruptRequests(uint32_t dmaChannelMask, bool enable=true) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelMask&~((1<<Info::NumChannels)-1)) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert((dmaChannelMask&~((1<<Info::NumChannels)-1)) != 0, "Illegal DMA channel");
+
       if (enable) {
          dmac().INT |= dmaChannelMask;
       }
@@ -1276,75 +1254,92 @@ public:
     * @note May use DmaChannelNum_All to apply to all channels
     */
    static void __attribute__((always_inline)) clearInterruptRequest(DmaChannelNum dmaChannelNum) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       dmac().CINT = dmaChannelNum;
    }
 
    /**
-    * Enable/disable interrupts in NVIC.
+    * Enable channel interrupts in NVIC.
+    * Any pending NVIC interrupts are first cleared.
     *
     * @param[in]  dmaChannelNum  Channel being modified
-    * @param[in]  enable         True => enable, False => disable
-    * @param[in]  nvicPriority   Interrupt priority
-	
-    * @return E_NO_ERROR on success
     */
-   static ErrorCode enableNvicInterrupts(DmaChannelNum dmaChannelNum, bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
-      IRQn_Type irqNum = Dma0Info::irqNums[0] + (dmaChannelNum&(Dma0Info::NumChannels-1));
-      if (enable) {
-         enableNvicInterrupt(irqNum, nvicPriority);
-      }
-      else {
-         // Disable interrupts
-         NVIC_DisableIRQ(irqNum);
-      }
-      return E_NO_ERROR;
+   static void enableNvicInterrupts(DmaChannelNum dmaChannelNum) {
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
+      const IRQn_Type irqNum = Dma0Info::irqNums[0] + (dmaChannelNum&(Dma0Info::NumChannels-1));
+      NVIC_EnableIRQ(irqNum);
    }
 
    /**
-    * Enable/disable error interrupts in NVIC.
+    * Enable and set priority of channel interrupts in NVIC.
+    * Any pending NVIC interrupts are first cleared.
     *
-    * @param[in]  enable        True => enable, False => disable
-    * @param[in]  nvicPriority  Interrupt priority
-
-    * @return E_NO_ERROR on success
+    * @param[in]  dmaChannelNum  Channel being modified
+    * @param[in]  nvicPriority   Interrupt priority
     */
-   static ErrorCode enableNvicErrorInterrupt(bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
-      if (enable) {
-         enableNvicInterrupt(Info::irqNums[Info::irqCount-1], nvicPriority);
-      }
-      else {
-         // Disable interrupts
-         NVIC_DisableIRQ(Info::irqNums[Info::irqCount-1]);
-      }
-      return E_NO_ERROR;
+   static void enableNvicInterrupts(DmaChannelNum dmaChannelNum, uint32_t nvicPriority) {
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
+      const IRQn_Type irqNum = Dma0Info::irqNums[0] + (dmaChannelNum&(Dma0Info::NumChannels-1));
+      enableNvicInterrupt(irqNum, nvicPriority);
+   }
+
+   /**
+    * Disable channel interrupts in NVIC.
+    *
+    * @param[in]  dmaChannelNum  Channel being modified
+    */
+   static void disableNvicInterrupts(DmaChannelNum dmaChannelNum) {
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
+      const IRQn_Type irqNum = Dma0Info::irqNums[0] + (dmaChannelNum&(Dma0Info::NumChannels-1));
+      NVIC_DisableIRQ(irqNum);
+   }
+
+   /**
+    * Enable error interrupts in NVIC.
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicErrorInterrupt() {
+      enableNvicInterrupt(Info::irqNums[Info::irqCount-1]);
+   }
+
+   /**
+    * Enable and set priority of error interrupts in NVIC.
+    * Any pending NVIC interrupts are first cleared.
+    *
+    * @param[in]  nvicPriority  Interrupt priority
+    */
+   static void enableNvicErrorInterrupt(uint32_t nvicPriority) {
+      enableNvicInterrupt(Info::irqNums[Info::irqCount-1], nvicPriority);
+   }
+
+   /**
+    * Disable error interrupts in NVIC.
+    */
+   static void disableNvicErrorInterrupt() {
+      NVIC_DisableIRQ(Info::irqNums[Info::irqCount-1]);
    }
 
    /**
     * Set callback for ISR.
     *
-    * @param[in]  dmaChannelNum  The DMA channel to set callback for
-    * @param[in]  callback       The function to call from stub ISR
+    * @param[in] dmaChannelNum  The DMA channel to set callback for
+    * @param[in] callback       Callback function to execute on interrupt.\n
+    *                           Use nullptr to remove callback.
     */
    static void __attribute__((always_inline)) setCallback(DmaChannelNum dmaChannelNum, DmaCallbackFunction callback) {
-#ifdef DEBUG_BUILD
-      if (dmaChannelNum>=Info::NumChannels) {
-         setAndCheckErrorCode(E_ILLEGAL_PARAM);
-      }
-#endif
+
+      usbdm_assert(Info::irqHandlerInstalled, "DMA not configured for interrupts");
+      usbdm_assert(dmaChannelNum<Info::NumChannels, "Illegal DMA channel");
+
       if (callback == nullptr) {
          callback = noHandlerCallback;
       }
-      callbacks[dmaChannelNum] = callback;
+      sCallbacks[dmaChannelNum] = callback;
    }
 
    /**
@@ -1363,7 +1358,7 @@ public:
 /**
  * Callback table for programmatically set handlers.
  */
-template<class Info> DmaCallbackFunction DmaBase_T<Info>::callbacks[];
+template<class Info> DmaCallbackFunction DmaBase_T<Info>::sCallbacks[];
 
 /**
  * Callback for programmatically set error handler.

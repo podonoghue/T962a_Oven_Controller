@@ -2,8 +2,8 @@
  * @file     pdb.h (180.ARM_Peripherals/Project_Headers/pdb.h)
  * @brief    Programmable Delay Block
  *
- * @version  V4.12.1.80
- * @date     13 April 2016
+ * @version  V4.12.1.240
+ * @date     28/10/2018
  */
 
 #ifndef HEADER_PDB_H
@@ -80,18 +80,10 @@ enum PdbTrigger {
  * Controls the loading of MOD, IDLY, CHnDLYm, DACINTx,and POyDLY register from holding registers
  */
 enum PdbLoadMode {
-   PdbLoadMode_Immediate = PDB_SC_LDMOD(0), //!< The register are loaded immediately after LD_OK is set
-   PdbLoadMode_Modulo    = PDB_SC_LDMOD(1), //!< The register are loaded when the counter reaches the modulo value
-   PdbLoadMode_Event     = PDB_SC_LDMOD(2), //!< The register are loaded when a trigger event occurs
-   PdbLoadMode_Both      = PDB_SC_LDMOD(3), //!< The register are loaded when either counter reaches the modulo value or trigger event occurs
-};
-
-/**
- * Controls whether the PDB interrupt is enabled
- */
-enum PdbInterrupt {
-   PdbInterrupt_Disable = PDB_SC_PDBIE(0),  //!< Sequence interrupt disabled
-   PdbInterrupt_Enable  = PDB_SC_PDBIE(1),  //!< Sequence interrupt enabled
+   PdbLoadMode_Immediate = PDB_SC_LDMOD(0), //!< Loaded immediately after LD_OK is set
+   PdbLoadMode_Modulo    = PDB_SC_LDMOD(1), //!< Loaded on counter roll-over after LD_OK is set
+   PdbLoadMode_Event     = PDB_SC_LDMOD(2), //!< Loaded on trigger event after LD_OK is set
+   PdbLoadMode_Both      = PDB_SC_LDMOD(3), //!< Loaded on counter roll-over or trigger event after LD_OK is set
 };
 
 /**
@@ -103,33 +95,84 @@ enum PdbMode {
 };
 
 /**
- * Controls whether the PDB generates DMA requests
+ * Action done on event (PDBIF set)
  */
-enum PdbDma {
-   PdbDma_Disable  = PDB_SC_CONT(0),  //!< DMA is disabled
-   PdbDma_Enable   = PDB_SC_CONT(1),  //!< DMA enabled
+enum PdbAction {
+   PdbAction_None       = PDB_SC_DMAEN(0)|PDB_SC_PDBIE(0), //!< No action on PDBIF set
+   PdbAction_Interrupt  = PDB_SC_DMAEN(0)|PDB_SC_PDBIE(1), //!< Interrupt on PDBIF set
+   PdbAction_Dma        = PDB_SC_DMAEN(1)|PDB_SC_PDBIE(1), //!< DMA on PDBIF set
 };
 
 /**
  * Controls whether the PDB error interrupt is enabled
  */
 enum PdbErrorInterrupt {
-   PdbErrorInterrupt_Disable = PDB_SC_PDBEIE(0),   //!< Sequence error disabled
-   PdbErrorInterrupt_Enable  = PDB_SC_PDBEIE(1),   //!< Sequence error enabled
+   PdbErrorInterrupt_Disabled = PDB_SC_PDBEIE(0),   //!< Sequence error disabled
+   PdbErrorInterrupt_Enabled  = PDB_SC_PDBEIE(1),   //!< Sequence error enabled
 };
 
-enum PdbPretrigger0 {
-   PdbPretrigger0_Disable = PDB_C1_EN(0<<0),                   //!< Pretrigger 0 disabled
-   PdbPretrigger0_Bypass  = PDB_C1_EN(1<<0)|PDB_C1_TOS(0<<0),  //!< Pretrigger 0 asserts 1 clock after trigger
-   PdbPretrigger0_Delay   = PDB_C1_EN(1<<0)|PDB_C1_TOS(1<<0),  //!< Pretrigger 0 asserts 1 clock + delay after trigger
+/**
+ * Pretrigger control
+ */
+enum PdbPretrigger {
+   PdbPretrigger_Disabled    = PDB_C1_EN(0),                //!< Pretrigger disabled
+   PdbPretrigger_Bypassed    = PDB_C1_EN(1)|PDB_C1_TOS(0),  //!< Pretrigger asserts 1 clock after trigger
+   PdbPretrigger_Delayed     = PDB_C1_EN(1)|PDB_C1_TOS(1),  //!< Pretrigger asserts 1 clock + delay after trigger
+   PdbPretrigger_BackToBack  = PDB_C1_EN(1)|PDB_C1_BB(1),   //!< Back-to-back, pretrigger asserts 2 clocks after previous acknowledge
 };
 
-enum PdbPretrigger1 {
-   PdbPretrigger1_Disable = PDB_C1_EN(0<<1),                   //!< Pretrigger 1 disabled
-   PdbPretrigger1_Bypass  = PDB_C1_EN(1<<1)|PDB_C1_TOS(0<<1),  //!< Pretrigger 1 asserts 1 clock after trigger
-   PdbPretrigger1_Delay   = PDB_C1_EN(1<<1)|PDB_C1_TOS(1<<1),  //!< Pretrigger 1 asserts 1 clock + delay after trigger
+#if PDB_DAC_COUNT>0
+/**
+ * DAC Trigger Control
+ *
+ * _Disabled
+ *    No DAC trigger is generated
+ *
+ * _Delayed
+ *    DAC interval counter is reset and counting starts when a rising edge is detected on
+ *    selected trigger input source or software trigger is selected and SWTRIG is written with 1.
+ *
+ * _External
+ *    DAC interval counter is bypassed and DAC external trigger input triggers the DAC interval trigger.
+ */
+enum PdbDacTriggerMode {
+   PdbDacTriggerMode_Disabled = PDB_INTC_TOE(0)|PDB_INTC_EXT(0), //!< No DAC trigger
+   PdbDacTriggerMode_Delayed  = PDB_INTC_TOE(1)|PDB_INTC_EXT(0), //!< DAC trigger delayed by DAC interval counter
+   PdbDacTriggerMode_External = PDB_INTC_TOE(1)|PDB_INTC_EXT(1), //!< DAC trigger is connected directly to external trigger
 };
+#endif
 
+/**
+ * Notes on the PDB.
+ *
+ * Components:\n
+ *     - Channels+pre-triggers - Usually associated with an ADC
+ *     - DAC delays            - Associated with a DAC
+ *     - Pulse outputs         - Usually associated with a CMP
+ *
+ * Operation:\n
+ * - The PDB can be triggered from another peripheral or directly by software using softwareTrigger().
+ * - When triggered, the PDB counter and the DAC delay counters are restarted.
+ * - The period of the PDB counter and the delay counters may be independently controlled.
+ *    - The PDB counter counts [0..MOD]. Set with setPeriod().
+ *    - The DAC delay counters count [0..DACINTx]. Set with configureDacTrigger().
+ *      The counters may be bypassed for external triggers.
+ * - The PDB may operate in one-shot or continuous mode.
+ *    - One shot mode   - The PDB and DAC delay counters are reset on trigger. The PDB counter counts one sequence only.
+ *      The DAC counter only operates while the main counter is counting but it may produce multiple triggers in the sequence.
+ *    - Continuous mode - As above but the counter resets when it reaches the counter period and restarts.\n
+ *      The DAC delay counters are NOT reset on PDB counter roll-over so operate independently after initial trigger.
+ * - I would expect the DAC Delay counter period to be less than or equal to the PDB counter period in one-shot mode.
+ * - The DAC Delay period may be set smaller than (PDB counter period/2) to trigger multiple DAC output
+ *   triggers within a PDB period but more often there would be only a single DAC event e.g.
+ *   <b>(PDB counter period/2) < (DAC Delay period) <= (PDB counter period)</b>. Again this is in one-shot mode.
+ * - The pre-triggers within a channel are associated with different ADC pre-triggers e.g. SC1[n]/R[n]. The pre-triggers
+ *   are referenced to the main PDB counter.\n
+ *   This allows multiple ADC channels (inputs) to be used with a PDB period - usually only 2 are available per ADC.
+ *   Set with configureAdcPretrigger().
+ * - The pulse outputs may be configured as high for a pulse from [start...end] times based on the PDB counter.
+ *   Set with configurePulseOutput().
+ */
 /**
  * Template class providing interface to Programmable Delay Block
  *
@@ -147,11 +190,13 @@ class PdbBase_T {
 
 protected:
    /** Callback function for ISR */
-   static PDBCallbackFunction callback;
+   static PDBCallbackFunction sCallback;
+
    /** Callback function for error ISR */
-   static PDBCallbackFunction errorCallback;
+   static PDBCallbackFunction sErrorCallback;
+
    /** Handler for unexpected interrupts */
-   static void illegalInterruptHandler() {
+   static void unhandledCallback() {
       setAndCheckErrorCode(E_NO_HANDLER);
    }
 public:
@@ -164,71 +209,77 @@ public:
          // Clear interrupt flag
          PdbBase_T<Info>::pdb().SC  &= ~PDB_SC_PDBIF_MASK;
          // Handle expected interrupt
-         callback();
+         sCallback();
          return;
       }
       // Assume sequence error
-      errorCallback();
+      sErrorCallback();
    }
 
    /**
     * Set Callback function
     *
-    *   @param[in]  theCallback - Callback function to be executed on PDB interrupt
+    *   @param[in]  callback Callback function to be executed on interrupt\n
+    *                        Use nullptr to remove callback.
     */
-   static void setCallback(PDBCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         callback = illegalInterruptHandler;
-         return;
+   static void setCallback(PDBCallbackFunction callback) {
+
+      usbdm_assert(Info::irqHandlerInstalled, "PDB not configure for interrupts");
+      if (callback == nullptr) {
+         callback = unhandledCallback;
       }
-      callback = theCallback;
+      sCallback = callback;
    }
+
    /**
     * Set Callback function
     *
-    *   @param[in]  theCallback - Callback function to be executed on PDB interrupt
+    *   @param[in]  callback Callback function to be executed on error interrupt\n
+    *                        Use nullptr to remove callback.
     */
-   static void setErrorCallback(PDBCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         errorCallback = illegalInterruptHandler;
-         return;
+   static void setErrorCallback(PDBCallbackFunction callback) {
+
+      usbdm_assert(Info::irqHandlerInstalled, "PDB not configure for interrupts");
+      if (callback == nullptr) {
+         callback = unhandledCallback;
       }
-      errorCallback = theCallback;
+      sErrorCallback = callback;
    }
 
 
 protected:
    /** Hardware instance pointer */
-   static __attribute__((always_inline)) volatile PDB_Type &pdb() { return Info::pdb(); }
-
-   /** Clock register mask for peripheral */
-   static __attribute__((always_inline)) volatile uint32_t &clockReg() { return Info::clockReg(); }
+   static volatile PDB_Type &pdb() { return Info::pdb(); }
 
 public:
    /**
     * Configures all mapped pins associated with this peripheral
     */
-   static void __attribute__((always_inline)) configureAllPins() {
+   static void configureAllPins() {
       // Configure pins
       Info::initPCRs();
    }
 
    /**
-    * Enable clock to the PDB
+    * Basic enable of PDB.
+    * Includes enabling clock and configuring all pins of mapPinsOnEnable is selected on configuration
     */
-   static void  __attribute__((always_inline)) enable() {
-      configureAllPins();
+   static void  enable() {
 
-      clockReg() |= Info::clockMask;
+      if (Info::mapPinsOnEnable) {
+         configureAllPins();
+      }
+      Info::enableClock();
       __DMB();
    }
 
    /**
     * Disable PDB
     */
-   static void  __attribute__((always_inline)) disable() {
+   static void  disable() {
+
       pdb().SC  = 0;
-      clockReg() &= ~Info::clockMask;
+      Info::disableClock();
       __DMB();
    }
 
@@ -239,6 +290,7 @@ public:
     * Sets PDB to default configuration.
     */
    static void defaultConfigure() {
+
       enable();
 
       pdb().MOD  = Info::pdb_mod;
@@ -278,29 +330,112 @@ public:
 #endif
       // Configure and trigger register load
       pdb().SC = Info::pdb_sc|PDB_SC_PDBEN_MASK|PDB_SC_LDOK_MASK;
+
       enableNvicInterrupts();
    }
 
    /**
     * Configures the PDB
     *
-    * Includes enabling clock and any pins used.\n
-    * Sets PDB to default configuration.
+    * Includes enabling clock and configuring all pins if mapPinsOnEnable is
+    * selected in configuration.\n
+    * ADC triggers, CMP pulse outputs and ADC triggers are disabled.
+    *
+    * @param pdbMode       PDB operates in one-shot or continuous mode
+    * @param pdbTrigger    PDB Trigger source
+    * @param pdbAction     Action done on event (PDBIF set)
+    *
+    * @note The PDB is NOT enabled.  This is usually done by confirmRegisterLoad().
     */
-   static void configure() {
-      defaultConfigure();
+   static void configure(
+         PdbMode     pdbMode,
+         PdbTrigger  pdbTrigger,
+         PdbAction   pdbAction = PdbAction_None
+   ) {
+
+      enable();
+      pdb().SC = pdbMode|pdbTrigger|pdbAction;
+
+      for (unsigned index=0; index<(sizeof(pdb().CH)/sizeof(pdb().CH[0])); index++) {
+         pdb().CH[index].C1 = 0;
+      }
+
+#if PDB_DAC_COUNT>0
+      for (unsigned index=0; index<(sizeof(pdb().DAC)/sizeof(pdb().DAC[0])); index++) {
+         pdb().DAC[index].INTC = 0;
+      }
+#endif
+
+#if PDB_POnDLY_COUNT>0
+      pdb().POEN = 0;
+#endif
    }
 
    /**
-    * Calculate interval in ticks
+    * Set Interrupts and DMA actions
     *
-    * @param[in] period  Required period in seconds
+    * @param[in] pdbAction          Controls action done on event (counter value is equal to the IDLY register)
+    * @param[in] pdbErrorInterrupt  Controls sequence error interrupt requests (on any ADC sequence errors)
+    */
+   static void setActions(
+         PdbAction            pdbAction,
+         PdbErrorInterrupt    pdbErrorInterrupt = PdbErrorInterrupt_Disabled) {
+
+      pdb().SC =
+            (pdb().SC&~(PDB_SC_PDBIE_MASK|PDB_SC_PDBEIE_MASK|PDB_SC_DMAEN_MASK))|
+            pdbAction|pdbErrorInterrupt|PDB_SC_PDBIF_MASK;
+   }
+
+   /**
+    * Enable sequence error interrupts (pdb_sc_pdbeie)
+    */
+   static void enableErrorInterrupts() {
+      pdb().SC |= PDB_SC_PDBEIE_MASK;
+   }
+
+   /**
+    * Disable sequence error interrupts (pdb_sc_pdbeie)
+    */
+   static void disableErrorInterrupts() {
+
+      pdb().SC &= ~PDB_SC_PDBEIE_MASK;
+   }
+
+   /**
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicInterrupts() {
+      enableNvicInterrupt(Info::irqNums[0]);
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
     *
-    * @return Number of tick corresponding to the period
+    * @param[in]  nvicPriority  Interrupt priority
+    */
+   static void enableNvicInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(Info::irqNums[0], nvicPriority);
+   }
+
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicInterrupts() {
+      NVIC_DisableIRQ(Info::irqNums[0]);
+   }
+
+   /**
+    * Converts time in seconds to time in ticks
+    *
+    * @param[in] seconds Time interval in seconds
+    *
+    * @return Time in ticks
     *
     * @note This uses the current PDB clock settings (pdb_sc_mult, pdb_sc_prescaler)
     */
-   static uint32_t calcTicksFromTime(float period) {
+   static uint32_t convertSecondsToTicks(float seconds) {
 
       float clockFrequency = Info::getInputClockFrequency();
       int multValue        = (pdb().SC&PDB_SC_MULT_MASK)>>PDB_SC_MULT_SHIFT;
@@ -309,7 +444,7 @@ public:
       // Multiplier factors for prescale divider
       static const int multFactors[] = {1,10,20,40};
       float clock = clockFrequency/(multFactors[multValue]*(1<<prescaleValue));
-      return round(period*clock)-1;
+      return round(seconds*clock);
    }
 
    /**
@@ -318,7 +453,7 @@ public:
     * than the given period.\n
     * This produces the highest resolution.\n
     * It is quite possible that other values would be more suitable for a particular application.
-    * For example, carefully chosen prescalers may result in less rounding for the needed intermediate
+    * For example, carefully chosen prescaler may result in less rounding for the needed intermediate
     * points for pulse outputs etc.
     *
     * @param[in]  period          Period in seconds as a float
@@ -373,15 +508,15 @@ public:
    }
 
    /**
-    * Sets period to given value.
+    * Sets period of main counter to given value.
     *
-    * It attempts to get 'best' dividers for given period.\n
+    * It attempts to get the 'best' dividers for a given period.\n
     * This involves finding the smallest prescaler that allows the PDB period
     * to be set to greater than the given period.\n
     * This produces the highest resolution.\n
-    * It is quite possible that other values would be more suitable for a particular application.
-    * For example, carefully chosen prescalers may result in less rounding for the needed intermediate points
-    * for pulse outputs etc.
+    * It is quite possible that other values would be more suitable for a particular application.\n
+    * For example, carefully chosen prescalers may result in less rounding for the needed intermediate
+    * points for pulse outputs etc.
     *
     * @param[in]  period Period in seconds as a float
     *
@@ -391,6 +526,7 @@ public:
     * @note This affects pdb_sc_mult, pdb_sc_prescaler, pdb_mod
     */
    static ErrorCode setPeriod(float period) {
+
       uint32_t mult     = 0;
       int      prescale = 0;
 
@@ -398,9 +534,11 @@ public:
       if (rc != E_NO_ERROR) {
          return rc;
       }
-      pdb().SC  = (pdb().SC&~(PDB_SC_MULT_MASK|PDB_SC_PRESCALER_MASK))|PDB_SC_MULT(mult)|PDB_SC_PRESCALER(prescale)|PDB_SC_PDBIF_MASK;
-      // Recalculate MOD using calcTicksFromTime() to ensure consistent results
-      pdb().MOD = calcTicksFromTime(period);
+      pdb().SC  = (pdb().SC&~(PDB_SC_MULT_MASK|PDB_SC_PRESCALER_MASK))|
+            PDB_SC_MULT(mult)|PDB_SC_PRESCALER(prescale)|PDB_SC_PDBIF_MASK;
+
+      // Calculate MOD using new MULT and PRESCALER convertSecondsToTicks()
+      pdb().MOD = convertSecondsToTicks(period) - 1;
 
       return E_NO_ERROR;
    }
@@ -411,8 +549,9 @@ public:
     * @param[in]  pdbPrescale    Clock pre-scale (pdb_sc_mult)
     * @param[in]  pdbMultiplier  Clock pre-scale multiplier (pdb_sc_prescaler)
     */
-   static void __attribute__((always_inline)) setClock(PdbPrescale pdbPrescale, PdbMultiplier pdbMultiplier) {
-      pdb().SC  = (pdb().SC&~(PDB_SC_MULT_MASK|PDB_SC_PRESCALER_MASK))|pdbPrescale|pdbMultiplier;
+   static void setClockDividers(PdbPrescale pdbPrescale, PdbMultiplier pdbMultiplier) {
+
+      pdb().SC  = (pdb().SC&~(PDB_SC_MULT_MASK|PDB_SC_PRESCALER_MASK))|pdbPrescale|pdbMultiplier|PDB_SC_PDBIF_MASK;
    }
 
    /**
@@ -420,144 +559,86 @@ public:
     *
     * @param[in] modulo Modulo value for the counter (pdb_mod)
     */
-   static void __attribute__((always_inline)) setModulo(int modulo) {
+   static void setModuloInTicks(uint16_t modulo) {
+
       pdb().MOD = modulo;
    }
 
    /**
     * Set interrupt delay (in ticks)
     *
-    * @param[in] delay Modulo value for the counter (pdb_mod)
+    * @param[in] delay Delay value (pdb_idly)
     */
-   static void __attribute__((always_inline)) setInterruptDelayInTicks(int delay) {
+   static void setInterruptDelayInTicks(uint16_t delay) {
+
       pdb().IDLY = delay;
    }
 
    /**
     * Set interrupt delay (in seconds)
     *
-    * @param[in] delay Modulo value for the counter (pdb_mod)
+    * @param[in] delay Delay value for the interrupt (pdb_idly)
     */
-   static void __attribute__((always_inline)) setInterruptDelay(float delay) {
-      pdb().IDLY = calcTicksFromTime(delay);
+   static void setInterruptDelay(float delay) {
+
+      pdb().IDLY = convertSecondsToTicks(delay) - 1;
    }
 
    /**
-    * Set trigger source and whether one-shot or continuous operation
+    * Set trigger source
     *
     * @param[in] pdbTrigger      Trigger source (pdb_sc_trgsel)
+    */
+   static void setTriggerSource(PdbTrigger pdbTrigger) {
+
+      pdb().SC = (pdb().SC&~PDB_SC_TRGSEL_MASK)|pdbTrigger|PDB_SC_PDBIF_MASK;
+   }
+
+   /**
+    * Set one-shot or continuous operation
+    *
     * @param[in] pdbMode         PDB mode. Controls if the PDB does one sequence or repeats (pdb_sc_cont)
     */
-   static void __attribute__((always_inline)) setTriggerSource(PdbTrigger pdbTrigger, PdbMode pdbMode=PdbMode_OneShot) {
-      pdb().SC = (pdb().SC&~PDB_SC_TRGSEL_MASK)|pdbTrigger|pdbMode|PDB_SC_PDBIF_MASK;
+   static void setMode(PdbMode pdbMode=PdbMode_OneShot) {
+
+      pdb().SC = (pdb().SC&~PDB_SC_CONT_MASK)|pdbMode|PDB_SC_PDBIF_MASK;
    }
 
    /**
     * Trigger PDB sequence (pdb_sc_swtrig, pdb_sc_trigsel)
     */
-   static __attribute__((always_inline)) void softwareTrigger() {
+   static void softwareTrigger() {
 
-      // PdbTrigger_Software must be all 1's for this to work
-      static_assert(PdbTrigger_Software==PDB_SC_TRGSEL_MASK, "Unexpected value for PdbTrigger_Software");
-      pdb().SC |= PdbTrigger_Software|PDB_SC_SWTRIG_MASK|PDB_SC_PDBIF_MASK;
+      // Set software trigger + do trigger + without clearing interrupt flag
+      pdb().SC |= PDB_SC_TRGSEL_MASK|PDB_SC_SWTRIG_MASK|PDB_SC_PDBIF_MASK;
    }
 
    /**
-    * Enable PDB and triggers loading of MOD, IDLY, CHnDLYm, DACINTx,and POyDLY from holding registers
+    * Enable PDB and configures loading of MOD, IDLY, CHnDLYm, DACINTx,and POyDLY from holding registers
     *
     * @param[in]  pdbLoadMode Controls when the registers are loaded. (pdb_sc_ldmod)
     *
     * @note The actual loading time is governed by pdbLoadMode
     * @note isLoadRegistersComplete() may be used to check if the loading has occurred.
     */
-   static void __attribute__((always_inline)) triggerRegisterLoad(PdbLoadMode pdbLoadMode) {
+   static void configureRegisterLoad(PdbLoadMode pdbLoadMode) {
+
       pdb().SC = (pdb().SC&~PDB_SC_LDMOD_MASK)|pdbLoadMode|PDB_SC_PDBEN_MASK|PDB_SC_LDOK_MASK|PDB_SC_PDBIF_MASK;
    }
 
    /**
     * Indicates if loading of MOD, IDLY, CHnDLYm, DACINTx,and POyDLY registers is complete
     *
-    * @note The loading is triggered by loadRegisters()
+    * @note The loading is triggered by confirmRegisterLoad()
     */
-   static bool __attribute__((always_inline)) isRegisterLoadComplete() {
+   static bool isRegisterLoadComplete() {
+
       return !(pdb().SC & PDB_SC_LDOK_MASK);
    }
 
+#if PDB_CH_COUNT>0
    /**
-    * Enable/disable interrupts in NVIC
-    *
-    * @param[in]  enable        True => enable, False => disable
-    * @param[in]  nvicPriority  Interrupt priority
-    */
-   static void enableNvicInterrupts(bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
-
-      if (enable) {
-         enableNvicInterrupt(Info::irqNums[0], nvicPriority);
-      }
-      else {
-         // Disable interrupts
-         NVIC_DisableIRQ(Info::irqNums[0]);
-      }
-   }
-
-   /**
-    * Enable/disable sequence error interrupts (pdb_sc_pdbeie)
-    *
-    * @param[in]  enable True => enable, False => disable
-    */
-   static void enableErrorInterrupts(bool enable=true) {
-      if (enable) {
-         pdb().SC |= PDB_SC_PDBEIE_MASK;
-      }
-      else {
-         pdb().SC &= ~PDB_SC_PDBEIE_MASK;
-      }
-   }
-
-   /**
-    * Enable/disable sequence interrupts (pdb_sc_pdbie)
-    *
-    * @param[in]  enable True => enable, False => disable
-    */
-   static void enableSequenceInterrupts(bool enable=true) {
-      if (enable) {
-         pdb().SC |= PDB_SC_PDBIE_MASK;
-      }
-      else {
-         pdb().SC &= ~PDB_SC_PDBIE_MASK;
-      }
-   }
-
-   /**
-    * Enable/disable DMA (pdb_sc_dmaen)
-    *
-    * @param[in]  enable True => enable, False => disable
-    */
-   static void enableDma(bool enable=true) {
-      if (enable) {
-         pdb().SC |= PDB_SC_DMAEN_MASK;
-      }
-      else {
-         pdb().SC &= ~PDB_SC_DMAEN_MASK;
-      }
-   }
-
-   /**
-    * Set Interrupts and DMA options
-    *
-    * @param[in] pdbInterrupt       Whether sequence interrupt requests are generated
-    * @param[in] pdbErrorInterrupt  Whether error interrupt requests are generated
-    * @param[in] pdbDma             Whether DMA requests are generated
-    */
-   static void setInterrupts(
-         PdbInterrupt         pdbInterrupt      = PdbInterrupt_Disable,
-         PdbErrorInterrupt    pdbErrorInterrupt = PdbErrorInterrupt_Disable,
-         PdbDma               pdbDma            = PdbDma_Disable) {
-      pdb().SC = (pdb().SC&~(PDB_SC_PDBIE_MASK|PDB_SC_PDBEIE_MASK|PDB_SC_DMAEN_MASK))|pdbInterrupt|pdbErrorInterrupt|pdbDma;
-   }
-
-   /**
-    * Configures the pretriggers associated with a channel.
+    * Configures the pretriggers associated with an ADC.
     *
     * Each pretrigger corresponds to an ADC SC1[n] R[n] register pair used in hardware triggered mode i.e.
     * Channel X, Pretrigger Y => adcX_sc1[Y], adc0_r[Y].
@@ -567,22 +648,27 @@ public:
     *
     * This allows multiple different ADC channels to be converted in a sequence.
     *
-    * @param[in] channel         Channel to affect
-    * @param[in] pdbPretrigger0  Pretrigger mode for pretrigger 0
-    * @param[in] delay0          Delay for pretrigger 0 in ticks
-    * @param[in] pdbPretrigger1  Pretrigger mode for pretrigger 1
-    * @param[in] delay1          Delay for pretrigger 1 in ticks
+    * @param adcNum           ADC associated with the pre-trigger (channel)
+    * @param pretriggerNum    Pretrigger being modified
+    * @param pdbPretrigger    Pretrigger settings
+    * @param delay            Delay in ticks - only needed for PdbPretrigger_Delayed
     */
-   static void setPretriggersInTicks(int channel,
-         PdbPretrigger0 pdbPretrigger0=PdbPretrigger0_Bypass,  uint16_t delay0=0,
-         PdbPretrigger1 pdbPretrigger1=PdbPretrigger0_Disable, uint16_t delay1=0) {
+   static void configureAdcPretriggerInTicks (
+         unsigned       adcNum,
+         unsigned       pretriggerNum,
+         PdbPretrigger  pdbPretrigger,
+         uint16_t       delay          = 0) {
 
-      pdb().CH[channel].C1     = pdbPretrigger0|pdbPretrigger1;
-      pdb().CH[channel].DLY[0] = delay0;
-      pdb().CH[channel].DLY[1] = delay1;
+      usbdm_assert(adcNum<(sizeof(pdb().CH)/sizeof(pdb().CH[0])),                      "Illegal ADC number");
+      usbdm_assert(pretriggerNum<(sizeof(pdb().CH[0].DLY)/sizeof(pdb().CH[0].DLY[0])), "Illegal Pretrigger number");
+
+      uint32_t mask      = (PDB_C1_EN(1)|PDB_C1_BB(1)|PDB_C1_TOS(1))<<pretriggerNum;
+      pdb().CH[adcNum].C1                 = (pdb().CH[adcNum].C1&~mask)|(pdbPretrigger<<pretriggerNum);
+      pdb().CH[adcNum].DLY[pretriggerNum] = delay - 1;
    }
+
    /**
-    * Configures the pretriggers associated with a channel.
+    * Configures the pretriggers associated with an ADC.
     *
     * Each pretrigger corresponds to an ADC SC1[n] R[n] register pair used in hardware triggered mode i.e.
     * Channel X, Pretrigger Y => adcX_sc1[Y], adc0_r[Y].
@@ -592,43 +678,364 @@ public:
     *
     * This allows multiple different ADC channels to be converted in a sequence.
     *
-    * @param[in] channel         Channel to affect
-    * @param[in] pdbPretrigger0  Pretrigger mode for pretrigger 0
-    * @param[in] delay0          Delay for pretrigger 0 in seconds
-    * @param[in] pdbPretrigger1  Pretrigger mode for pretrigger 1
-    * @param[in] delay1          Delay for pretrigger 1 in seconds
+    * @param adcNum           ADC associated with the pre-trigger (channel)
+    * @param pretriggerNum    Pretrigger being modified
+    * @param pdbPretrigger    Pretrigger settings
+    * @param delay            Delay - only needed for PdbPretrigger_Delayed
     */
-   static void setPretriggers(int channel,
-         PdbPretrigger0 pdbPretrigger0,                        float delay0,
-         PdbPretrigger1 pdbPretrigger1=PdbPretrigger1_Disable, float delay1=0.0) {
+   static void configureAdcPretrigger (
+         unsigned       adcNum,
+         unsigned       pretriggerNum,
+         PdbPretrigger  pdbPretrigger,
+         float          delay          = 0.0) {
 
-      pdb().CH[channel].C1     = pdbPretrigger0|pdbPretrigger1;
-      pdb().CH[channel].DLY[0] = calcTicksFromTime(delay0);
-      pdb().CH[channel].DLY[1] = calcTicksFromTime(delay1);
+      configureAdcPretriggerInTicks(adcNum, pretriggerNum, pdbPretrigger, convertSecondsToTicks(delay));
    }
 
    /**
-    * Get error and sequence flags for the PDB channel
+    * Disables all pretriggers associated with an ADC.
     *
-    * @param[in] channel the PDB channel to clear
+    * @param[in] adcNum          ADC to affect
     */
-   static uint32_t getChannelFlags(int channel) {
-      return pdb().CH[channel].S;
+   static void disableAdcPretriggers(unsigned adcNum) {
+
+      usbdm_assert(adcNum<(sizeof(pdb().CH)/sizeof(pdb().CH[0])), "Illegal ADC number");
+
+      pdb().CH[adcNum].C1 = 0;
    }
 
    /**
-    * Clear error and sequence flags in the PDB channel
+    * Disables a pretrigger associated with an ADC.
     *
-    * @param[in] channel the PDB channel to clear
+    * @param[in] adcNum       ADC to affect
+    * @param pretriggerNum    Pretrigger being modified
     */
-   static void clearErrorFlags(int channel) {
+   static void disableAdcPretrigger(
+         unsigned       adcNum,
+         unsigned       pretriggerNum) {
+
+      usbdm_assert(adcNum<(sizeof(pdb().CH)/sizeof(pdb().CH[0])), "Illegal ADC number");
+
+      uint32_t mask      = (PDB_C1_EN(1)|PDB_C1_BB(1)|PDB_C1_TOS(1))<<pretriggerNum;
+      pdb().CH[adcNum].C1 &= mask;
+   }
+
+   /**
+    * Get error and sequence flags for the PDB channel (ADC trigger)
+    *
+    * @param[in] adcNum The ADC to get flags for.
+    */
+   static uint32_t getChannelFlags(unsigned adcNum) {
+
+      return pdb().CH[adcNum].S;
+   }
+
+   /**
+    * Clear error and sequence flags in the PDB channel (ADC trigger)
+    *
+    * @param[in] adcNum The ADC to clear flags for
+    */
+   static void clearErrorFlags(unsigned adcNum) {
+
       // Clear flags
-      pdb().CH[channel].S = PDB_S_ERR_MASK; // w1c bits
+      pdb().CH[adcNum].S = 0; // w0c bits
    }
+
+   /**
+    * @tparam adcNum The number of the ADC pretrigger (channel) to control
+    */
+   template<unsigned adcNum>
+   class AdcPreTrigger {
+
+      static_assert(adcNum<(sizeof(pdb().CH)/sizeof(pdb().CH[0])), "Illegal ADC number");
+
+   public:
+      static constexpr unsigned ADC_NUM = adcNum;
+
+      /**
+       * Configures the pretriggers associated with an ADC.
+       *
+       * Each pretrigger corresponds to an ADC SC1[n] R[n] register pair used in hardware triggered mode i.e.
+       * Channel X, Pretrigger Y => adcX_sc1[Y], adc0_r[Y].
+       * For example:
+       *   Channel 0, Pretrigger 0 => adc0_sc1[0], adc0_r[0]
+       *   Channel 0, Pretrigger 1 => adc0_sc1[1], adc0_r[1] etc.
+       *
+       * This allows multiple different ADC channels to be converted in a sequence.
+       *
+       * @param pretriggerNum    Pretrigger being modified
+       * @param pdbPretrigger    Pretrigger settings
+       * @param delay            Delay in ticks - only needed for PdbPretrigger_Delayed
+       */
+      static void configureInTicks (
+            unsigned       pretriggerNum,
+            PdbPretrigger  pdbPretrigger,
+            uint16_t       delay          = 0) {
+
+         PdbBase_T::configureAdcPretriggerInTicks(adcNum, pretriggerNum, pdbPretrigger, delay);
+      }
+
+      /**
+       * Configures the pretriggers associated with an ADC.
+       *
+       * Each pretrigger corresponds to an ADC SC1[n] R[n] register pair used in hardware triggered mode i.e.
+       * Channel X, Pretrigger Y => adcX_sc1[Y], adc0_r[Y].
+       * For example:
+       *   Channel 0, Pretrigger 0 => adc0_sc1[0], adc0_r[0]
+       *   Channel 0, Pretrigger 1 => adc0_sc1[1], adc0_r[1] etc.
+       *
+       * This allows multiple different ADC channels to be converted in a sequence.
+       *
+       * @param pretriggerNum    Pretrigger being modified
+       * @param pdbPretrigger    Pretrigger settings
+       * @param delay            Delay - only needed for PdbPretrigger_Delayed
+       */
+      static void configure (
+            unsigned       pretriggerNum,
+            PdbPretrigger  pdbPretrigger,
+            float          delay          = 0.0) {
+
+         PdbBase_T::configureAdcPretriggerInTicks(adcNum, pretriggerNum, pdbPretrigger, convertSecondsToTicks(delay));
+      }
+
+      /**
+       * Disables the pretriggers associated with an ADC.
+       */
+      static void disable() {
+
+         PdbBase_T::disableAdcPretriggers(adcNum);
+      }
+
+      /**
+       * Get error and sequence flags for the adcNum
+       */
+      static uint32_t getFlags() {
+
+         return PdbBase_T::getChannelFlags(adcNum);
+      }
+
+      /**
+       * Clear error and sequence flags for the adcNum
+       */
+      static void clearFlags() {
+
+         PdbBase_T::clearErrorFlags(adcNum);
+      }
+
+   };
+#endif
+
+#if PDB_DAC_COUNT>0
+   /**
+    * DAC Trigger Control
+    *
+    * There may be multiple DAC triggers generated if the period is smaller that the main counter period.\n
+    * The trigger may be bypassed when using an external trigger.
+    *
+    * @param dacNum            DAC number
+    * @param pdbDacTriggerMode Control how the DAC trigger is generated
+    * @param period            DAC period in ticks
+    */
+   static void configureDacTriggerInTicks (
+         unsigned          dacNum,
+         PdbDacTriggerMode pdbDacTriggerMode,
+         uint16_t          period = 0) {
+
+      usbdm_assert(dacNum<(sizeof(pdb().DAC)/sizeof(pdb().DAC[0])), "Illegal DAC number");
+
+      usbdm_assert(
+            (pdbDacTriggerMode != PdbDacTriggerMode_External) || (period == 0),
+            "DAC period may not be used with external trigger");
+
+      pdb().DAC[dacNum].INTC = pdbDacTriggerMode;
+      pdb().DAC[dacNum].INT  = period - 1;
+   }
+
+   /**
+    * DAC Trigger Control.
+    *
+    * There may be multiple DAC triggers generated if the period is smaller that the main counter period.\n
+    * The trigger may be bypassed when using an external trigger.
+    *
+    * @param dacNum            DAC number
+    * @param pdbDacTriggerMode Controls how the DAC trigger is generated
+    * @param period            Interval used to calculate the reload value for DAC interval counter
+    */
+   static void configureDacTrigger(
+         unsigned          dacNum,
+         PdbDacTriggerMode pdbDacTriggerMode,
+         float             period) {
+
+      configureDacTriggerInTicks(dacNum, pdbDacTriggerMode, convertSecondsToTicks(period));
+   }
+
+   /**
+    * Disable DAC Trigger associated with a DAC.
+    *
+    * @param dacNum            DAC number
+    */
+   static void disableDacTrigger(unsigned dacNum) {
+
+      usbdm_assert(dacNum<(sizeof(pdb().DAC)/sizeof(pdb().DAC[0])), "Illegal DAC number");
+
+      pdb().DAC[dacNum].INTC = 0;
+   }
+
+   /**
+    * @tparam dacNum The number of the DAC trigger to control
+    */
+   template<unsigned dacNum>
+   class DacTrigger {
+
+      static_assert(dacNum<(sizeof(pdb().DAC)/sizeof(pdb().DAC[0])), "Illegal DAC number");
+
+   public:
+      static constexpr unsigned DAC_NUM = dacNum;
+
+      /**
+       * DAC Trigger Control
+       *
+       * There may be multiple DAC triggers generated if the period is smaller that the main counter period.\n
+       * The trigger may be bypassed when using an external trigger.
+       *
+       * @param pdbDacTriggerMode Control how the DAC trigger is generated
+       * @param period            Reload value for DAC interval counter
+       */
+      static void configureInTicks (
+            PdbDacTriggerMode pdbDacTriggerMode,
+            uint16_t          period = 0) {
+
+         PdbBase_T::configureDacTriggerInTicks(dacNum, pdbDacTriggerMode, period);
+      }
+
+      /**
+       * DAC Trigger Control
+       *
+       * There may be multiple DAC triggers generated if the period is smaller that the main counter period.\n
+       * The trigger may be bypassed when using an external trigger.
+       *
+       * @param pdbDacTriggerMode Control how the DAC trigger is generated
+       * @param period           Interval used to calculate the reload value for DAC interval counter
+       */
+      static void configure(
+            PdbDacTriggerMode pdbDacTriggerMode,
+            float             period) {
+
+         PdbBase_T::configureDacTrigger(dacNum, pdbDacTriggerMode, period);
+      }
+
+      /**
+       * Disable DAC Trigger Control
+       */
+      static void disable() {
+
+         PdbBase_T::disableDacTrigger(dacNum);
+      }
+
+   };
+#endif
+
+#if PDB_POnDLY_COUNT>0
+   /**
+    * Configure pulse outputs.
+    * The pulse outputs are usually associated with comparators.
+    *
+    * @param outputNum        Pulse output number
+    * @param pulseHighDelay   Delay in ticks to start of pulse output
+    * @param pulseLowDelay    Delay in ticks to end of pulse output
+    */
+   static void configurePulseOutputInTicks(
+         unsigned outputNum,
+         uint16_t pulseHighDelay,
+         uint16_t pulseLowDelay) {
+
+      usbdm_assert(outputNum < (sizeof(pdb().POnDLY)/sizeof(pdb().POnDLY[0])), "Illegal pulse output");
+
+      pdb().POEN |= (1<<outputNum);
+      pdb().POnDLY[outputNum].DLY1 = pulseHighDelay;
+      pdb().POnDLY[outputNum].DLY2 = pulseLowDelay;
+   }
+
+   /**
+    * Configure pulse outputs.
+    * The pulse outputs are usually associated with comparators.
+    *
+    * @param outputNum        Pulse output number
+    * @param pulseHighDelay  Delay in ticks to start of pulse output
+    * @param pulseLowDelay    Delay in ticks to end of pulse output
+    */
+   static void configurePulseOutput(
+         unsigned outputNum,
+         float    pulseHighDelay,
+         float    pulseLowDelay) {
+
+      configurePulseOutputInTicks(outputNum,
+            convertSecondsToTicks(pulseHighDelay),
+            convertSecondsToTicks(pulseLowDelay));
+   }
+
+   /**
+    * Disable a pulse output.
+    *
+    * @param outputNum        Pulse output number
+    */
+   static void disablePulseOutput(unsigned outputNum) {
+
+      usbdm_assert((1<<outputNum) <= PDB_POEN_POEN_MASK, "Illegal pulse output");
+      pdb().POEN &= ~(1<<outputNum);
+   }
+
+   /**
+    * @tparam outputNum Pulse output number.  Usually corresponds to a comparator.
+    */
+   template<unsigned outputNum>
+   class CmpPulseOutput {
+
+      static_assert(outputNum < (sizeof(pdb().POnDLY)/sizeof(pdb().POnDLY[0])), "Illegal pulse output");
+
+   public:
+      static constexpr unsigned PULSE_NUM = outputNum;
+
+      /**
+       * Configure pulse outputs.
+       * The pulse outputs are usually associated with comparators.
+       *
+       * @param pulseHighDelay   Delay in ticks to start of pulse output
+       * @param pulseLowDelay    Delay in ticks to end of pulse output
+       */
+      static void configureInTicks(
+            uint16_t pulseHighDelay,
+            uint16_t pulseLowDelay) {
+
+         PdbBase_T::configurePulseOutputInTicks(outputNum, pulseHighDelay, pulseLowDelay);
+      }
+
+      /**
+       * Configure pulse outputs.
+       * The pulse outputs are usually associated with comparators.
+       *
+       * @param pulseHighDelay   Delay in ticks to start of pulse output
+       * @param pulseLowDelay    Delay in ticks to end of pulse output
+       */
+      static void configure(
+            float    pulseHighDelay,
+            float    pulseLowDelay) {
+
+         PdbBase_T::configurePulseOutput(outputNum, pulseHighDelay, pulseLowDelay);
+      }
+
+      /**
+       * Disable pulse output
+       */
+      static void disable() {
+         pdb().POEN &= ~(1<<outputNum);
+      }
+   };
+#endif
 };
 
-template<class Info> PDBCallbackFunction PdbBase_T<Info>::callback = PdbBase_T<Info>::illegalInterruptHandler;
-template<class Info> PDBCallbackFunction PdbBase_T<Info>::errorCallback = PdbBase_T<Info>::illegalInterruptHandler;
+template<class Info> PDBCallbackFunction PdbBase_T<Info>::sCallback      = PdbBase_T<Info>::unhandledCallback;
+template<class Info> PDBCallbackFunction PdbBase_T<Info>::sErrorCallback = PdbBase_T<Info>::unhandledCallback;
 
 #ifdef USBDM_PDB_IS_DEFINED
 /**
@@ -643,6 +1050,14 @@ class Pdb : public PdbBase_T<PdbInfo> {};
  * Class representing PDB
  */
 class Pdb0 : public PdbBase_T<Pdb0Info> {};
+
+#endif
+
+#ifdef USBDM_PDB1_IS_DEFINED
+/**
+ * Class representing PDB
+ */
+class Pdb1 : public PdbBase_T<Pdb1Info> {};
 
 #endif
 

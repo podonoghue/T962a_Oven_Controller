@@ -31,7 +31,7 @@ namespace USBDM {
  *  Enables and selects polarity of EWM hardware input
  */
 enum EwmInput {
-   EwmInput_Disable     = EWM_CTRL_INEN(0)|EWM_CTRL_ASSIN(0), //!< EWM_in Pin disabled
+   EwmInput_Disabled    = EWM_CTRL_INEN(0)|EWM_CTRL_ASSIN(0), //!< EWM_in Pin disabled
    EwmInput_ActiveLow   = EWM_CTRL_INEN(1)|EWM_CTRL_ASSIN(0), //!< EWM_in Pin activeLow
    EwmInput_ActiveHighe = EWM_CTRL_INEN(1)|EWM_CTRL_ASSIN(1), //!< EWM_in Pin activeHigh
 };
@@ -77,14 +77,7 @@ protected:
    }
 
    /** Callback function for ISR */
-   static EWMCallbackFunction callback;
-
-   /**
-    * Clock register for peripheral
-    *
-    * @return Reference to clock register
-    */
-   static __attribute__((always_inline)) volatile uint32_t &clockReg() { return Info::clockReg(); }
+   static EWMCallbackFunction sCallback;
 
 public:
    /**
@@ -99,19 +92,21 @@ public:
     */
    static void irqHandler() {
       // Call handler
-      callback();
+      sCallback();
    }
 
    /**
     * Set callback function
     *
-    * @param[in]  theCallback Callback function to execute on interrupt
+    * @param[in] callback Callback function to execute on interrupt.\n
+    *                     Use nullptr to remove callback.
     */
-   static void setCallback(EWMCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         theCallback = unhandledCallback;
+   static void setCallback(EWMCallbackFunction callback) {
+      usbdm_assert(Info::irqHandlerInstalled, "EWM not configured for interrupts");
+      if (callback == nullptr) {
+         callback = unhandledCallback;
       }
-      callback = theCallback;
+      sCallback = callback;
    }
 
 public:
@@ -134,7 +129,7 @@ public:
       }
 
       // Enable clock to CMP interface
-      clockReg() |= Info::clockMask;
+      Info::enableClock();
    }
 
    /**
@@ -252,24 +247,32 @@ public:
     * Disable interface to EWM
     */
    static void disable() {
-      clockReg() &= ~Info::clockMask;
+      Info::disableClock();
    }
 
    /**
-    * Enable/disable interrupts in NVIC
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicInterrupts() {
+      enableNvicInterrupt(Info::irqNums[0]);
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
     *
-    * @param[in]  enable        True => enable, False => disable
     * @param[in]  nvicPriority  Interrupt priority
     */
-   static void enableNvicInterrupts(bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
+   static void enableNvicInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(Info::irqNums[0], nvicPriority);
+   }
 
-      if (enable) {
-         enableNvicInterrupt(Info::irqNums[0], nvicPriority);
-      }
-      else {
-         // Disable interrupts
-         NVIC_DisableIRQ(Info::irqNums[0]);
-      }
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicInterrupts() {
+      NVIC_DisableIRQ(Info::irqNums[0]);
    }
 
    /**
@@ -287,7 +290,7 @@ public:
    }
 };
 
-template<class Info> EWMCallbackFunction EwmBase_T<Info>::callback = EwmBase_T<Info>::unhandledCallback;
+template<class Info> EWMCallbackFunction EwmBase_T<Info>::sCallback = EwmBase_T<Info>::unhandledCallback;
 
 #if defined(USBDM_EWM_IS_DEFINED)
 class Ewm : public EwmBase_T<EwmInfo> {};

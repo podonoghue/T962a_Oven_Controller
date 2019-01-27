@@ -138,28 +138,33 @@ protected:
    };
 
    /** Callback function for ISR */
-   static LLWUCallbackFunction callback;
+   static LLWUCallbackFunction sCallback;
+
+   /** Callback to catch unhandled interrupt */
+   static void unhandledCallback() {
+      setAndCheckErrorCode(E_NO_HANDLER);
+   }
 
 public:
    /**
     * IRQ handler
     */
    static void irqHandler(void) {
-      if (callback != 0) {
-         callback();
-      }
-      else {
-         setAndCheckErrorCode(E_NO_HANDLER);
-      }
+      sCallback();
    }
 
    /**
     * Set Callback function
     *
-    *   @param[in]  theCallback - Callback function to be executed on LLWU interrupt
+    *   @param[in]  callback Callback function to be executed on interrupt\n
+    *                        Use nullptr to remove callback.
     */
-   static void setCallback(LLWUCallbackFunction theCallback) {
-      callback = theCallback;
+   static void setCallback(LLWUCallbackFunction callback) {
+      usbdm_assert(Info::irqHandlerInstalled, "LLWU not configured for interrupts");
+      if (callback == nullptr) {
+         callback = unhandledCallback;
+      }
+      sCallback = callback;
    }
 
 protected:
@@ -435,20 +440,28 @@ public:
    }
 
    /**
-    * Enable/disable interrupts in NVIC
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicInterrupts() {
+      enableNvicInterrupt(Info::irqNums[0]);
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
     *
-    * @param[in]  enable        True => enable, False => disable
     * @param[in]  nvicPriority  Interrupt priority
     */
-   static void enableNvicInterrupts(bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
+   static void enableNvicInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(Info::irqNums[0], nvicPriority);
+   }
 
-      if (enable) {
-         enableNvicInterrupt(Info::irqNums[0], nvicPriority);
-      }
-      else {
-         // Disable interrupts
-         NVIC_DisableIRQ(Info::irqNums[0]);
-      }
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicInterrupts() {
+      NVIC_DisableIRQ(Info::irqNums[0]);
    }
 
    template<LlwuPin llwuPin>
@@ -468,7 +481,7 @@ public:
        * This will map the pin to the LLWU function (mux value) \n
        * The clock to the port will be enabled before changing the PCR
        *
-       * @tparam llwuPin          LLWU pin to configure e.g. LlwuPin_Pte1
+       * @tparam llwuPin LLWU pin to configure e.g. LlwuPin_Pte1
        *
        * @param[in]  pinPull          One of PinPull_None, PinPull_Up, PinPull_Down
        * @param[in]  pinAction        One of PinAction_None, etc (defaults to PinAction_None)
@@ -493,8 +506,8 @@ public:
       /**
        * Set callback for Pin interrupts
        *
-       * @param[in] callback The function to call on Pin interrupt. \n
-       *                     nullptr to indicate none
+       * @param[in] pinCallback The function to call on Pin interrupt. \n
+       *                        nullptr to indicate none
        *
        * @return E_NO_ERROR            No error
        * @return E_HANDLER_ALREADY_SET Handler already set
@@ -507,20 +520,33 @@ public:
       }
 
       /**
-       * Enable/disable Pin interrupts in NVIC.
+       * Enable Pin interrupts in NVIC
        * Any pending NVIC interrupts are first cleared.
-       *
-       * @param[in]  enable        True => enable, False => disable
-       * @param[in]  nvicPriority  Interrupt priority
        */
-      static void enableNvicInterrupts(bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
-         Pcr::enableNvicInterrupts(enable, nvicPriority);
+      static void enablePinNvicInterrupts() {
+         Pcr::enableNvicInterrupt();
       }
 
+      /**
+       * Enable and set priority of Pin interrupts in NVIC
+       * Any pending NVIC interrupts are first cleared.
+       *
+       * @param[in]  nvicPriority  Interrupt priority
+       */
+      static void enablePinNvicInterrupts(uint32_t nvicPriority) {
+         Pcr::enableNvicInterrupt(nvicPriority);
+      }
+
+      /**
+       * Disable Pin interrupts in NVIC
+       */
+      static void disablePinNvicInterrupts() {
+         Pcr::disableNvicInterrupts();
+      }
    };
 };
 
-template<class Info> LLWUCallbackFunction LlwuBase_T<Info>::callback = 0;
+template<class Info> LLWUCallbackFunction LlwuBase_T<Info>::sCallback = LlwuBase_T<Info>::unhandledCallback;
 
 #ifdef USBDM_LLWU_IS_DEFINED
 /**

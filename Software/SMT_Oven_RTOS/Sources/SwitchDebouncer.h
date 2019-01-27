@@ -134,8 +134,8 @@ private:
    /** Buffer to implement peek() */
    SwitchValue lookaheadKey;
 
-   uint debounceCount = 0;
-   uint lastSnapshot  = 0;
+   unsigned debounceCount = 0;
+   unsigned lastSnapshot  = 0;
 
    /**
     * Get Key from queue

@@ -37,7 +37,7 @@
 <stringAttribute key="net.sourceforge.usbdm.gdb.serverType" value="SERVER_SOCKET"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.setPcRegister" value="false"/>
 <stringAttribute key="net.sourceforge.usbdm.gdb.stopAtMainAddress" value="main"/>
-<stringAttribute key="net.sourceforge.usbdm.gdb.targetVdd" value="BDM_TARGET_VDD_OFF"/>
+<stringAttribute key="net.sourceforge.usbdm.gdb.targetVdd" value="BDM_TARGET_VDD_3V3"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.trimClock" value="false"/>
 <intAttribute key="net.sourceforge.usbdm.gdb.ttyPort" value="4321"/>
 <booleanAttribute key="net.sourceforge.usbdm.gdb.useDebugVersion" value="false"/>

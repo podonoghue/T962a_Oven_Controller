@@ -131,7 +131,7 @@ public:
     *
     * @param lineCoding Line coding information
     */
-   static void setLineCoding(LineCodingStructure * const lineCoding) {
+   static void setLineCoding(LineCodingStructure *const lineCoding) {
       getLineCoding() = *lineCoding;
    }
 
@@ -159,7 +159,6 @@ public:
    static void sendBreak(uint16_t length) {
       (void)length;
    }
-
 }; // class CDC_interface
 
 }; // end namespace USBDM

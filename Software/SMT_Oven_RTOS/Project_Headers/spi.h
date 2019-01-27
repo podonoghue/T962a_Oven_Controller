@@ -101,8 +101,8 @@ enum SpiTxCompleteInterrupt {
  * Controls DSPI Finished interrupts (EOQF flag)
  */
 enum SpiEndOfQueueInterrupt {
-   SpiEndOfQueueInterrupt_Disable   = SPI_RSER_EOQF_RE(0),   // DSPI Finished Request Disabled
-   SpiEndOfQueueInterrupt_Enable    = SPI_RSER_EOQF_RE(1),   // DSPI Finished Request Enable (EOQF flag)
+   SpiEndOfQueueInterrupt_Disabled   = SPI_RSER_EOQF_RE(0),   // DSPI Finished Request Disabled
+   SpiEndOfQueueInterrupt_Enabled    = SPI_RSER_EOQF_RE(1),   // DSPI Finished Request Enable (EOQF flag)
 };
 /**
  * Select which Peripheral Select Line to assert during transaction
@@ -583,7 +583,7 @@ public:
     */
    void configureInterrupts(
          SpiTxCompleteInterrupt     spiTxCompleteInterrupt     = SpiTxCompleteInterrupt_Disabled,
-         SpiEndOfQueueInterrupt     spiEndOfQueueInterrupt     = SpiEndOfQueueInterrupt_Disable,
+         SpiEndOfQueueInterrupt     spiEndOfQueueInterrupt     = SpiEndOfQueueInterrupt_Disabled,
          SpiFifoUnderflowInterrupt  spiFifoUnderflowInterrupt  = SpiFifoUnderflowInterrupt_Disabled,
          SpiFifoOverflowInterrupt   spiFifoOverflowInterrupt   = SpiFifoOverflowInterrupt_Disabled
          ) {
@@ -622,30 +622,29 @@ public:
 
 protected:
    /** Callback function for ISR */
-   static SpiCallbackFunction callback;
+   static SpiCallbackFunction sCallback;
 
 public:
    /**
     * IRQ handler
     */
    static void irqHandler() {
-      callback(SpiBase_T<Info>::getStatus());
+      sCallback(SpiBase_T<Info>::getStatus());
    }
 
    /**
     * Set Callback function\n
     *
-    * @param[in] theCallback Callback function to execute on interrupt.\n
-    *                        nullptr to indicate none
+    *  @param[in]  callback  Callback function to be executed on interrupt.\n
+    *                        Use nullptr to remove callback.
     */
-   static __attribute__((always_inline)) void setCallback(SpiCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
+   static __attribute__((always_inline)) void setCallback(SpiCallbackFunction callback) {
+      usbdm_assert(Info::irqHandlerInstalled, "SPI not configure for interrupts");
+      if (callback == nullptr) {
          callback = Spi::unhandledCallback;
-         return;
       }
-      callback = theCallback;
+      sCallback = callback;
    }
-
 
 #ifdef __CMSIS_RTOS
 protected:
@@ -685,7 +684,7 @@ public:
          setConfiguration(configuration);
       }
       else {
-         setCmsisErrorCode(status);
+         CMSIS::setCmsisErrorCode(status);
       }
       return status;
    }
@@ -710,7 +709,7 @@ public:
          spi->MCR &= ~SPI_MCR_HALT_MASK;
       }
       else {
-         setCmsisErrorCode(status);
+         CMSIS::setCmsisErrorCode(status);
       }
       return status;
    }
@@ -729,7 +728,7 @@ public:
       spi->MCR |= SPI_MCR_HALT_MASK;
       osStatus status = mutex().release();
       if (status != osOK) {
-         setCmsisErrorCode(status);
+         CMSIS::setCmsisErrorCode(status);
       }
       return status;
    }
@@ -808,7 +807,7 @@ public:
       }
 
       // Enable SPI module clock
-      Info::clockReg() |= Info::clockMask;
+      Info::enableClock();
       __DMB();
 
       spi->MCR =
@@ -895,7 +894,7 @@ void __attribute__((noinline)) Spi::txRx(uint32_t dataSize, const T *txData, T *
    }
 }
 
-template<class Info> SpiCallbackFunction SpiBase_T<Info>::callback = Spi::unhandledCallback;
+template<class Info> SpiCallbackFunction SpiBase_T<Info>::sCallback = Spi::unhandledCallback;
 
 #if defined(USBDM_SPI0_IS_DEFINED)
 /**

@@ -121,10 +121,11 @@ public:
             CmpPower_HighSpeed,
             CmpHysteresis_3,
             CmpPolarity_Noninverted);
-      Vmains::configureDac(32, CmpDacSource_Vdd);
+      Vmains::configureDac(32, CmpDacSource_Vdda);
       Vmains::selectInputs(Cmp0Input_CmpIn1,Cmp0Input_DacRef);
       Vmains::setCallback(callbackFunction);
       Vmains::enableInterrupts(CmpInterrupt_Both);
+      Vmains::enableNvicInterrupts(NvicPriority_Normal);
    }
 
 public:

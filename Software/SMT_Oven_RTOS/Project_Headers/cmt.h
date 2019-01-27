@@ -80,16 +80,16 @@ enum CmtMode {
  * Controls Extended space operation
  */
 enum CmtExtendedSpace {
-   CmtExtendedSpace_Disable  = CMT_MSC_EXSPC(0), //!< Enables to usual operation
-   CmtExtendedSpace_Enable   = CMT_MSC_EXSPC(1), //!< Forces subsequent cycles to be spaces
+   CmtExtendedSpace_Disabled  = CMT_MSC_EXSPC(0), //!< Enables to usual operation
+   CmtExtendedSpace_Enabled   = CMT_MSC_EXSPC(1), //!< Forces subsequent cycles to be spaces
 };
 
 /**
  *  Enables/Disabled CMT output
  */
 enum CmtOutput {
-   CmtOutput_Disable = CMT_OC_IROPEN(0), //!< IRO Pin disabled
-   CmtOutput_Enable  = CMT_OC_IROPEN(1), //!< IRO Pin enabled
+   CmtOutput_Disabled = CMT_OC_IROPEN(0), //!< IRO Pin disabled
+   CmtOutput_Enabled  = CMT_OC_IROPEN(1), //!< IRO Pin enabled
 };
 
 /**
@@ -146,14 +146,7 @@ protected:
    }
 
    /** Callback function for ISR */
-   static CMTCallbackFunction callback;
-
-   /**
-    * Clock register for peripheral
-    *
-    * @return Reference to clock register
-    */
-   static __attribute__((always_inline)) volatile uint32_t &clockReg() { return Info::clockReg(); }
+   static CMTCallbackFunction sCallback;
 
 public:
    /**
@@ -184,21 +177,23 @@ public:
     */
    static void irqHandler() {
       // Call handler
-      callback();
+      sCallback();
    }
 
    /**
     * Set callback function.
     *
-    * @param[in]  theCallback Callback function to execute on interrupt
+    * @param[in] callback Callback function to execute on interrupt.\n
+    *                     Use nullptr to remove callback.
     *
     * @note It is expected that the callback will clear the status flag that triggered the interrupt. See getStatus().
     */
-   static void setCallback(CMTCallbackFunction theCallback) {
-      if (theCallback == nullptr) {
-         theCallback = unhandledCallback;
+   static void setCallback(CMTCallbackFunction callback) {
+      usbdm_assert(Info::irqHandlerInstalled, "CMT not configured for interrupts");
+      if (callback == nullptr) {
+         callback = unhandledCallback;
       }
-      callback = theCallback;
+      sCallback = callback;
    }
 
 public:
@@ -220,7 +215,7 @@ public:
       }
 
       // Enable clock to CMP interface
-      clockReg() |= Info::clockMask;
+      Info::enableClock();
    }
 
    /**
@@ -309,7 +304,7 @@ public:
     *
     * @param[in] cmtExtendedSpace Allows Forcing of subsequent cycles to be spaces
     */
-   static void setExtendedSpace(CmtExtendedSpace cmtExtendedSpace=CmtExtendedSpace_Enable) {
+   static void setExtendedSpace(CmtExtendedSpace cmtExtendedSpace=CmtExtendedSpace_Enabled) {
       cmt().MSC = (cmt().MSC&~CMT_MSC_EXSPC(1))|cmtExtendedSpace;
    }
 
@@ -429,25 +424,33 @@ public:
     */
    static void disable() {
       cmt().MSC = 0;
-      enableNvicInterrupts(false);
-      clockReg() &= ~Info::clockMask;
+      disableNvicInterrupts();
+      Info::disableClock();
    }
 
    /**
-    * Enable/disable interrupts in NVIC
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicInterrupts() {
+      enableNvicInterrupt(Info::irqNums[0]);
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
     *
-    * @param[in]  enable        True => enable, False => disable
     * @param[in]  nvicPriority  Interrupt priority
     */
-   static void enableNvicInterrupts(bool enable=true, uint32_t nvicPriority=NvicPriority_Normal) {
+   static void enableNvicInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(Info::irqNums[0], nvicPriority);
+   }
 
-      if (enable) {
-         enableNvicInterrupt(Info::irqNums[0], nvicPriority);
-      }
-      else {
-         // Disable interrupts
-         NVIC_DisableIRQ(Info::irqNums[0]);
-      }
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicInterrupts() {
+      NVIC_DisableIRQ(Info::irqNums[0]);
    }
 
    /**
@@ -473,7 +476,7 @@ public:
    }
 };
 
-template<class Info> CMTCallbackFunction CmtBase_T<Info>::callback = CmtBase_T<Info>::unhandledCallback;
+template<class Info> CMTCallbackFunction CmtBase_T<Info>::sCallback = CmtBase_T<Info>::unhandledCallback;
 
 #if defined(USBDM_CMT_IS_DEFINED)
 class Cmt : public CmtBase_T<CmtInfo> {};

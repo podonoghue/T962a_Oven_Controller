@@ -52,8 +52,7 @@ enum FlashDriverError_t {
 class Flash : public FtflInfo {
 
 public:
-  
-   // Sector size for program flash (minimum erase element)
+    // Sector size for program flash (minimum erase element)
    static constexpr unsigned programFlashSectorSize = 2048;
 
    // Phrase size for program flash (minimum programming element)
@@ -239,7 +238,7 @@ public:
     * @return false => Processor not in correct mode
     */
    static bool isFlashAvailable() {
-      return (Smc::getStatus() == SmcStatus_run);
+      return (Smc::getStatus() == SmcStatus_RUN);
    }
 
    /**
@@ -254,6 +253,56 @@ public:
       return
             isFlashAvailable() &&
             waitForFlashReady();
+   }
+
+   /**
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicInterrupts() {
+      NVIC_EnableIRQ(irqNums[0]);
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    *
+    * @param[in]  nvicPriority  Interrupt priority
+    */
+   static void enableNvicInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(irqNums[0], nvicPriority);
+   }
+
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicInterrupts() {
+      NVIC_DisableIRQ(irqNums[0]);
+   }
+
+   /**
+    * Enable interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    */
+   static void enableNvicCollisionInterrupts() {
+      NVIC_EnableIRQ(irqNums[1]);
+   }
+
+   /**
+    * Enable and set priority of interrupts in NVIC
+    * Any pending NVIC interrupts are first cleared.
+    *
+    * @param[in]  nvicPriority  Interrupt priority
+    */
+   static void enableNvicCollisionInterrupts(uint32_t nvicPriority) {
+      enableNvicInterrupt(irqNums[1], nvicPriority);
+   }
+
+   /**
+    * Disable interrupts in NVIC
+    */
+   static void disableNvicCollisionInterrupts() {
+      NVIC_DisableIRQ(irqNums[1]);
    }
 
 private:

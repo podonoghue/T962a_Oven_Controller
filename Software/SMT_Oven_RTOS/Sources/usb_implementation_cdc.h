@@ -41,7 +41,7 @@ namespace USBDM {
 //
 
 /** Causes a semi-unique serial number to be generated for each USB device */
-//#define UNIQUE_ID
+#define UNIQUE_ID
 
 
 #ifdef UNIQUE_ID
@@ -73,9 +73,11 @@ static constexpr unsigned  CDC_DATA_IN_EP_MAXSIZE       = 16; //!< CDC data in
  */
 class Usb0 : public UsbBase_T<Usb0Info, CONTROL_EP_MAXSIZE> {
 
+   // Allow superclass to access handleTokenComplete(void);
    friend UsbBase_T<Usb0Info, CONTROL_EP_MAXSIZE>;
 
 public:
+
    /**
     * String indexes
     *
@@ -152,16 +154,16 @@ protected:
    /* end-points */
    /** In end-point for CDC notifications */
    static InEndpoint  <Usb0Info, Usb0::CDC_NOTIFICATION_ENDPOINT, CDC_NOTIFICATION_EP_MAXSIZE>  epCdcNotification;
-   
+
    /** Out end-point for CDC data out */
    static OutEndpoint <Usb0Info, Usb0::CDC_DATA_OUT_ENDPOINT,     CDC_DATA_OUT_EP_MAXSIZE>      epCdcDataOut;
-   
+
    /** In end-point for CDC data in */
    static InEndpoint  <Usb0Info, Usb0::CDC_DATA_IN_ENDPOINT,      CDC_DATA_IN_EP_MAXSIZE>       epCdcDataIn;
    /*
     * TODO Add additional End-points here
     */
-	
+
    using cdcInterface = RemoteInterface;
    static cdcInterface::Response  *response;
 
@@ -177,16 +179,16 @@ public:
    /**
     * CDC Transmit
     *
-    * @param data Pointer to data to transmit
-    * @param size Number of bytes to transmit
+    * @param[in] data Pointer to data to transmit
+    * @param[in] size Number of bytes to transmit
     */
    static void sendCdcData(const uint8_t *data, unsigned size);
 
    /**
     * CDC Receive
     *
-    * @param data    Pointer to data to receive
-    * @param maxSize Maximum number of bytes to receive
+    * @param[in] data    Pointer to data to receive
+    * @param[in] maxSize Maximum number of bytes to receive
     *
     * @return Number of bytes received
     */
@@ -269,7 +271,7 @@ protected:
     * Checks for data and schedules transfer as necessary\n
     * Each transfer will have a ZLP as necessary.
     *
-    * @param state Current end-point state
+    * @param[in] state Current end-point state
     */
    static void cdcInTransactionCallback(EndpointState state);
 
@@ -277,7 +279,7 @@ protected:
     * Call-back handling CDC-OUT transaction complete\n
     * Data received is passed to the cdcInterface
     *
-    * @param state Current end-point state
+    * @param[in] state Current end-point state
     */
    static void cdcOutTransactionCallback(EndpointState state);
 
@@ -301,7 +303,7 @@ protected:
    /**
     * Handle SETUP requests not handled by base handler
     *
-    * @param setup SETUP packet received from host
+    * @param[in] setup SETUP packet received from host
     *
     * @note Provides CDC extensions
     */

@@ -3,17 +3,6 @@
  * @brief   Basic UART routines for console
  * @date    13 June 2015
  */
-#ifndef CONSOLE_H_
-#define CONSOLE_H_
-
-#include <derivative.h>
-#include "hardware.h"
-#if defined(USBDM_UART0_IS_DEFINED) || defined(USBDM_UART1_IS_DEFINED) || defined(USBDM_UART2_IS_DEFINED) || defined(USBDM_UART3_IS_DEFINED) || defined(USBDM_UART4_IS_DEFINED)
-#include "uart.h"
-#endif
-#if defined(USBDM_LPUART0_IS_DEFINED) || defined(USBDM_LPUART1_IS_DEFINED) || defined(USBDM_LPUART2_IS_DEFINED)
-#include "lpuart.h"
-#endif
 
  /*
  * *****************************
@@ -24,6 +13,17 @@
  * Any manual changes will be lost.
  */
 
+#ifndef INCLUDE_USBDM_CONSOLE_H_
+#define INCLUDE_USBDM_CONSOLE_H_
+#include <derivative.h>
+#include "hardware.h"
+
+#if defined(USBDM_UART0_IS_DEFINED) || defined(USBDM_UART1_IS_DEFINED) || defined(USBDM_UART2_IS_DEFINED) || defined(USBDM_UART3_IS_DEFINED) || defined(USBDM_UART4_IS_DEFINED)
+#include "uart.h"
+#endif
+#if defined(USBDM_LPUART0_IS_DEFINED) || defined(USBDM_LPUART1_IS_DEFINED) || defined(USBDM_LPUART2_IS_DEFINED)
+#include "lpuart.h"
+#endif
 
 #define USE_CONSOLE 1
 
@@ -33,8 +33,8 @@
 namespace USBDM {
 
 /**
- * @addtogroup CONSOLE_Group Console, Console
- * @brief Console serial interface
+ * @addtogroup CONSOLE_Group Console, Console Interface
+ * @brief Abstraction for Console Interface
  * @{
  */
 
@@ -91,4 +91,4 @@ int  console_rxChar(void);
 
 #endif /* USE_CONSOLE */
 
-#endif /* CONSOLE_H_ */
+#endif /* INCLUDE_USBDM_CONSOLE_H_ */

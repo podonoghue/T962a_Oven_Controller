@@ -119,7 +119,6 @@
    <item key="/CMP0/cmp_muxcr_msel"                        value="7" />
    <item key="/CMP0/cmp_muxcr_psel"                        value="1" />
    <item key="/CMP0/irqHandlingMethod"                     value="$ClassMethod" />
-   <item key="/FTFL/EepromSize"                            value="eeprom2KBytes" />
    <item key="/FTFL/peripheral_file"                       value="ftfl_64k_flexrom" />
    <item key="/FTM0/ftm_sc_ps"                             value="7" />
    <item key="/FTM0/minimumResolution"                     value="50" />
@@ -139,8 +138,8 @@
    <item key="/SIM/system_bus_clock[2]"                    value="40000000" />
    <item key="/SIM/system_core_clock[1]"                   value="4000000" />
    <item key="/SIM/system_core_clock[2]"                   value="40000000" />
-   <item key="/SIM/system_erclk32k_clock"                  value="0" />
    <item key="/SIM/system_flash_clock[1]"                  value="1000000" />
    <item key="/SIM/system_flash_clock[2]"                  value="20000000" />
    <item key="/USB0/irqHandlingMethod"                     value="$ClassMethod" />
+   <item key="/USB0/irqLevel"                              value="1" />
 </section>
