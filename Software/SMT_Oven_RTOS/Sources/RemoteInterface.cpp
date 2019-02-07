@@ -125,7 +125,7 @@ bool parseProfile(char *cmd) {
       return false;
    }
 
-   strncpy(profile.description, tok, sizeof(profile.description));
+   strncpy(profile.description, tok, sizeof(profile.description)-1);
    tok = strtok(nullptr, ",");
    if (tok == nullptr) {
       return false;

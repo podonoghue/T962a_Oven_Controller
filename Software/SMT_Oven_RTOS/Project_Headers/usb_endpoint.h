@@ -41,9 +41,8 @@ enum EndpointState {
    EPDataOut,   //!< Doing a sequence of OUT packets
    EPStatusIn,  //!< Doing an IN packet as a status handshake
    EPStatusOut, //!< Doing an OUT packet as a status handshake
-   EPThrottle,  //!< Doing OUT packets but no buffers available (NAKed)
    EPStall,     //!< Endpoint is stalled
-   EPComplete,  //!< Used for command protocol - new command available
+//   EPComplete,  //!< Used for command protocol - new command transfer available
 };
 
 /**
@@ -55,26 +54,38 @@ public:
    /**
     * Get name of USB state
     *
-    * @param[in]  state USB state
+    * @param[in]  state Endpoint state
     *
     * @return Pointer to static string
     */
-   static const char *getStateName(EndpointState state){
-      switch (state) {
-         default         : return "Unknown";
-         case EPIdle     : return "EPIdle";
-         case EPDataIn   : return "EPDataIn";
-         case EPDataOut  : return "EPDataOut,";
-         case EPStatusIn : return "EPStatusIn";
-         case EPStatusOut: return "EPStatusOut";
-         case EPThrottle : return "EPThrottle";
-         case EPStall    : return "EPStall";
-         case EPComplete : return "EPComplete";
+   static const char *getStateName(EndpointState state) {
+      static const char *names[] = {
+         "EPIdle",
+         "EPDataIn",
+         "EPDataOut,",
+         "EPStatusIn",
+         "EPStatusOut",
+         "EPStall",
+         "EPComplete",
+      };
+      const char *rc = "Unknown";
+      if (state<(sizeof(names)/sizeof(names[0]))) {
+         rc = names[state];
       }
+      return rc;
+   }
+
+   /**
+    * Get name of USB state
+    *
+    * @return Pointer to static string
+    */
+   const char *getStateName() {
+      return getStateName(fState);
    }
 
 protected:
-   /** Data 0/1 Transmit flag */
+   /** Data 0/1 flag */
    volatile DataToggle fDataToggle;
 
    /** Odd/Even Transmit buffer flag */
@@ -93,11 +104,14 @@ protected:
    volatile bool fNeedZLP;
 
    /**
-    *  Callback used on completion of transaction
+    *  Callback used on completion of data and handshake phases of transaction.
+    *  This routine is called:\n
+    *  - After an IN transaction with endpointState = EPDataIn, EPStatusIn.\n
+    *  - After an OUT transaction with endpointState = EPDataOut, EPStatusOut.
     *
-    * @param[in]  endpointState State of endpoint before completion \n
-    * e.g. EPDataOut, EPStatusIn, EPLastIn, EPStatusOut\n
-    * The endpoint is in EPIdle state now.
+    * @param[in] endpointState State of endpoint before completion of transaction
+    *
+    * @note The endpoint state will be set to EPIdle before calling this routine.
     */
    void (*fCallback)(EndpointState endpointState);
 
@@ -124,14 +138,15 @@ public:
     * Constructor
     *
     * @param[in]  endpointNumber End-point number
+    * @param[in]  usb            Reference to USB hardware
     */
-   constexpr Endpoint(int endpointNumber, volatile USB_Type &usb) :
+   Endpoint(int endpointNumber, volatile USB_Type &usb) :
             fDataToggle(DataToggle_0),
             fTxOdd(BufferToggle_Even),
             fRxOdd(BufferToggle_Even),
             fState(EPIdle),
             fNeedZLP(false),
-            fCallback(0),
+            fCallback(unsetHandlerCallback),
             fUsb(usb),
             fEndpointNumber(endpointNumber) {
    }
@@ -166,22 +181,22 @@ public:
    }
 
    /**
-    * Clear Stall on endpoint
-    */
-   void clearStall() {
-//      console.WRITELN("EpX.clearStall");
-      usb().ENDPOINT[fEndpointNumber].ENDPT &= ~USB_ENDPT_EPSTALL_MASK;
-      fState       = EPIdle;
-      fDataToggle  = DataToggle_0;
-   }
-
-   /**
     * Set Data toggle
     *
     * @param[in] dataToggle
     */
    void setDataToggle(DataToggle dataToggle) {
       fDataToggle = dataToggle;
+   }
+
+   /**
+    * Clear Stall on endpoint
+    */
+   void clearStall() {
+//      console.WRITELN("EpX.clearStall");
+      usb().ENDPOINT[fEndpointNumber].ENDPT &= ~USB_ENDPT_EPSTALL_MASK;
+      setState(EPIdle);
+      setDataToggle(DataToggle_0);
    }
 
    /**
@@ -203,7 +218,13 @@ public:
    }
 
    /**
-    * Set callback to execute at end of transaction
+    * Set callback to execute on completion of data and handshake phases of transaction.
+    *
+    *  This callback routine is called with parameter endpointState which is
+    *  the state of endpoint before completion of transaction:\n
+    *  - After an IN transaction with endpointState = EPDataIn, EPStatusIn.\n
+    *  - After an OUT transaction with endpointState = EPDataOut, EPStatusOut.
+    *  The endpoint state will be set to EPIdle <b>before</b> calling this routine.
     *
     * @param[in]  callback The call-back function to execute\n
     *                      May be nullptr to remove callback
@@ -216,12 +237,12 @@ public:
    }
 
    /**
-    *  Indicates that the next IN transaction needs to be
-    *  terminated with ZLP if modulo endpoint size
+    *  Indicates that the next IN transaction needs to be terminated
+    *  with a ZLP if transfer size is multiple of endpoint size
     *
     *  @param[in]  needZLP True to indicate need for ZLPs.
     *
-    *  @note This flag is cleared on each transaction
+    *  @note This flag is cleared during the transaction
     */
    void setNeedZLP(bool needZLP=true) {
       fNeedZLP = needZLP;
@@ -261,7 +282,7 @@ protected:
    /**
     * Get Receive BDT entry to be used for next OUT transaction
     *
-    * @return
+    * @return Receive BDT
     */
    BdtEntry *getFreeBdtReceiveEntry() {
       return fRxOdd?&endPointBdts[ENDPOINT_NUM].rxOdd:&endPointBdts[ENDPOINT_NUM].rxEven;
@@ -270,7 +291,7 @@ protected:
    /**
     * Get Receive BDT entry used for last OUT transaction
     *
-    * @return
+    * @return Receive BDT
     */
    BdtEntry *getCompleteBdtReceiveEntry() {
       return (!fRxOdd)?&endPointBdts[ENDPOINT_NUM].rxOdd:&endPointBdts[ENDPOINT_NUM].rxEven;
@@ -279,7 +300,7 @@ protected:
    /**
     * Get Transmit BDT entry to be used for next IN transaction
     *
-    * @return
+    * @return Transmit BDT
     */
    BdtEntry *getFreeBdtTransmitEntry() {
       return fTxOdd?&endPointBdts[ENDPOINT_NUM].txOdd:&endPointBdts[ENDPOINT_NUM].txEven;
@@ -288,7 +309,7 @@ protected:
    /**
     * Get Transmit BDT entry used for last IN transaction
     *
-    * @return
+    * @return Transmit BDT
     */
    BdtEntry *getCompleteBdtTransmitEntry() {
       return (!fTxOdd)?&endPointBdts[ENDPOINT_NUM].txOdd:&endPointBdts[ENDPOINT_NUM].txEven;
@@ -346,13 +367,13 @@ public:
    }
 
    /**
-    * Start IN transaction [Transmit, device -> host, DATA0/1]
+    * Start IN transaction phase [Transmit, device -> host, DATA0/1]
     *
-    * @param[in]  state   State to adopt for transaction e.g. EPDataIn, EPStatusIn
+    * @param[in]  state   State to adopt for this phase e.g. EPDataIn, EPStatusIn
     * @param[in]  bufSize Size of buffer to send (may be zero)
-    * @param[in]  bufPtr  Pointer to buffer (may be NULL to indicate fDatabuffer is being used directly)
+    * @param[in]  bufPtr  Pointer to external buffer (may be NULL to indicate fDatabuffer is being used directly)
     */
-   void startTxTransaction(EndpointState state, uint8_t bufSize=0, const uint8_t *bufPtr=nullptr) {
+   void startTxPhase(EndpointState state, uint8_t bufSize=0, const uint8_t *bufPtr=nullptr) {
       // Pointer to data
       fDataPtr = (uint8_t*)bufPtr;
 
@@ -366,22 +387,19 @@ public:
       fState = state;
 
       // Configure the BDT for transfer
-      initialiseBdtTx();
+      startTxPacket();
    }
 
    /**
-    * Configure the BDT for next IN [Transmit, device -> host]
+    * Configure the BDT for next IN packet [Transmit, device -> host]
     */
-   void initialiseBdtTx() {
+   void startTxPacket() {
 
       // Get BDT to use
       BdtEntry *bdt = getFreeBdtTransmitEntry();
 
-      if ((endPointBdts[ENDPOINT_NUM].txEven.own == BdtOwner_SIE) ||
-            (endPointBdts[ENDPOINT_NUM].txOdd.own  == BdtOwner_SIE)) {
-         console.WRITELN("Opps-Tx");
-         return;
-      }
+      usbdm_assert(bdt->own == BdtOwner_MCU, "MCU doesn't own BDT!");
+
       uint16_t size = fDataRemaining;
       if (size > EP_MAXSIZE) {
          size = EP_MAXSIZE;
@@ -395,7 +413,7 @@ public:
          // Copy the Transmit data to EP buffer
          (void) memcpy(fDataBuffer, (void*)fDataPtr, size);
 
-         // Pointer to _next_ data
+         // Advance pointer to next data
          fDataPtr += size;
       }
       // Count of transferred bytes
@@ -416,15 +434,13 @@ public:
    }
 
    /**
-    *  Start an OUT transaction [Receive, device <- host, DATA0/1]
+    * Start an OUT transaction phase [Receive, device <- host, DATA0/1]
     *
-    *   @param[in]  state   - State to adopt for transaction e.g. EPIdle, EPDataOut, EPStatusOut
+    *   @param[in]  state   - State to adopt for phase e.g. EPIdle, EPDataOut, EPStatusOut
     *   @param[in]  bufSize - Size of data to transfer (may be zero)
     *   @param[in]  bufPtr  - Buffer for data (may be nullptr)
-    *
-    *   @note The end-point is configured to to accept EP_MAXSIZE packet irrespective of bufSize
     */
-   void startRxTransaction(EndpointState state, uint8_t bufSize=0, uint8_t *bufPtr=nullptr) {
+   void startRxPhase(EndpointState state, uint8_t bufSize=0, uint8_t *bufPtr=nullptr) {
       // Count of bytes transferred
       fDataTransferred     = 0;
       // Total bytes to Receive
@@ -434,16 +450,16 @@ public:
       // State to adopt
       fState               = state;
       // Configure the BDT for transfer
-      initialiseBdtRx();
+      startRxPacket();
    }
 
    /**
-    * Configure the BDT for OUT [Receive, device <- host, DATA0/1]
+    * Configure the BDT for OUT packet [Receive, device <- host, DATA0/1]
     *
-    * @note No action is taken if already configured
-    * @note Always uses EP_MAXSIZE for packet size accepted
+    * @note Always uses EP_MAXSIZE for packet size accepted irrespective of remaining transfer size.\n
+    *       This is necessary to ensure the endpoint can accept a SETUP packet.
     */
-   void initialiseBdtRx() {
+   void startRxPacket() {
 
       // Get BDT to use
       BdtEntry *bdt = getFreeBdtReceiveEntry();
@@ -512,15 +528,15 @@ public:
          case EPDataOut:        // Receiving a sequence of OUT packets
             // Save the data from the Receive buffer
             transferSize = saveRxData();
-            // Completed transfer when undersize packet or received expected number of bytes
             if ((transferSize < EP_MAXSIZE) || (fDataRemaining == 0)) {
+               // Completed transfer when undersize packet or received expected number of bytes
                // Now idle
                fState = EPIdle;
                fCallback(EPDataOut);
             }
             else {
                // Set up for next OUT packet
-               initialiseBdtRx();
+               startRxPacket();
             }
             break;
 
@@ -534,10 +550,9 @@ public:
          case EPDataIn:    // Doing a sequence of IN packets (until data count <= EP_MAXSIZE)
          case EPStatusIn:  // Just done an IN packet as a status handshake
          case EPIdle:      // Idle
-         case EPComplete:  // Not used
          case EPStall:     // Not used
-         case EPThrottle:  // Not used
-            console.WRITE("Unexpected OUT, ep=").WRITE(ENDPOINT_NUM).WRITE(", s=").WRITELN(getStateName(fState));
+         default:
+            console.WRITE("Unexpected OUT, ep=").WRITE(ENDPOINT_NUM).WRITE(", s=").WRITELN(getStateName());
             fState = EPIdle;
             break;
       }
@@ -559,7 +574,7 @@ public:
             // Check if packets remaining
             if ((fDataRemaining > 0) || fNeedZLP) {
                // Set up next IN packet
-               initialiseBdtTx();
+               startTxPacket();
             }
             else {
                fState = EPIdle;
@@ -576,12 +591,12 @@ public:
             fCallback(EPStatusIn);
             break;
 
-            // We don't expect an IN token while in the following states
+         // We don't expect an IN token while in the following states
          case EPIdle:      // Idle (Transmit complete)
          case EPDataOut:   // Doing a sequence of OUT packets (until data count <= EP_MAXSIZE)
          case EPStatusOut: // Doing an OUT packet as a status handshake
          default:
-            console.WRITE("Unexpected IN, ep=").WRITE(ENDPOINT_NUM).WRITE(", s=").WRITELN(getStateName(fState));
+            console.WRITE("Unexpected IN, ep=").WRITE(ENDPOINT_NUM).WRITE(", s=").WRITELN(getStateName());
             fState = EPIdle;
             break;
       }
@@ -599,11 +614,11 @@ class ControlEndpoint : public Endpoint_T<Info, 0, EP0_SIZE> {
 
 public:
    using Endpoint_T<Info, 0, EP0_SIZE>::fState;
-   using Endpoint_T<Info, 0, EP0_SIZE>::initialiseBdtRx;
+   using Endpoint_T<Info, 0, EP0_SIZE>::startRxPacket;
    using Endpoint_T<Info, 0, EP0_SIZE>::getFreeBdtReceiveEntry;
    using Endpoint_T<Info, 0, EP0_SIZE>::usb;
-   using Endpoint_T<Info, 0, EP0_SIZE>::startTxTransaction;
-   using Endpoint_T<Info, 0, EP0_SIZE>::startRxTransaction;
+   using Endpoint_T<Info, 0, EP0_SIZE>::startTxPhase;
+   using Endpoint_T<Info, 0, EP0_SIZE>::startRxPhase;
 
    /**
     * Constructor
@@ -631,34 +646,33 @@ public:
    }
 
    /**
-    * Configure EP0 for an empty status IN transactions [Tx, device -> host, DATA1]\n
-    * Used to acknowledge a DATA out transaction.
+    * Start empty status IN transaction phase [Transmit, device -> host, DATA1]
+    * Used to acknowledge a DATA OUT transaction.
     *
     * State       = EPStatusIn
     * Data Toggle = DATA1
     */
    void startTxStatus() {
       Endpoint::setDataToggle(DataToggle_1);
-      startTxTransaction(EPStatusIn);
+      startTxPhase(EPStatusIn);
    }
 
    /**
-    * Set up for SETUP packet [Rx, host -> device, DATA0]
+    * Start an SETUP transaction phase [Receive, device <- host, DATA0]
     *
     * State       = EPIdle
     * Data Toggle = DATA0
     */
    void startSetupTransaction() {
       Endpoint::setDataToggle(DataToggle_0);
-      startRxTransaction(EPIdle);
+      startRxPhase(EPIdle);
    }
 
    /**
     * Conditionally set up for SETUP packet [Rx, host -> device, DATAx]
     * If already configured for OUT transfer does nothing.
     *
-    * This routine would be used after processing a SETUP transaction
-    * (before processing any data transactions).
+    * This routine would be used after processing a SETUP packet (before data phase).
     *
     * State       = unchanged
     * Data Toggle = unchanged
@@ -669,13 +683,13 @@ public:
 
       if (bdt->own == BdtOwner_MCU) {
          // Make ready for SETUP packet
-         initialiseBdtRx();
+         startRxPacket();
       }
    }
 
    /**
     * Modifies endpoint state after SETUP has been received.
-    * DATA1 is toggle for 1st data transaction
+    * DATA1 is toggle for first packet in data phase
     *
     * State       = EPIdle
     * Data Toggle = DATA1
@@ -701,7 +715,7 @@ protected:
 
 private:
    // Make private
-   using Endpoint_T<Info, ENDPOINT_NUM, EP_MAXSIZE>::startRxTransaction;
+   using Endpoint_T<Info, ENDPOINT_NUM, EP_MAXSIZE>::startRxPhase;
 
 public:
    /**
@@ -739,7 +753,7 @@ protected:
 
 private:
    // Make private
-   using Endpoint_T<Info, ENDPOINT_NUM, EP_MAXSIZE>::startTxTransaction;
+   using Endpoint_T<Info, ENDPOINT_NUM, EP_MAXSIZE>::startTxPhase;
 
 public:
    /**

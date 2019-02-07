@@ -5,7 +5,6 @@
  *  Created on: 10 Jul 2016
  *      Author: podonoghue
  */
-
 #ifndef PROJECT_HEADERS_PID_H_
 #define PROJECT_HEADERS_PID_H_
 
@@ -220,6 +219,7 @@ private:
       }
 
       tickCount++;
+//      USBDM::console.writeln(tickCount);
 
       // Update input samples & error
       lastInput    = currentInput;

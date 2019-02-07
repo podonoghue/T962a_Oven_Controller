@@ -84,9 +84,9 @@ const MS_PropertiesFeatureDescriptor msPropertiesFeatureDescriptor = {
       ),
       /* uint32_t ldataType0;       */ nativeToLe32(7UL), // 7 == REG_MULTI_SZ
       /* uint16_t wNameLength0;     */ nativeToLe16(sizeof(msPropertiesFeatureDescriptor.bName0)),
-      /* char16_t  bName0[42];       */ MS_DEVICE_INTERFACE_GUIDs,
+      /* char16_t  bName0[42];      */ MS_DEVICE_INTERFACE_GUIDs,
       /* uint32_t wPropertyLength0; */ nativeToLe32(sizeof(msPropertiesFeatureDescriptor.bData0)),
-      /* char16_t  bData0[78];       */ MS_DEVICE_GUID,
+      /* char16_t  bData0[78];      */ MS_DEVICE_GUID,
       /*---------------------- Section 2 -----------------------------*/
       /* uint32_t lPropertySize1;   */ nativeToLe32(
             sizeof(msPropertiesFeatureDescriptor.lPropertySize1)+
@@ -134,31 +134,6 @@ const char *UsbBase::getTokenName(unsigned token) {
    const char *rc = "Unknown";
    if (token<(sizeof(names)/sizeof(names[0]))) {
       rc = names[token];
-   }
-   return rc;
-}
-
-/**
- * Get name of USB state
- *
- * @param[in]  state USB state
- *
- * @return Pointer to static string
- */
-const char *UsbBase::getStateName(EndpointState state) {
-   static const char *names[] = {
-      "EPIdle",
-      "EPDataIn",
-      "EPDataOut,",
-      "EPStatusIn",
-      "EPStatusOut",
-      "EPThrottle",
-      "EPStall",
-      "EPComplete",
-   };
-   const char *rc = "Unknown";
-   if (state<(sizeof(names)/sizeof(names[0]))) {
-      rc = names[state];
    }
    return rc;
 }
@@ -238,11 +213,11 @@ void reportLineCoding(const LineCodingStructure *lineCodingStructure) {
 /**
  * Format SETUP packet as string
  *
- * @param[in] p SETUP packet
+ * @param[in]  p SETUP packet
  *
  * @return Pointer to static buffer
  */
-const char *UsbBase::reportSetupPacket(SetupPacket *p) {
+const char *UsbBase::getSetupPacketDescription(SetupPacket *p) {
 #ifdef DEBUG_BUILD
    static char buff[100];
    StringFormatter sf(buff, sizeof(buff));

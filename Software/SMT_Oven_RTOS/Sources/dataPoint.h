@@ -49,18 +49,29 @@ private:
    static constexpr float FIXED_POINT_SCALE    = 100.0;
 
    /* Bit encoding for fState_status */
-   static constexpr int   THERMO_STATUS_OFFSET = 4;
    static constexpr int   THERMO_STATUS_WIDTH  = 3;
-   static constexpr int   THERMO_STATUS_MASK   = (1<<3)-1;
-   static constexpr int   STATE_MASK           = 0xF;
+   static constexpr int   THERMO_STATUS_MASK   = (1<<THERMO_STATUS_WIDTH)-1;
 
-   uint16_t fState_status;                       // Controller state and thermocouple status (encoded)
-   // |15..13|12..10|9..7|6..4|3..0|
-   //   Th3    Th2   Th1   Th0 State
+   /**
+    * Union to encode the Profile State and Thermocouple status efficiently for storage.
+    */
+   union EncodedStatus {
+      uint16_t raw;
+      struct {
+         ThermocoupleStatus th0:3;
+         ThermocoupleStatus th1:3;
+         ThermocoupleStatus th2:3;
+         ThermocoupleStatus th3:3;
+         State              state:4;
+      };
+      constexpr EncodedStatus(uint16_t value) : raw(value) {}
+   };
+
+   EncodedStatus fState_status;                  // Controller state and thermocouple status (encoded)
 
    uint8_t  fHeater;                             // Heater duty cycle
    uint8_t  fFan;                                // Fan duty cycle
-   uint16_t fTargetTemp;                         // Oven target temperature
+   uint16_t fTargetTemp;                         // Oven target temperature (scaled by FIXED_POINT_SCALE)
    uint16_t fThermocouples[NUM_THERMOCOUPLES];   // Thermocouple values
 
 public:
@@ -77,7 +88,7 @@ public:
     * @return Status
     */
    ThermocoupleStatus getStatus(unsigned index) const {
-      return (ThermocoupleStatus)((fState_status>>(THERMO_STATUS_WIDTH*index+THERMO_STATUS_OFFSET))&THERMO_STATUS_MASK);
+      return (ThermocoupleStatus)((fState_status.raw>>(THERMO_STATUS_WIDTH*index))&THERMO_STATUS_MASK);
    }
 
    /**
@@ -88,8 +99,8 @@ public:
     */
    void setStatus(unsigned index, ThermocoupleStatus status) {
       fState_status =
-            (fState_status & ~(THERMO_STATUS_MASK<<(THERMO_STATUS_WIDTH*index+THERMO_STATUS_OFFSET))) |
-            ((status&THERMO_STATUS_MASK)<<(THERMO_STATUS_WIDTH*index+THERMO_STATUS_OFFSET));
+            (fState_status.raw & ~(THERMO_STATUS_MASK<<(THERMO_STATUS_WIDTH*index))) |
+            ((status&THERMO_STATUS_MASK)<<(THERMO_STATUS_WIDTH*index));
    }
 
    /**
@@ -196,7 +207,7 @@ public:
     * @return state e.g. s_soak
     */
    State getState() const {
-      return (State)(fState_status&STATE_MASK);
+      return fState_status.state;
    }
    /**
     * Record state
@@ -204,7 +215,7 @@ public:
     * @param[in] state State e.g. s_soak
     */
    void setState(State state) {
-      fState_status = (fState_status&~STATE_MASK)|(state&STATE_MASK);
+      fState_status.state = state;
    }
    /**
     * Get recorded heater value

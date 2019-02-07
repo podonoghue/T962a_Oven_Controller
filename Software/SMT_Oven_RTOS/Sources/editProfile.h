@@ -170,7 +170,7 @@ public:
    virtual const char *getDescription() const {
       static char buff[STRING_LENGTH+1];
       memset(buff, '\0', sizeof(buff));
-      strncpy(buff, nameBuffer, STRING_LENGTH);
+      strncpy(buff, nameBuffer, STRING_LENGTH+1);
 
       // Trim trailing spaces etc.
       int index = STRING_LENGTH;
@@ -209,7 +209,8 @@ public:
     * @return true if value actually changed
     */
    virtual bool reset() {
-      strncpy(nameBuffer, name, sizeof(nameBuffer));
+      strncpy(nameBuffer, name, sizeof(nameBuffer)-1);
+      nameBuffer[sizeof(nameBuffer)-1] = '\0';
       unsigned i = strlen(name);
       if (i<sizeof(nameBuffer)) {
          memset(nameBuffer+i, ' ', sizeof(nameBuffer)-i);

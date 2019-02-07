@@ -104,8 +104,8 @@ private:
       const osTimerDef_t *timer;   // Pointer to Timer definition
    };
 
-   osTimerControlBlock_t  os_timer_cb  = {0,0,0,0,0,0,0,0};
-   const osTimerDef_t     os_timer_def;
+   volatile osTimerControlBlock_t  os_timer_cb  = {0,0,0,0,0,0,0,0};
+   const    osTimerDef_t           os_timer_def;
 
 public:
    /**
@@ -116,7 +116,7 @@ public:
     * @param[in] timerType Type of timer e.g. osTimerPeriodic, osTimerOnce
     */
    Timer(Callback callback, void *argument, os_timer_type timerType) :
-     os_timer_def{callback, (void*)&os_timer_cb} {
+      os_timer_def{callback, (void*)&os_timer_cb} {
       osTimerId timer_id __attribute__((unused)) = osTimerCreate(&os_timer_def, timerType, argument);
       usbdm_assert((void*)timer_id == (void*)&os_timer_cb, "Internal check failed");
    }
@@ -156,6 +156,12 @@ public:
     * @return false Failure
     */
    bool create(void *argument=nullptr, os_timer_type timerType=osTimerPeriodic) {
+      if (os_timer_cb.state != 0) {
+         osStatus rc = destroy();
+         if (rc != osOK) {
+            return rc;
+         }
+      }
       osTimerId timer_id __attribute__((unused)) = osTimerCreate(&os_timer_def, timerType, argument);
       return ((void*)timer_id == (void*)&os_timer_cb);
    }
@@ -487,7 +493,7 @@ class Pool {
 
 private:
    uint32_t pool[3+((sizeof(T)+3)/4)*size] = {0};
-   const osPoolDef_t os_pool_def                 = { size, sizeof(T), pool };
+   const    osPoolDef_t os_pool_def        = { size, sizeof(T), pool };
 
 public:
    Pool() {

@@ -28,7 +28,8 @@
  *
  * Under Linux drivers for bulk and CDC are automatically loaded
  */
-//#define MS_COMPATIBLE_ID_FEATURE
+
+#define MS_COMPATIBLE_ID_FEATURE
 #include "RemoteInterface.h"
 
 #define UNIQUE_ID
@@ -45,7 +46,7 @@ namespace USBDM {
 
 
 #ifdef UNIQUE_ID
-#define SERIAL_NO             "SMT-OVEN-%lu"
+#define SERIAL_NO             "SMT-OVEN-"
 #else
 #define SERIAL_NO             "SMT-OVEN-0001"
 #endif
@@ -245,7 +246,7 @@ protected:
       epCdcDataOut.setCallback(cdcOutTransactionCallback);
 
       // Make sure epCdcDataOut is ready for polling (OUT)
-      epCdcDataOut.startRxTransaction(EPDataOut, epCdcDataOut.BUFFER_SIZE);
+      epCdcDataOut.startRxPhase(EPDataOut, epCdcDataOut.BUFFER_SIZE);
 
       epCdcDataIn.initialise();
       addEndpoint(&epCdcDataIn);
@@ -263,8 +264,12 @@ protected:
 
    /**
     * Callback for SOF tokens
+    *
+    * @param frameNumber Frame number from SOF token
+    *
+    * @return  Error code
     */
-   static ErrorCode sofCallback();
+   static ErrorCode sofCallback(uint16_t frameNumber);
 
    /**
     * Call-back handling CDC-IN transaction complete\n
@@ -287,7 +292,7 @@ protected:
     * Handler for Token Complete USB interrupts for\n
     * end-points other than EP0
     */
-   static void handleTokenComplete(void);
+   static void handleTokenComplete(UsbStat   usbStat);
 
    /**
     * Start CDC IN transaction\n

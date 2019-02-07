@@ -33,15 +33,17 @@ private:
    static constexpr uint8_t CDC_LINE_CONTROL_RTS_MASK = 1<<1;
 
 protected:
-   using simpleCallbak = bool (*)();
+
+   /** Type for call-back */
+   using SimpleCallbak = bool (*)();
 
    /**
     * Wrapper for initialised static variable
     *
     * @return Reference to notifyUsbIn function pointer
     */
-   static simpleCallbak &notifyUsbInPtr() {
-      static simpleCallbak cb = nullptr;
+   static SimpleCallbak &notifyUsbInPtr() {
+      static SimpleCallbak cb = nullptr;
       return cb;
    }
 
@@ -51,7 +53,7 @@ protected:
     * @return Reference to notifyUsbIn function pointer
     */
    static void notifyUsbIn() {
-      simpleCallbak cb = notifyUsbInPtr();
+      SimpleCallbak cb = notifyUsbInPtr();
       if (cb != nullptr) {
          cb();
       }
@@ -73,7 +75,7 @@ public:
     *
     * @param cb The function to call to notify the USB In interface that new data is available
     */
-   static void setUsbInNotifyCallback(simpleCallbak cb) {
+   static void setUsbInNotifyCallback(SimpleCallbak cb) {
       notifyUsbInPtr() = cb;
    }
 

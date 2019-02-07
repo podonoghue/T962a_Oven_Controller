@@ -96,18 +96,18 @@ static State state = s_off;
 
 /**
  * Call-back from the timer to step through the profile state-machine
- *                      .--.
- *                     /    \
- *                    /      \
- *               .....        \
- *          ....               \
- *      ....                    \
- *     /                         \
- *    /                           \
- *   /                             \
- *  /                               \
- * /                   dwell         \
- * preheat  soak   ramp_up  ramp_down
+ *                    .---.
+ *                   /     \
+ *                  /       \
+ *              ,--'         \
+ *          ,--'              \
+ *      ,--'                   \
+ *     /                        \
+ *    /                          \
+ *   /                            \
+ *  /                              \
+ * /                  dwell         \
+ * preheat  soak  ramp_up  ramp_down
  */
 static void handler(const void *) {
 
@@ -138,9 +138,9 @@ static void handler(const void *) {
 #endif
 
    console.
-      WRITE(time).WRITE(", ").WRITE(Reporter::getStateName(state)).
+      WRITE(time).WRITE("s, ").WRITE(Reporter::getStateName(state)).
       WRITE(": TO=").WRITE(timeout).
-      WRITE(", T =").WRITE(currentTemperature).
+      WRITE(", T=").WRITE(currentTemperature).
       WRITE(", SP=").WRITELN(setpoint);
 
    // Handle state
@@ -153,9 +153,11 @@ static void handler(const void *) {
          ovenControl.setHeaterDutycycle(0);
          ovenControl.setFanDutycycle(0);
          return;
+
       case s_off:
       case s_manual:
          return;
+
       case s_init:
          /*
           * Startup
@@ -316,7 +318,7 @@ bool startRunProfile(NvSolderProfile &profile) {
    state          = s_init;
 
    // Start Timer callback
-   timer.create();
+//   timer.create();
    timer.start(1.0);
 
    return true;
@@ -328,7 +330,7 @@ bool startRunProfile(NvSolderProfile &profile) {
 void completeRunProfile() {
    // Stop timer callback
    timer.stop();
-   timer.destroy();
+//   timer.destroy();
 
    // Stop PID controller
    pid.enable(false);
@@ -345,9 +347,8 @@ void completeRunProfile() {
  */
 void abortRunProfile() {
 
-   completeRunProfile();
    state = s_fail;
-
+   completeRunProfile();
 }
 
 /**
@@ -436,7 +437,6 @@ void runProfile() {
       if ((uint32_t)(now - last) >= osKernelSysTickMicroSec(1000000U)) {
          temperatureSensors.updateMeasurements();
          last += osKernelSysTickMicroSec(1000000U);
-//         Reporter::addLogPoint(time, state);
       }
       // Update display
       Reporter::displayProfileProgress();
@@ -477,6 +477,7 @@ void runProfile() {
 
    // Report every second until key-press
    do {
+      temperatureSensors.updateMeasurements();
       Reporter::displayProfileProgress();
    } while (buttons.getButton(1000) == SwitchValue::SW_NONE);
 

@@ -205,16 +205,20 @@ RemoteInterface::Response  *Usb0::response = nullptr;
 
 /**
  * Handler for Start of Frame Token interrupt (~1ms interval)
+ *
+ * @param frameNumber Frame number from SOF token
+ *
+ * @return  E_NO_ERROR on success
  */
-ErrorCode Usb0::sofCallback() {
+ErrorCode Usb0::sofCallback(uint16_t frameNumber) {
    // Activity LED
    // Off                     - no USB activity, not connected
    // On                      - no USB activity, connected
    // Off, flash briefly on   - USB activity, not connected
    // On,  flash briefly off  - USB activity, connected
-   if (fUsb().FRMNUML==0) {
+   if ((frameNumber&0xFF)==0) {
       // Every ~256 ms
-      switch (fUsb().FRMNUMH&0x03) {
+      switch (frameNumber&0x03) {
          case 0:
             if (fConnectionState == USBconfigured) {
                // Activity LED on when USB connection established
@@ -249,6 +253,10 @@ ErrorCode Usb0::sofCallback() {
  * A packet is only sent if there has been a change in status
  */
 void Usb0::epCdcSendNotification() {
+//   if (fConnectionState != USBconfigured) {
+//      // Only send notifications if configured.
+//      return;
+//   }
    static const CDCNotification cdcNotification = {
          CDC_NOTIFICATION, SERIAL_STATE, 0, RT_INTERFACE, nativeToLe16(2)
    };
@@ -274,7 +282,7 @@ void Usb0::epCdcSendNotification() {
 
    // Set up to Tx packet
 //   console.write("epCdcSendNotification() 0x").writeln(epCdcNotification.getBuffer()[sizeof(cdcNotification)+0], USBDM::Radix_16);
-   epCdcNotification.startTxTransaction(EPDataIn, sizeof(cdcNotification)+2);
+   epCdcNotification.startTxPhase(EPDataIn, sizeof(cdcNotification)+2);
 }
 
 static uint8_t cdcOutBuff[10] = "Welcome\n";
@@ -290,7 +298,7 @@ void Usb0::startCdcIn() {
       memcpy(epCdcDataIn.getBuffer(), cdcOutBuff, cdcOutByteCount);
       //TODO Check if need ZLP
       epCdcDataIn.setNeedZLP();
-      epCdcDataIn.startTxTransaction(EPDataIn, cdcOutByteCount);
+      epCdcDataIn.startTxPhase(EPDataIn, cdcOutByteCount);
       cdcOutByteCount = 0;
    }
 }
@@ -298,16 +306,13 @@ void Usb0::startCdcIn() {
 /**
  * Handler for Token Complete USB interrupts for
  * end-points other than EP0
+ *
+ * @param usbStat USB Status value from USB hardware
  */
-void Usb0::handleTokenComplete() {
-
-   // Status from Token
-   UsbStat   usbStat  = fUsb().STAT;
+void Usb0::handleTokenComplete(UsbStat usbStat) {
 
    // Endpoint number
-   uint8_t   endPoint = usbStat.endp;
-
-   fEndPoints[endPoint]->flipOddEven(usbStat);
+   uint8_t endPoint = usbStat.endp;
 
    switch (endPoint) {
       case CDC_NOTIFICATION_ENDPOINT: // Accept IN token
@@ -342,7 +347,7 @@ void Usb0::cdcOutTransactionCallback(EndpointState state) {
       cdcInterface::putData(epCdcDataOut.getDataTransferredSize(), epCdcDataOut.getBuffer());
    }
    // Set up for next transfer
-   epCdcDataOut.startRxTransaction(EPDataOut, epCdcDataOut.BUFFER_SIZE);
+   epCdcDataOut.startRxPhase(EPDataOut, epCdcDataOut.BUFFER_SIZE);
 }
 
 /**
@@ -366,7 +371,7 @@ void Usb0::cdcInTransactionCallback(EndpointState state) {
       }
       // Schedules transfer
       epCdcDataIn.setNeedZLP();
-      epCdcDataIn.startTxTransaction(EPDataIn, response->size, response->data);
+      epCdcDataIn.startTxPhase(EPDataIn, response->size, response->data);
    }
 }
 
@@ -389,6 +394,7 @@ bool Usb0::notify() {
  *  @note Assumes clock set up for USB operation (48MHz)
  */
 void Usb0::initialise() {
+
    // Add extra handling of CDC requests directed to EP0
    setUnhandledSetupCallback(handleUserEp0SetupRequests);
 
@@ -419,7 +425,7 @@ void Usb0::handleSetLineCoding() {
 
    // Don't use external buffer - this requires response to fit in internal EP buffer
    static_assert(sizeof(LineCodingStructure) < fControlEndpoint.BUFFER_SIZE, "Buffer insufficient size");
-   fControlEndpoint.startRxTransaction(EPDataOut, sizeof(LineCodingStructure));
+   fControlEndpoint.startRxPhase(EPDataOut, sizeof(LineCodingStructure));
 }
 
 /**
