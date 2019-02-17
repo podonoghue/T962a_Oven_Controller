@@ -9,7 +9,8 @@
 #ifndef SOURCES_MESSAGEBOX_H_
 #define SOURCES_MESSAGEBOX_H_
 
-#include "SwitchDebouncer.h"
+#include "configure.h"
+//#include "SwitchDebouncer.h"
 
 /**
  * Controls options for choice display on message box

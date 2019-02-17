@@ -61,7 +61,10 @@ public:
     */
    void updateMeasurements() {
       // Lock while changes made
+//      PulseTp tp(3);
       fMutex.wait();
+      {
+//      PulseTp tp(6);
       float temperatures[NUM_THERMOCOUPLES];
       ThermocoupleStatus status[NUM_THERMOCOUPLES];
       int   foundSensorCount   = 0;
@@ -73,8 +76,8 @@ public:
          for (int overSample=0; overSample<OVERSAMPLES; overSample++) {
             float temperature;
             float coldReference;
-            status[t] = fTemperatureSensors[t].getReading(temperature, coldReference);
-            temperatures[t]   += temperature;
+            status[t] = fTemperatureSensors[t].getNewReading(temperature, coldReference);
+            temperatures[t]    += temperature;
             fColdReferences[t] += coldReference;
             if (status[t] == Max31855::TH_ENABLED) {
                foundSensorCount++;
@@ -82,7 +85,7 @@ public:
             }
          }
          // Scale for average
-         temperatures[t]    /= OVERSAMPLES;
+         temperatures[t]     /= OVERSAMPLES;
          fColdReferences[t]  /= OVERSAMPLES;
       }
       if (foundSensorCount==0) {
@@ -98,17 +101,16 @@ public:
       fCurrentMeasurements.setFan(0);
       fCurrentMeasurements.setHeater(0);
       fCurrentMeasurements.setThermocouplePoint(temperatures, status);
+      }
       fMutex.release();
    }
    /**
-    * Get current temperature\n
-    * This is an average of the active thermocouples\n
-    * This does a new set of measurements
+    * Get last measured temperature\n
+    * This is an average of the active thermocouples
     *
     * @return Averaged oven temperature
     */
-   float getTemperature() {
-      updateMeasurements();
+   float getLastTemperature() {
       return fAverageTemperature;
    }
    /**
@@ -148,7 +150,7 @@ public:
     */
    float getCaseTemperature() {
       float temperature, coldReference;
-      ThermocoupleStatus status = fTemperatureSensors[0].getReading(temperature, coldReference);
+      ThermocoupleStatus status = fTemperatureSensors[0].getLastReading(temperature, coldReference);
       if (status == Max31855::TH_MISSING) {
          // No MAX31855!
          return 50.0;

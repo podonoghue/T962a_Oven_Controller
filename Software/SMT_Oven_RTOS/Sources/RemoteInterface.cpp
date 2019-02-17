@@ -8,10 +8,63 @@
  *
  *  Created on: 26Feb.,2017
  *      Author: podonoghue
+ *
+ * Remote Commands
+ *
+ * Identify oven
+ *  -> "IDN?"
+ *  <- "SMT-Oven 1.0.0.0"
+ *
+ * Set thermocouple enable and offset values
+ *  -> "THERM T1Enable,T1Offset,T2Enable,T2Offset,T3Enable,T3Offset,T4Enable,T4Offset"
+ *  <- "OK"
+ *
+ * Get thermocouple enable and offset values
+ *  -> "THERM?"
+ *  <- "T1Enable,T1Offset,T2Enable,T2Offset,T3Enable,T3Offset,T4Enable,T5Offset;"
+ *
+ * Set PID parameters
+ *  -> "PID Proportional,Integral,Differential"
+ *  <- "OK"
+ *
+ * Get PID parameters
+ *  -> "PID?"
+ *  <- "Proportional,Integral,Differential;"
+ *
+ * Set profile parameters
+ *  -> "PROF profile-number,description,flags,liquidus,preheatTime,soakTemp1,soakTemp2,soakTime,rampUpSlope,peakTemp,peakDwell,rampDownSlope;
+ *  <- "OK"
+ *
+ * Get current profile parameters
+ *  -> "PROF?"
+ *  -> "profile-number,description,flags,liquidus,preheatTime,soakTemp1,soakTemp2,soakTime,rampUpSlope,peakTemp,peakDwell,rampDownSlope;
+ *
+ *  Get plot value
+ *  <- "PLOT?"
+ *  -> 75;preheat,0,27.8,27.5,0,100,0.0,0.0,27.5,0.0;preheat,1,27.8,27.5,0,100,0.0,0.0,27.5,0.0;...//...;fail,74,0.0,27.8,100,30,0.0,0.0,27.8,0.0;
+ *  Format: number_of_points;[state,time,target temperature, average temperature, heater percentage, fan percentage, T1, T2, T3, T4]*number_of_points
+ *
+ * Start running current profile
+ *  <- "RUN"
+ *  -> "OK"
+ *
+ * Abort running profile
+ *  <- "ABORT"
+ *  -> "OK"
+ *
+ * Get state of running profile
+ *  <- "RUN?"
+ *  -> "OK|Failed|Running"
+ *
+ * Unknown command
+ *  <- "?????"
+ *  -> "Failed - unrecognized command"
  */
+
 #include "configure.h"
 #include "cmsis.h"
 #include "RemoteInterface.h"
+#include "stringFormatter.h"
 
 /** Current command */
 RemoteInterface::Command   *RemoteInterface::command;
@@ -48,8 +101,8 @@ bool RemoteInterface::send(Response *response) {
 /**
  * Writes thermocouple status to remote
  *
- * @param time  Time of log entry to send
- * @param lastEntry Indicates this is the last entry so append "\n\r"
+ * @param time       Time of log entry to send
+ * @param lastEntry  Indicates this is the last entry so append "\n\r"
  *
  * @return Number of characters written to buffer
  */
@@ -65,13 +118,22 @@ void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
    const DataPoint &point = Draw::getDataPoint(time);
 
    // Format response
-   snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%s,%d,%0.1f,%0.1f,%d,%d,",
-         Reporter::getStateName(point.getState()),
-         time,
-         point.getTargetTemperature(),
-         point.getAverageTemperature(),
-         point.getHeater(),
-         point.getFan());
+   USBDM::StringFormatter fm(reinterpret_cast<char*>(response->data), sizeof(response->data));
+   fm.write(Reporter::getStateName(point.getState()))
+     .write(time).write(',')
+     .write(point.getTargetTemperature()).write(',')
+     .write(point.getAverageTemperature()).write(',')
+     .write(point.getHeater()).write(',')
+     .write(point.getFan()).write(',');
+
+//   snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%s,%d,%0.1f,%0.1f,%d,%d,",
+//         Reporter::getStateName(point.getState()),
+//         time,
+//         point.getTargetTemperature(),
+//         point.getAverageTemperature(),
+//         point.getHeater(),
+//         point.getFan());
+
    for (unsigned t=0; t<DataPoint::NUM_THERMOCOUPLES; t++) {
       char buff2[10];
       float temperature;
@@ -94,7 +156,7 @@ void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
 /**
  *  Parse profile information into selected profile
  *
- *  @param cmd Profile described by a string e.g.\n
+ *  @param cmd    Profile described by a string e.g.\n
  *  4,My Profile,FF,1.0,140,183,90,1.4,210,15,-3.0;
  *  profile-number,description,flags,liquidus,preheatTime,soakTemp1,soakTemp2,soakTime,rampUpSlope,peakTemp,peakDwell,rampDownSlope
  *
@@ -308,7 +370,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
    else if (strncasecmp((const char *)(cmd->data), "THERM ", 6) == 0) {
       /*
        * Sets the enable and offset value for each thermocouple
-       * -> "THERM T1Enable,T1Offset,T2Enable,T2Offset,T3Enable,T3Offset,T4Enable,T5Offset"
+       * -> "THERM T1Enable,T1Offset,T2Enable,T2Offset,T3Enable,T3Offset,T4Enable,T4Offset"
        * <- "OK"
        */
       if (!getInteractiveMutex(response)) {
@@ -369,7 +431,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
    }
    else if (strcasecmp((const char *)(cmd->data), "PID?\n") == 0) {
       /*
-       *  Set PID parameters
+       *  Get PID parameters
        *  -> "PID?"
        *  <- "Proportional,Integral,Differential;"
        */
@@ -438,7 +500,8 @@ bool RemoteInterface::doCommand(Command *cmd) {
       /*
        *  Get plot value
        *  <- "PLOT?"
-       *  ->
+       *  -> 75;preheat,0,27.8,27.5,0,100,0.0,0.0,27.5,0.0;preheat,1,27.8,27.5,0,100,0.0,0.0,27.5,0.0;...//...;fail,74,0.0,27.8,100,30,0.0,0.0,27.8,0.0;
+       *  number_of_points;[state,time,target temperature, average temperature, heater percentage, fan percentage, T1, T2, T3, T4]*
        */
       int lastValid = Draw::getData().getLastValid();
       snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%d;", lastValid+1);
@@ -519,7 +582,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
       /*
        * Unknown command
        * <- "?????"
-       * -> "Failed - ..."
+       * -> "Failed - unrecognized command"
        */
       strcpy(reinterpret_cast<char*>(response->data), "Failed - unrecognized command\n\r");
       response->size = strlen(reinterpret_cast<char*>(response->data));
@@ -571,7 +634,7 @@ void RemoteInterface::initialise() {
  *
  * @note the Data is volatile and is processed or saved immediately.
  */
-void RemoteInterface::putData(int size, const uint8_t *buff) {
+void RemoteInterface::putData(int size, volatile const uint8_t *buff) {
    for (int i=0; i<size; i++) {
       if (command == nullptr) {
          // Allocate new command buffer

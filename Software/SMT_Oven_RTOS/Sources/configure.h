@@ -10,13 +10,39 @@
 #define SOURCES_CONFIGURE_H_
 
 #include <string.h>
+#include "derivative.h"
+#include "hardware.h"
+
+/** Test point */
+using Tp1      = USBDM::GpioB<17, USBDM::ActiveHigh>;
+
+class PulseTp {
+public:
+   PulseTp(unsigned pulseCount) {
+      USBDM::CriticalSection cs;
+      Tp1::set();
+      pulseCount *= 2;
+      while (pulseCount-->0) {
+         for (unsigned index=0; index<20; index++) {
+            __asm__("nop");
+         }
+         Tp1::toggle();
+      }
+      for (unsigned index=0; index<50; index++) {
+         __asm__("nop");
+      }
+   }
+
+   ~PulseTp() {
+      Tp1::clear();
+   }
+};
+
 #include "Max31855.h"
 #include "SolderProfile.h"
 #include "SwitchDebouncer.h"
 #include "ZeroCrossingPwm.h"
 
-#include "derivative.h"
-#include "hardware.h"
 #include "cmp.h"
 #include "delay.h"
 #include "spi.h"

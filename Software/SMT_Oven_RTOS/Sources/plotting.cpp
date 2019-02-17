@@ -8,8 +8,9 @@
  */
 
 #include <algorithm>    // std::max
-#include <plotting.h>
-#include <TemperaturePlot.h>
+#include "configure.h"
+#include "plotting.h"
+#include "TemperaturePlot.h"
 #include "lcd_st7920.h"
 #include "configure.h"
 

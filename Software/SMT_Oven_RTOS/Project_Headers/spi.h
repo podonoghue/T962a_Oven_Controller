@@ -684,7 +684,7 @@ public:
          setConfiguration(configuration);
       }
       else {
-         CMSIS::setCmsisErrorCode(status);
+         CMSIS::setAndCheckCmsisErrorCode(status);
       }
       return status;
    }
@@ -709,7 +709,7 @@ public:
          spi->MCR &= ~SPI_MCR_HALT_MASK;
       }
       else {
-         CMSIS::setCmsisErrorCode(status);
+         CMSIS::setAndCheckCmsisErrorCode(status);
       }
       return status;
    }
@@ -724,24 +724,25 @@ public:
     * @note The USBDM error code will also be set on error
     */
    virtual osStatus endTransaction() override {
-      // Release mutex
       spi->MCR |= SPI_MCR_HALT_MASK;
+      // Release mutex
       osStatus status = mutex().release();
+//      CMSIS::Thread::yield();
       if (status != osOK) {
-         CMSIS::setCmsisErrorCode(status);
+         CMSIS::setAndCheckCmsisErrorCode(status);
       }
       return status;
    }
 #endif
 
 public:
-   // SPI SCK (clock) Pin
+   /** SPI SCK (clock) Pin */
    using sckGpio  = GpioTable_T<Info, 0, ActiveHigh>;
 
-   // SPI SIN (data in = usually MISO) Pin
+   /** SPI SIN (data in = usually MISO) Pin */
    using sinGpio  = GpioTable_T<Info, 1, ActiveHigh>;
 
-   // SPI SOUT (data out = usually MOSI) Pin
+   /** SPI SOUT (data out = usually MOSI) Pin */
    using soutGpio = GpioTable_T<Info, 2, ActiveHigh>;
 
    /**
@@ -836,7 +837,7 @@ public:
    /**
     * Gets and clears status flags.
     *
-    * @return status valkue (SPI->SR)
+    * @return Status value (SPI->SR)
     */
    static uint32_t __attribute__((always_inline)) getStatus() {
       // Capture interrupt status

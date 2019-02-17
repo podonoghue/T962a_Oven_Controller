@@ -151,6 +151,20 @@ int _lseek(int file __attribute__((unused)), int ptr __attribute__((unused)), in
  */
 static caddr_t heap_end = NULL;
 
+__attribute__((always_inline)) static inline void __enable_irq(void)
+{
+  __asm volatile ("cpsie i");
+}
+
+__attribute__((always_inline)) static inline uint32_t __disable_irq(void)
+{
+   uint32_t result;
+
+  __asm volatile ("mrs %0, primask" : "=r" (result));
+  __asm volatile ("cpsid i");
+  return(result & 1);
+}
+
 /**
  *  sbrk
  *
@@ -159,6 +173,7 @@ static caddr_t heap_end = NULL;
  */
 __attribute__((__weak__))
 caddr_t _sbrk(int incr) {
+   __disable_irq();
    extern char __HeapBase;   /* Defined by the linker */
    extern char __HeapLimit;  /* Defined by the linker */
    caddr_t prev_heap_end;
@@ -177,10 +192,12 @@ caddr_t _sbrk(int incr) {
       __asm__("bkpt");
 #else
       errno = ENOMEM;
+      __enable_irq();
       return (caddr_t)-1;
 #endif
    }
    heap_end = next_heap_end;
+   __enable_irq();
    return prev_heap_end;
 }
 

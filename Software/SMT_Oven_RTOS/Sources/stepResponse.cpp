@@ -47,9 +47,8 @@ public:
          if (abort) {
             return;
          }
-         disableInterrupts();
+         USBDM::CriticalSection cs;
          flag = (fabs(temperature-lastTemperature)<0.01);
-         enableInterrupts();
       } while (!flag);
    }
 

@@ -5,12 +5,12 @@
  *  Created on: 18Mar.,2017
  *      Author: podonoghue
  */
-#include <dataPoint.h>
-#include <math.h>
-#include <plotting.h>
-#include <reporter.h>
-#include <RemoteInterface.h>
 #include "configure.h"
+#include "dataPoint.h"
+#include "math.h"
+#include "plotting.h"
+#include "reporter.h"
+#include "RemoteInterface.h"
 
 namespace Reporter {
 

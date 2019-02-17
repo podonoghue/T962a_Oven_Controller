@@ -5,11 +5,11 @@
  *      Author: podonoghue
  */
 
-#include <copyProfile.h>
-#include <manageProfiles.h>
-#include <plotting.h>
-#include "lcd_st7920.h"
 #include "configure.h"
+#include "copyProfile.h"
+#include "manageProfiles.h"
+#include "plotting.h"
+#include "lcd_st7920.h"
 #include "EditProfile.h"
 
 namespace ManageProfiles {

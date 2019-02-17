@@ -6,9 +6,9 @@
  */
 
 #include <copyProfile.h>
+#include "configure.h"
 #include "lcd_st7920.h"
 #include "messageBox.h"
-#include "configure.h"
 
 namespace CopyProfile {
 

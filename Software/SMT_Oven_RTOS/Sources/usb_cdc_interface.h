@@ -35,25 +35,23 @@ private:
 protected:
 
    /** Type for call-back */
-   using SimpleCallbak = bool (*)();
+   using SimpleCallback = bool (*)();
 
    /**
     * Wrapper for initialised static variable
     *
     * @return Reference to notifyUsbIn function pointer
     */
-   static SimpleCallbak &notifyUsbInPtr() {
-      static SimpleCallbak cb = nullptr;
+   static SimpleCallback &notifyUsbInPtr() {
+      static SimpleCallback cb = nullptr;
       return cb;
    }
 
    /**
-    * Wrapper for initialised static variable
-    *
-    * @return Reference to notifyUsbIn function pointer
+    * Notify USB that transmit data (response) is available
     */
    static void notifyUsbIn() {
-      SimpleCallbak cb = notifyUsbInPtr();
+      SimpleCallback cb = notifyUsbInPtr();
       if (cb != nullptr) {
          cb();
       }
@@ -75,7 +73,7 @@ public:
     *
     * @param cb The function to call to notify the USB In interface that new data is available
     */
-   static void setUsbInNotifyCallback(SimpleCallbak cb) {
+   static void setUsbInNotifyCallback(SimpleCallback cb) {
       notifyUsbInPtr() = cb;
    }
 
@@ -96,7 +94,7 @@ public:
     * @param size Amount of data
     * @param buff Buffer for data
     *
-    * @note the Data is volatile so should be processed or saved immediately.
+    * @note The data is volatile so should be processed or saved immediately.
     */
    static void putData(int size, const uint8_t *buff) {
       (void)size;

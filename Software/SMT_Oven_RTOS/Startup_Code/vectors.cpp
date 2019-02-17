@@ -18,6 +18,7 @@
 /*********** $start(VectorsIncludeFiles) *** Do not edit after this comment ****************/
 #include "cmp.h"
 #include "usb.h"
+#include "pit.h"
 /*********** $end(VectorsIncludeFiles)   *** Do not edit above this comment ***************/
 
 /*
@@ -216,10 +217,6 @@ void FTM2_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void CMT_IRQHandler(void)                     WEAK_DEFAULT_HANDLER;
 void RTC_Alarm_IRQHandler(void)               WEAK_DEFAULT_HANDLER;
 void RTC_Seconds_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
-void PIT0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
-void PIT1_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
-void PIT2_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
-void PIT3_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void PDB0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void USBDCD_IRQHandler(void)                  WEAK_DEFAULT_HANDLER;
 void DAC0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
@@ -309,10 +306,10 @@ VectorTable const __vector_table = {
       CMT_IRQHandler,                          /*   61,   45  Carrier Modulator Transmitter                                                    */
       RTC_Alarm_IRQHandler,                    /*   62,   46  Real Time Clock                                                                  */
       RTC_Seconds_IRQHandler,                  /*   63,   47  Real Time Clock                                                                  */
-      PIT0_IRQHandler,                         /*   64,   48  Periodic Interrupt Timer                                                         */
-      PIT1_IRQHandler,                         /*   65,   49  Periodic Interrupt Timer                                                         */
-      PIT2_IRQHandler,                         /*   66,   50  Periodic Interrupt Timer                                                         */
-      PIT3_IRQHandler,                         /*   67,   51  Periodic Interrupt Timer                                                         */
+      USBDM::PitChannel<0>::irqHandler,        /*   64,   48  Periodic Interrupt Timer                                                         */
+      USBDM::PitChannel<1>::irqHandler,        /*   65,   49  Periodic Interrupt Timer                                                         */
+      USBDM::PitChannel<2>::irqHandler,        /*   66,   50  Periodic Interrupt Timer                                                         */
+      USBDM::PitChannel<3>::irqHandler,        /*   67,   51  Periodic Interrupt Timer                                                         */
       PDB0_IRQHandler,                         /*   68,   52  Programmable Delay Block                                                         */
       USBDM::Usb0::irqHandler,                 /*   69,   53  Universal Serial Bus                                                             */
       USBDCD_IRQHandler,                       /*   70,   54  USB Device Charger Detection                                                     */

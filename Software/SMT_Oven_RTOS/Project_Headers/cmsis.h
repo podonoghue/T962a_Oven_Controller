@@ -162,7 +162,7 @@ public:
             return rc;
          }
       }
-      osTimerId timer_id __attribute__((unused)) = osTimerCreate(&os_timer_def, timerType, argument);
+      osTimerId timer_id = osTimerCreate(&os_timer_def, timerType, argument);
       return ((void*)timer_id == (void*)&os_timer_cb);
    }
    /**
@@ -603,7 +603,7 @@ public:
       return thread_id;
    }
    /**
-    * Get thread ID of current process
+    * Get thread ID of current thread
     *
     * @return ID of thread
     */
@@ -619,6 +619,25 @@ public:
       return osThreadGetPriority(thread_id);
    }
    /**
+    * Get priority of current thread
+    *
+    * @return Priority of thread
+    */
+   static osPriority getMyPriority() {
+      auto threadId = CMSIS::Thread::getMyId();
+      return osThreadGetPriority(threadId);
+   }
+   /**
+    * Get thread Priority
+    *
+    * @param[in] threadId Thread ID of thread to adjust priority of
+    *
+    * @return Priority of thread
+    */
+   static osPriority getPriority(osThreadId threadId) {
+      return osThreadGetPriority(threadId);
+   }
+   /**
     * Set thread Priority
     *
     * @param[in] priority Priority to set for thread
@@ -630,6 +649,36 @@ public:
     */
    osStatus setPriority(osPriority priority) {
       return osThreadSetPriority(thread_id, priority);
+   }
+
+   /**
+    * Set thread Priority
+    *
+    * @param[in] threadId Thread ID of thread to adjust priority of
+    * @param[in] priority Priority to set for thread
+    *
+    * @return osOK:              The priority of the thread has been successfully changed.
+    * @return osErrorValue:      Incorrect priority value.
+    * @return osErrorResource:   Thread that is not an active thread.
+    * @return osErrorISR:        Cannot be called from interrupt service routines.
+    */
+   static osStatus setPriority(osThreadId threadId, osPriority osPriority) {
+      return osThreadSetPriority(threadId, osPriority);
+   }
+
+   /**
+    * Set priority of current thread
+    *
+    * @param[in] priority Priority to set for thread
+    *
+    * @return osOK:              The priority of the thread has been successfully changed.
+    * @return osErrorValue:      Incorrect priority value.
+    * @return osErrorResource:   Thread that is not an active thread.
+    * @return osErrorISR:        Cannot be called from interrupt service routines.
+    */
+   static osStatus setMyPriority(osPriority osPriority) {
+      auto threadId = CMSIS::Thread::getMyId();
+      return osThreadSetPriority(threadId, osPriority);
    }
 
    /**
@@ -696,7 +745,7 @@ public:
 
 #if (osFeature_Wait != 0)
    /**
-    * Wait for any event of the type Signal, Message, Mail for a specified time peiod.
+    * Wait for any event of the type Signal, Message, Mail for a specified time period.
     * While the system waits the thread that is calling this function is put into the state WAITING. When millisec is set to osWaitForever the function will wait for an infinite time until a event occurs.
     *
     * @param[in] millisec How long to wait in milliseconds. Use osWaitForever for indefinite wait.
@@ -1230,17 +1279,6 @@ public:
    }
 
    /**
-    * Obtains pointer to object indicated by event.
-    *
-    * @param event Event to use.  Usually obtained from get().
-    *
-    * @return Object reference
-    */
-   static T *getValueFromEvent(osEvent event) {
-      return (T*)(event.value.p);
-   }
-
-   /**
     * Get a mail item from the mail queue.\n
     * For use in ISRs
     *
@@ -1250,6 +1288,17 @@ public:
     */
    osEvent getISR() {
       return osMailGet((os_mailQ_cb *)&pool, 0);
+   }
+
+   /**
+    * Obtains pointer to object indicated by event.
+    *
+    * @param event Event to use.  Usually obtained from get().
+    *
+    * @return Object reference
+    */
+   static T *getValueFromEvent(osEvent event) {
+      return (T*)(event.value.p);
    }
 
    /**

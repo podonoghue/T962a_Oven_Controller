@@ -57,7 +57,7 @@ public:
       CaseFan::setDutyCycle(0);
 
       // Check every 5 seconds
-      start(5000 /* ms */);
+//      start(5000 /* ms */);
    }
 };
 #endif /* SOURCES_CASETEMPERATUREMONITOR_CPP_ */

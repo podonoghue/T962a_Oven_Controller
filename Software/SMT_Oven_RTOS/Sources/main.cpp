@@ -79,11 +79,16 @@ void initialise() {
    Spare::Ftm::enable();
    Spare::setDutyCycle(0);
    ovenControl.initialise();
+   Tp1::setOutput(PinDriveStrength_High);
 }
 
 int main() {
 
    console.writeln("Starting Oven");
+
+   console.write("Main thread priority = ").writeln(CMSIS::Thread::getMyPriority());
+   CMSIS::Thread::setMyPriority(osPriorityHigh);
+   console.write("Main thread lowered priority = ").writeln(CMSIS::Thread::getMyPriority());
 
    initialise();
 

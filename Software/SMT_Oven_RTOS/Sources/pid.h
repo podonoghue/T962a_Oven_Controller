@@ -214,6 +214,8 @@ private:
     * Executed at \ref interval by Timer callback
     */
    void callback() override {
+//      PulseTp tp;
+
       if(!enabled) {
          return;
       }
@@ -245,7 +247,6 @@ private:
       // Update output
       outputFn(currentOutput);
    }
-
 };
 
 #endif // PROJECT_HEADERS_PID_H_

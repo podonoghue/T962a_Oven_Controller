@@ -131,7 +131,7 @@
 #define WRITE(...)   VA_MACRO(WRITE, __VA_ARGS__)
 #define WRITELN(...) VA_MACRO(WRITELN, __VA_ARGS__)
 
-#if 1 || defined(DEBUG_BUILD)
+#if defined(DEBUG_BUILD)
 #define WRITE1(_1)           write(_1)
 #define WRITE2(_1, _2)       write(_1,_2)
 #define WRITE3(_1, _2, _3)   write(_1,_2,_3)

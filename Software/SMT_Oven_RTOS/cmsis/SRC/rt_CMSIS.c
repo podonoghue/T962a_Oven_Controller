@@ -426,7 +426,7 @@ extern       osMessageQId    osMessageQId_osTimerMessageQ;
 
 // ==== Helper Functions ====
 
-/// Convert timeout in millisec to system ticks
+/// Convert timeout in millisecond to system ticks
 static uint16_t rt_ms2tick (uint32_t millisec) {
   uint32_t tick;
 
@@ -1132,6 +1132,8 @@ os_InRegs osCallback_type svcTimerCall (osTimerId timer_id) {
 
 osStatus isrMessagePut (osMessageQId queue_id, uint32_t info, uint32_t millisec);
 
+extern void iterateMessageboxQueue(void *q);
+
 /// Timer Tick (called each SysTick)
 void sysTimerTick (void) {
   os_timer_cb *pt, *p;
@@ -1147,7 +1149,8 @@ void sysTimerTick (void) {
     os_timer_head = p;
     status = isrMessagePut(osMessageQId_osTimerMessageQ, (uint32_t)pt, 0U);
     if (status != osOK) {
-      os_error(OS_ERR_TIMER_OVF);
+       iterateMessageboxQueue(osMessageQId_osTimerMessageQ);
+       os_error(OS_ERR_TIMER_OVF);
     }
     if (pt->type == (uint8_t)osTimerPeriodic) {
       rt_timer_insert(pt, pt->icnt);
@@ -1890,7 +1893,15 @@ os_InRegs osEvent_type svcMessageGet (osMessageQId queue_id, uint32_t millisec) 
 
 // Message Queue ISR Calls
 
-/// Put a Message to a Queue
+/**
+ * Put a Message to a Queue
+ *
+ * @param queue_id      ID of queue to use
+ * @param info          Arbitrary information to add
+ * @param millisec      Delay - must be zero
+ *
+ * @return Error if failed
+ */
 osStatus isrMessagePut (osMessageQId queue_id, uint32_t info, uint32_t millisec) {
 
   if ((queue_id == NULL) || (millisec != 0U)) {

@@ -5,15 +5,15 @@
  *  Created on: 28 Sep 2016
  *      Author: podonoghue
  */
-
-#include <copyProfile.h>
-#include <dataPoint.h>
-#include <EditProfile.h>
-#include <math.h>
-#include <plotting.h>
-#include <reporter.h>
-#include <RemoteInterface.h>
-#include <SolderProfile.h>
+#include "configure.h"
+#include "copyProfile.h"
+#include "dataPoint.h"
+#include "EditProfile.h"
+#include "math.h"
+#include "plotting.h"
+#include "reporter.h"
+#include "RemoteInterface.h"
+#include "SolderProfile.h"
 
 #include "hardware.h"
 #include "cmsis.h"
@@ -50,9 +50,6 @@ void monitor() {
 
    // Time in monitor sequence
    int   time  = 0;
-
-   temperatureSensors.updateMeasurements();
-   Reporter::displayProfileProgress();
 
    do {
       // Update display
@@ -110,6 +107,8 @@ static State state = s_off;
  * preheat  soak  ramp_up  ramp_down
  */
 static void handler(const void *) {
+//   PulseTp tp(12);
+//   USBDM::console.write("Timer thread priority = ").writeln(CMSIS::Thread::getMyPriority());
 
    /* Records start of soak time */
    static int startOfSoakTime;
@@ -124,7 +123,7 @@ static void handler(const void *) {
    constexpr int DELTA = 2;
 
    // Get current temperature (NAN on thermocouple failure)
-   float currentTemperature = temperatureSensors.getTemperature();
+   float currentTemperature = temperatureSensors.getLastTemperature();
 
    if (std::isnan(currentTemperature)) {
       state = s_fail;
@@ -362,7 +361,7 @@ bool remoteStartRunProfile() {
 }
 
 /**
- * Run the current profile
+ * Check run status
  *
  * @return State of profile state machine
  */
@@ -435,7 +434,7 @@ void runProfile() {
    for(;;) {
       uint32_t now = osKernelSysTick();
       if ((uint32_t)(now - last) >= osKernelSysTickMicroSec(1000000U)) {
-         temperatureSensors.updateMeasurements();
+//         temperatureSensors.updateMeasurements();
          last += osKernelSysTickMicroSec(1000000U);
       }
       // Update display
@@ -477,7 +476,7 @@ void runProfile() {
 
    // Report every second until key-press
    do {
-      temperatureSensors.updateMeasurements();
+//      temperatureSensors.updateMeasurements();
       Reporter::displayProfileProgress();
    } while (buttons.getButton(1000) == SwitchValue::SW_NONE);
 
@@ -497,7 +496,7 @@ void drawManualScreen() {
 
    lcd.printf("Set Temp  = %5.1f\x7F\n", pid.getSetpoint());
 
-   lcd.printf("Oven Temp = %5.1f\x7F\n", temperatureSensors.getTemperature());
+   lcd.printf("Oven Temp = %5.1f\x7F\n", temperatureSensors.getLastTemperature());
 
    if (ovenControl.getHeaterDutycycle() == 0) {
       lcd.printf("Heater = off\n");

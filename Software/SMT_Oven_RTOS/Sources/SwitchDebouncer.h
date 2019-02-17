@@ -10,6 +10,7 @@
 #define SOURCES_SWITCHDEBOUNCER_H_
 
 #include "cmsis.h"
+#include "pit.h"
 
 /**
  * Return values from switch
@@ -104,7 +105,7 @@ public:
  * F1..F4 have auto-repeat function
  */
 template<typename f1, typename f2, typename f3, typename f4, typename sel>
-class SwitchDebouncer : private CMSIS::TimerClass {
+class SwitchDebouncer  {
 
 private:
    /*
@@ -155,7 +156,9 @@ private:
    /**
     * Called at a regular rate by a CMSIS timer to poll the switches
     */
-   void callback() override {
+   void callback() {
+//      PulseTp tp;
+
       uint8_t snapshot =
             (f1::isPressed()? SwitchValue::SW_F1:0)|
             (f2::isPressed()? SwitchValue::SW_F2:0)|
@@ -184,6 +187,11 @@ private:
       }
       lastSnapshot  = snapshot;
    }
+   static SwitchDebouncer *This;
+
+   static void shim() {
+      This->callback();
+   }
 
 public:
    /**
@@ -198,7 +206,14 @@ public:
       sel::setInput(PinPull_Up);
 
       keyQueue.create();
-      start(TICK_INTERVAL);
+      using Pit = USBDM::Pit;
+      Pit::configure(PitDebugMode_Stop);
+      PitChannelNum pitNum = Pit::allocateChannel();
+      This = this;
+      Pit::setCallback(pitNum, shim);
+      Pit::configureChannel(pitNum, TICK_INTERVAL*ms, PitChannelIrq_Enabled);
+      Pit::enableNvicInterrupts(pitNum, NvicPriority_Normal);
+//      start(TICK_INTERVAL);
    }
 
    /**
@@ -232,5 +247,8 @@ public:
       return deQueue(millisecondsToWait);
    }
 };
+
+template<typename f1, typename f2, typename f3, typename f4, typename sel>
+SwitchDebouncer<f1, f2, f3, f4, sel> *SwitchDebouncer<f1, f2, f3, f4, sel>::This = nullptr;
 
 #endif /* SOURCES_SWITCHDEBOUNCER_H_ */

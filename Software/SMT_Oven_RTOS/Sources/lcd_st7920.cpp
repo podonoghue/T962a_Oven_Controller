@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include "lcd_st7920.h"
+//#include "configure.h"
 
 /**
  * Write command to LCD
@@ -143,6 +144,8 @@ void LCD_ST7920::clearFrameBuffer() {
  * Refreshes LCD from frame buffer
  */
 void LCD_ST7920::refreshImage() {
+//   PulseTp tp(6);
+
    // Set Extended instructions
    writeCommand(0b110110);
 

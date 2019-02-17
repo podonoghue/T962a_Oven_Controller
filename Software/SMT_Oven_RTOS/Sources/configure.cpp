@@ -32,6 +32,7 @@ SwitchDebouncer<F1Button, F2Button, F3Button, F4Button, SButton> buttons{};
  * @param[in] dutyCycle Controls the Heater/Fan
  */
 void outPutControl(float dutyCycle) {
+//   PulseTp tp;
    int heaterDutycycle;
    int fanDutycycle;
 
@@ -58,7 +59,8 @@ void outPutControl(float dutyCycle) {
  * @return Averaged oven temperature
  */
 float getTemperature() {
-   return temperatureSensors.getTemperature();
+   temperatureSensors.updateMeasurements();
+   return temperatureSensors.getLastTemperature();
 }
 
 /** PID controller */
