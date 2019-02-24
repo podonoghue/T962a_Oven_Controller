@@ -1103,8 +1103,8 @@ public:
  *    - Messages are <b>allocated</b> from the pool and added to the mail queue.
  *    - Messages are then removed from the mail queue and <b>freed</b> after use.
  *
- * @tparam T      Type of items in mail queue (determines size of items in pool)
- * @tparam size   Size of mail queue in items (determines number of items that can be allocated from the pool)
+ * @tparam T           Type of items in mail queue (determines size of items in pool)
+ * @tparam queueSize   Size of mail queue in items (determines number of items that can be allocated from the pool)
  *
  * Example:
  * @code
@@ -1171,14 +1171,34 @@ public:
  * }
  * @endcode
  */
-template <typename T, size_t size, Thread *thread=nullptr>
+template <typename T, size_t queueSize, Thread *thread=nullptr>
 class MailQueue {
 
+   struct MailQ {
+      uint8_t     cb_type;     /** Control Block Type                      */
+      uint8_t     state;       /** State flag variable                     */
+      uint8_t     isr_st;      /** State flag variable for isr functions   */
+      void       *p_lnk;       /** Chain of tasks waiting for message      */
+      uint16_t    first;       /** Index of the message list begin         */
+      uint16_t    last;        /** Index of the message list end           */
+      uint16_t    count;       /** Actual number of stored messages        */
+      uint16_t    size;        /** Maximum number of stored messages       */
+      void        *msg[queueSize];  /** FIFO of Message pointers   */
+   };
+   struct MessageBuffer {
+     void      *free;                            /** Pointer to first free memory block      */
+     void      *end;                             /** Pointer to memory block end             */
+     uint32_t  blk_size;                         /** Memory block size                       */
+     uint32_t  messages[((sizeof(T)+3)/4)*queueSize]; /** */
+   };
+
 private:
-   uint32_t            queue[4+size];
-   uint32_t            messages[3+((sizeof(T)+3)/4)*size];
-   const  void         *pool[2]       = {queue, messages};
-   const  os_mailQ_def os_mail_def    = {size, sizeof(T), pool};
+//   uint32_t            queue[4+size];
+   MailQ                queue;
+//   uint32_t            messages[3+((sizeof(T)+3)/4)*size];
+   MessageBuffer        messages;
+   const  void         *pool[2]       = {&queue, &messages};
+   const  os_mailQ_def os_mail_def    = {queueSize, sizeof(T), pool};
 
    //   static void *operator new     (size_t) = delete;
    //   static void *operator new[]   (size_t) = delete;
@@ -1186,6 +1206,14 @@ private:
    //   static void  operator delete[](void*)  = delete;
 
 public:
+   bool checkBounds(void *p) {
+      return ((p == nullptr) || ((p>=messages.messages) && (p<messages.messages+((sizeof(T)+3)/4)*queueSize)));
+   }
+
+   void check() {
+      usbdm_assert(checkBounds(messages.free), "Opps");
+   }
+
    /**
     * Create mail queue
     */
@@ -1196,6 +1224,7 @@ public:
       }
       osMailQId queue_id __attribute__((unused)) = osMailCreate(&os_mail_def, threadId);
       usbdm_assert(queue_id == (osMailQId)pool, "Internal check failed");
+      check();
    }
    /**
     * Allocate a memory block from the mail queue memory pool
@@ -1205,10 +1234,13 @@ public:
     * @return Pointer to allocated block or nullptr on failure.
     */
    T *alloc(uint32_t millisec=osWaitForever) {
-      if ((messages[0]==0) && (messages[1]==0)) {
+      if ((messages.free==nullptr) && (messages.end==nullptr)) {
          create();
       }
-      return (T *) osMailAlloc((os_mailQ_cb *)&pool, millisec);
+      check();
+      auto t = (T *) osMailAlloc((os_mailQ_cb *)&pool, millisec);
+      check();
+      return t;
    }
 
    /**
@@ -1221,7 +1253,10 @@ public:
     * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
    T *allocISR() {
-      return (T *)osMailAlloc((os_mailQ_cb *)&pool, 0);
+      check();
+      auto t = (T *)osMailAlloc((os_mailQ_cb *)&pool, 0);
+      check();
+      return t;
    }
 
    /**
@@ -1232,10 +1267,13 @@ public:
     * @return Pointer to allocated block or nullptr on failure.
     */
    T *calloc(uint32_t millisec=osWaitForever) {
-      if ((messages[0]==0) && (messages[0]==0)) {
+      if ((messages.free == nullptr) && (messages.end == nullptr)) {
          create();
       }
-      return (T *)osMailCAlloc((os_mailQ_cb *)&pool, millisec);
+      check();
+      auto t = (T *)osMailCAlloc((os_mailQ_cb *)&pool, millisec);
+      check();
+      return t;
    }
 
    /**
@@ -1247,7 +1285,10 @@ public:
     * @return Pointer to allocated block or nullptr on failure.
     */
    T *callocISR(uint32_t millisec) {
-      return (T *)osMailCAlloc((osMailQId)&pool, 0);
+      check();
+      auto t =  (T *)osMailCAlloc((osMailQId)&pool, 0);
+      check();
+      return t;
    }
 
    /**
@@ -1260,7 +1301,10 @@ public:
     * @return osErrorParameter:  The value to the parameter queue_id is incorrect.
     */
    osStatus free(T *mail) {
-      return osMailFree((osMailQId)&pool, mail);
+      check();
+      auto t = osMailFree((osMailQId)&pool, mail);
+      check();
+      return t;
    }
 
    /**
@@ -1275,7 +1319,10 @@ public:
     * @return osErrorParameter:  A parameter is invalid or outside of a permitted range.
     */
    osEvent get(uint32_t millisec=osWaitForever) {
-      return osMailGet((os_mailQ_cb *)&pool, millisec);
+      check();
+      auto t = osMailGet((os_mailQ_cb *)&pool, millisec);
+      check();
+      return  t;
    }
 
    /**
@@ -1287,7 +1334,10 @@ public:
     * @return osErrorParameter:  A parameter is invalid or outside of a permitted range.
     */
    osEvent getISR() {
-      return osMailGet((os_mailQ_cb *)&pool, 0);
+      check();
+      auto t = osMailGet((os_mailQ_cb *)&pool, 0);
+      check();
+      return t;
    }
 
    /**
@@ -1311,6 +1361,7 @@ public:
     * @return osErrorParameter:  A parameter is invalid or outside of a permitted range.
     */
    osStatus put(T *mail) {
+      check();
       return osMailPut((os_mailQ_cb *)&pool, mail);
    }
    /**
@@ -1319,6 +1370,7 @@ public:
     * @return CMSIS mail queue ID
     */
    osMailQId getId() {
+      check();
       return (osMailQId)queue;
    }
 };

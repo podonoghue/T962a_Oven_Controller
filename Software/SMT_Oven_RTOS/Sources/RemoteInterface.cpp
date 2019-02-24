@@ -98,13 +98,15 @@ bool RemoteInterface::send(Response *response) {
    return true;
 }
 
+void *RemoteInterface::allocatedBuffers[4] = {0};
+unsigned RemoteInterface::allocIndex = 0;
+unsigned RemoteInterface::deallocIndex = 0;
+
 /**
  * Writes thermocouple status to remote
  *
  * @param time       Time of log entry to send
  * @param lastEntry  Indicates this is the last entry so append "\n\r"
- *
- * @return Number of characters written to buffer
  */
 void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
 
@@ -119,38 +121,29 @@ void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
 
    // Format response
    USBDM::StringFormatter fm(reinterpret_cast<char*>(response->data), sizeof(response->data));
-   fm.write(Reporter::getStateName(point.getState()))
+   fm.setPrecision(1);
+   fm.write(Reporter::getStateName(point.getState())).write(',')
      .write(time).write(',')
      .write(point.getTargetTemperature()).write(',')
      .write(point.getAverageTemperature()).write(',')
      .write(point.getHeater()).write(',')
      .write(point.getFan()).write(',');
 
-//   snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%s,%d,%0.1f,%0.1f,%d,%d,",
-//         Reporter::getStateName(point.getState()),
-//         time,
-//         point.getTargetTemperature(),
-//         point.getAverageTemperature(),
-//         point.getHeater(),
-//         point.getFan());
-
    for (unsigned t=0; t<DataPoint::NUM_THERMOCOUPLES; t++) {
-      char buff2[10];
       float temperature;
       point.getTemperature(t, temperature);
-      snprintf(buff2, sizeof(buff2), "%0.1f", temperature);
+      fm.write(temperature);
       if (t != 3) {
-         strcat(buff2,",");
+         fm.write(',');
       }
-      strcat(reinterpret_cast<char*>(response->data), buff2);
    }
-   strcat(reinterpret_cast<char*>(response->data), ";");
+   fm.write(';');
    if (lastEntry) {
       // Terminate the whole transfer sequence
-      strcat(reinterpret_cast<char*>(response->data),"\n\r");
+      fm.write("\n\r\0");
    }
-   response->size = strlen(reinterpret_cast<char*>(response->data));
-   RemoteInterface::send(response);
+   response->size = fm.length();
+   send(response);
 }
 
 /**
@@ -356,6 +349,9 @@ bool RemoteInterface::doCommand(Command *cmd) {
       // This should be impossible
       return false;
    }
+   // Format response
+   USBDM::StringFormatter fm(reinterpret_cast<char*>(response->data), sizeof(response->data));
+   fm.setPrecision(1);
 
    if (strcasecmp((const char *)(cmd->data), "IDN?\n") == 0) {
       /*
@@ -363,8 +359,8 @@ bool RemoteInterface::doCommand(Command *cmd) {
        *  -> "IDN?"
        *  <- "SMT-Oven 1.0.0.0"
        */
-      strcpy(reinterpret_cast<char*>(response->data), IDN);
-      response->size = strlen(IDN);
+      fm.write(IDN);
+      response->size = fm.length();
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "THERM ", 6) == 0) {
@@ -377,13 +373,13 @@ bool RemoteInterface::doCommand(Command *cmd) {
          return false;
       }
       if (parseThermocouples(reinterpret_cast<char*>(&cmd->data[6]))) {
-         strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
+         fm.write("OK\n\r\0");
       }
       else {
-         strcpy(reinterpret_cast<char*>(response->data), "Failed - Data error\n\r");
+         fm.write("Failed - Data error\n\r\0");
       }
       interactiveMutex.release();
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      response->size = fm.length();
       send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "THERM?\n") == 0) {
@@ -394,19 +390,16 @@ bool RemoteInterface::doCommand(Command *cmd) {
        */
       response->data[0] = (uint8_t)'\0';
       for (int t=0; t<4; t++) {
-         char buff[10];
-         snprintf(buff, sizeof(buff),"%d,%d",
-               temperatureSensors.getThermocouple(t).isEnabled(),
-               temperatureSensors.getThermocouple(t).getOffset());
+         fm.write((int)temperatureSensors.getThermocouple(t).isEnabled()).write(',')
+           .write(temperatureSensors.getThermocouple(t).getOffset());
          if (t != 3) {
-            strcat(buff, ",");
+            fm.write(',');
          }
          else {
-            strcat(buff, ";\n\r");
+            fm.write(";\n\r\0");
          }
-         strcat(reinterpret_cast<char*>(response->data), buff);
       }
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      response->size = fm.length();
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "PID ", 4) == 0) {
@@ -420,13 +413,13 @@ bool RemoteInterface::doCommand(Command *cmd) {
          return false;
       }
       if (parsePidParameters(reinterpret_cast<char*>(&cmd->data[4]))) {
-         strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
+         fm.write("OK\n\r\0");
       }
       else {
-         strcpy(reinterpret_cast<char*>(response->data), "Failed - Data error\n\r");
+         fm.write("Failed - Data error\n\r\0");
       }
       interactiveMutex.release();
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      response->size = fm.length();
       send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "PID?\n") == 0) {
@@ -436,9 +429,10 @@ bool RemoteInterface::doCommand(Command *cmd) {
        *  <- "Proportional,Integral,Differential;"
        */
       response->data[0] = (uint8_t)'\0';
-      snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%f,%f,%f\n\r",
-            (float)pidKp, (float)pidKi, (float)pidKd);
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      fm.write((float)pidKp).write(',');
+      fm.write((float)pidKi).write(',');
+      fm.write((float)pidKd).write("\n\r\0");
+      response->size = fm.length();
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "PROF ", 5) == 0) {
@@ -452,13 +446,13 @@ bool RemoteInterface::doCommand(Command *cmd) {
          return false;
       }
       if (parseProfile(reinterpret_cast<char*>(&cmd->data[5]))) {
-         strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
+         fm.write("OK\n\r\0");
       }
       else {
-         strcpy(reinterpret_cast<char*>(response->data), "Failed - data error\n\r");
+         fm.write("Failed - Data error\n\r\0");
       }
       interactiveMutex.release();
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      response->size = fm.length();
       send(response);
    }
    else if (strcasecmp((const char *)(cmd->data), "PROF?\n") == 0) {
@@ -468,31 +462,18 @@ bool RemoteInterface::doCommand(Command *cmd) {
        *  -> "profile-number,description,flags,liquidus,preheatTime,soakTemp1,soakTemp2,soakTime,rampUpSlope,peakTemp,peakDwell,rampDownSlope;
        */
       const NvSolderProfile &profile = profiles[currentProfileIndex];
-      snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data),
-            /* index         */ "%d,"
-            /* description   */ "%s,"
-            /* flags         */ "%2.2X,"
-            /* liquidus      */ "%d,"
-            /* preheatTime   */ "%d,"
-            /* soakTemp1     */ "%d,"
-            /* soakTemp2     */ "%d,"
-            /* soakTime      */ "%d,"
-            /* ramp2Slope    */ "%.1f,"
-            /* peakTemp      */ "%d,"
-            /* peakDwell     */ "%d,"
-            /* rampDownSlope */ "%.1f;\n\r",
-            (int)currentProfileIndex,
-            (const char *)profile.description,
-            (int)  profile.flags,
-            (int)  profile.liquidus,
-            (int)  profile.preheatTime,
-            (int)  profile.soakTemp1,
-            (int)  profile.soakTemp2,
-            (int)  profile.soakTime,
-            (float)profile.rampUpSlope,
-            (int)  profile.peakTemp,
-            (int)  profile.peakDwell,
-            (float)profile.rampDownSlope);
+      fm.write((int)          currentProfileIndex).write(',');     /* index         */
+      fm.write((const char *) profile.description).write(',');     /* description   */
+      fm.write((int)          profile.flags).write(',');           /* flags         */
+      fm.write((int)          profile.liquidus).write(',');        /* liquidus      */
+      fm.write((int)          profile.preheatTime).write(',');     /* preheatTime   */
+      fm.write((int)          profile.soakTemp1).write(',');       /* soakTemp1     */
+      fm.write((int)          profile.soakTemp2).write(',');       /* soakTemp2     */
+      fm.write((int)          profile.soakTime).write(',');        /* soakTime      */
+      fm.write((float)        profile.rampUpSlope).write(',');     /* ramp2Slope    */
+      fm.write((int)          profile.peakTemp).write(',');        /* peakTemp      */
+      fm.write((int)          profile.peakDwell).write(',');       /* peakDwell     */
+      fm.write((float)        profile.rampDownSlope).write(',');   /* rampDownSlope */
       response->size = strlen(reinterpret_cast<char*>(response->data));
       send(response);
    }
@@ -504,12 +485,12 @@ bool RemoteInterface::doCommand(Command *cmd) {
        *  number_of_points;[state,time,target temperature, average temperature, heater percentage, fan percentage, T1, T2, T3, T4]*
        */
       int lastValid = Draw::getData().getLastValid();
-      snprintf(reinterpret_cast<char*>(response->data), sizeof(response->data), "%d;", lastValid+1);
+      fm.write(lastValid+1).write(';');
       if (lastValid < 0) {
          // Terminate the response early
-         strcat(reinterpret_cast<char*>(response->data), "\n\r");
+         fm.write("\n\r\0");
       }
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      response->size = fm.length();
       send(response);
       for (int index=0; index<=lastValid; index++) {
          logThermocoupleStatus(index, index == lastValid);
@@ -526,8 +507,8 @@ bool RemoteInterface::doCommand(Command *cmd) {
          return false;
       }
       RunProfile::remoteStartRunProfile();
-      strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      fm.write("OK\n\r\0");
+      response->size = fm.length();
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "ABORT\n\r", 4) == 0) {
@@ -543,10 +524,10 @@ bool RemoteInterface::doCommand(Command *cmd) {
       RunProfile::abortRunProfile();
       // Unlock previous lock
       interactiveMutex.release();
-      strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
       // Unlock interface
       interactiveMutex.release();
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      fm.write("OK\n\r\0");
+      response->size = fm.length();
       send(response);
    }
    else if (strncasecmp((const char *)(cmd->data), "RUN?\n\r", 4) == 0) {
@@ -563,19 +544,19 @@ bool RemoteInterface::doCommand(Command *cmd) {
       if (state == s_complete) {
          // Unlock previous lock
          interactiveMutex.release();
-         strcpy(reinterpret_cast<char*>(response->data), "OK\n\r");
+         fm.write("OK\n\r\0");
       }
       else if (state == s_fail) {
          // Unlock interface
          interactiveMutex.release();
-         strcpy(reinterpret_cast<char*>(response->data), "Failed\n\r");
+         fm.write("Failed\n\r\0");
       }
       else {
-         strcpy(reinterpret_cast<char*>(response->data), "Running\n\r");
+         fm.write("Running\n\r\0");
       }
       // Unlock interface
       interactiveMutex.release();
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      response->size = fm.length();
       send(response);
    }
    else {
@@ -584,8 +565,8 @@ bool RemoteInterface::doCommand(Command *cmd) {
        * <- "?????"
        * -> "Failed - unrecognized command"
        */
-      strcpy(reinterpret_cast<char*>(response->data), "Failed - unrecognized command\n\r");
-      response->size = strlen(reinterpret_cast<char*>(response->data));
+      fm.write("Failed - unrecognized command\n\r\0");
+      response->size = fm.length();
       send(response);
    }
    return true;

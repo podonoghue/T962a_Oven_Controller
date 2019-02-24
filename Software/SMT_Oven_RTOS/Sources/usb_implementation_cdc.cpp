@@ -354,9 +354,15 @@ EndpointState Usb0::cdcOutTransactionCallback(EndpointState state) {
 EndpointState Usb0::cdcInTransactionCallback(EndpointState state) {
    usbdm_assert(state == EPDataIn, "Incorrect endpoint state");
    (void)state;
-   if (response != nullptr) {
+   RemoteInterface::Response *t = nullptr;
+   {
+      USBDM::CriticalSection cs;
+      t = response;
+      response = nullptr;
+   }
+   if (t != nullptr) {
       // Free last buffer as transfer is now complete
-      RemoteInterface::freeResponseBuffer(response);
+      RemoteInterface::freeResponseBuffer(t);
    }
    // Set up new message
    response = RemoteInterface::getResponse();

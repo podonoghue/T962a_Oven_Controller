@@ -15,8 +15,8 @@ proc poll {} {
    puts $::ovenFilehandle "IDN?"
    flush $::ovenFilehandle
 }
-# source TestOvenCommunication.tcl
 # cd C:\\Users\\podonoghue\\Documents\\Development\\T962a_Oven_Controller
+# source TestOvenCommunication.tcl
 
 # simple serial port example to send AT to modem and 
 # wait for OK response in a fixed amount of time.  At the
@@ -38,7 +38,7 @@ switch $tcl_platform(os) {
     default            {error "Must configure comPort"}
 }
 set waitSecs 5
-set nTries   1000
+set nTries   10000
 
 #
 # A cheap version of expect.
@@ -179,14 +179,14 @@ set fh [open $comPort RDWR]
 fconfigure $fh -blocking 0 -buffering none \
         -mode 115200,n,8,1 -translation binary -eofchar {}
 
-# Loop nTries times, sending AT to modem and expecting OK.
+# Loop nTries times, sending PLOT? to modem and accepting any response ending in newline.
 set nMatches 0
 for {set i 0} {$i < $nTries} {incr i} {
     if {[send_expect $fh "PLOT?\r" ".*\n" $waitSecs]} {
         incr nMatches
         regsub -all "\r" [send_exp_getbuf $fh] {\r} buf
         regsub -all "\n" $buf {\n} buf
-        puts "GOT MATCH: <$buf>"
+        puts "GOT MATCH $i: <$buf>"
     } else {
         puts "NO MATCH IN $waitSecs SECONDS"
     }

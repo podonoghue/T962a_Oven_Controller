@@ -109,24 +109,45 @@ public:
       return (RemoteInterface::Response*)status.value.p;
    }
 
+   static void *allocatedBuffers[4];
+   static unsigned allocIndex;
+   static unsigned deallocIndex;
+
    /**
     * Used to free response buffer
     *
     * @param[in,out] response Response buffer to free
     */
-   static void freeResponseBuffer(RemoteInterface::Response *&response) {
+   static void freeResponseBuffer(RemoteInterface::Response *response) {
+      if(allocatedBuffers[deallocIndex] != response) {
+         __BKPT();
+      }
+      allocatedBuffers[deallocIndex++] = nullptr;
+      if (deallocIndex>=(sizeof(allocatedBuffers)/sizeof(allocatedBuffers[0]))) {
+         deallocIndex = 0;
+      }
       RemoteInterface::responseQueue.free(response);
-      response = nullptr;
    }
 
    /**
     * Allocate response (send) buffer
     *
     * @return Pointer to allocated buffer
-    * @return NULL Failed allocation
+    * @return nullptr Failed allocation
     */
    static Response *allocResponseBuffer() {
-      return responseQueue.alloc();
+      Response *t = responseQueue.alloc();
+      if(t == nullptr) {
+         __BKPT();
+      }
+      if(allocatedBuffers[allocIndex] != nullptr) {
+         __BKPT();
+      }
+      allocatedBuffers[allocIndex++] = t;
+      if (allocIndex>=(sizeof(allocatedBuffers)/sizeof(allocatedBuffers[0]))) {
+         allocIndex = 0;
+      }
+      return t;
    }
 
    /**
@@ -154,5 +175,6 @@ public:
     */
    static void putData(int size, volatile const uint8_t *buff);
 };
+
 
 #endif /* SOURCES_REMOTEINTERFACE_H_ */
