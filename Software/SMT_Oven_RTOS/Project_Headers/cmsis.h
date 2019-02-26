@@ -1174,28 +1174,26 @@ public:
 template <typename T, size_t queueSize, Thread *thread=nullptr>
 class MailQueue {
 
-   struct MailQ {
-      uint8_t     cb_type;     /** Control Block Type                      */
-      uint8_t     state;       /** State flag variable                     */
-      uint8_t     isr_st;      /** State flag variable for isr functions   */
-      void       *p_lnk;       /** Chain of tasks waiting for message      */
-      uint16_t    first;       /** Index of the message list begin         */
-      uint16_t    last;        /** Index of the message list end           */
-      uint16_t    count;       /** Actual number of stored messages        */
-      uint16_t    size;        /** Maximum number of stored messages       */
+   struct MainQueue_cb {
+      uint8_t     cb_type;          /** Control Block Type                      */
+      uint8_t     state;            /** State flag variable                     */
+      uint8_t     isr_st;           /** State flag variable for isr functions   */
+      void       *p_lnk;            /** Chain of tasks waiting for message      */
+      uint16_t    first;            /** Index of the message list begin         */
+      uint16_t    last;             /** Index of the message list end           */
+      uint16_t    count;            /** Actual number of stored messages        */
+      uint16_t    size;             /** Maximum number of stored messages       */
       void        *msg[queueSize];  /** FIFO of Message pointers   */
    };
    struct MessageBuffer {
-     void      *free;                            /** Pointer to first free memory block      */
-     void      *end;                             /** Pointer to memory block end             */
-     uint32_t  blk_size;                         /** Memory block size                       */
-     uint32_t  messages[((sizeof(T)+3)/4)*queueSize]; /** */
+     void      *free;                                 /** Pointer to first free memory block      */
+     void      *end;                                  /** Pointer to memory block end             */
+     uint32_t  blk_size;                              /** Memory block size                       */
+     uint32_t  messages[((sizeof(T)+3)/4)*queueSize]; /** Message pool*/
    };
 
 private:
-//   uint32_t            queue[4+size];
-   MailQ                queue;
-//   uint32_t            messages[3+((sizeof(T)+3)/4)*size];
+   MainQueue_cb         queue;
    MessageBuffer        messages;
    const  void         *pool[2]       = {&queue, &messages};
    const  os_mailQ_def os_mail_def    = {queueSize, sizeof(T), pool};
@@ -1211,7 +1209,7 @@ public:
    }
 
    void check() {
-      usbdm_assert(checkBounds(messages.free), "Opps");
+      usbdm_assert(checkBounds(messages.free), "Pointer corrupted");
    }
 
    /**
@@ -1224,7 +1222,6 @@ public:
       }
       osMailQId queue_id __attribute__((unused)) = osMailCreate(&os_mail_def, threadId);
       usbdm_assert(queue_id == (osMailQId)pool, "Internal check failed");
-      check();
    }
    /**
     * Allocate a memory block from the mail queue memory pool
@@ -1237,10 +1234,7 @@ public:
       if ((messages.free==nullptr) && (messages.end==nullptr)) {
          create();
       }
-      check();
-      auto t = (T *) osMailAlloc((os_mailQ_cb *)&pool, millisec);
-      check();
-      return t;
+      return (T *) osMailAlloc((os_mailQ_cb *)&pool, millisec);
    }
 
    /**
@@ -1253,10 +1247,7 @@ public:
     * @return osErrorParameter: a parameter is invalid or outside of a permitted range.
     */
    T *allocISR() {
-      check();
-      auto t = (T *)osMailAlloc((os_mailQ_cb *)&pool, 0);
-      check();
-      return t;
+      return (T *)osMailAlloc((os_mailQ_cb *)&pool, 0);
    }
 
    /**
@@ -1270,10 +1261,7 @@ public:
       if ((messages.free == nullptr) && (messages.end == nullptr)) {
          create();
       }
-      check();
-      auto t = (T *)osMailCAlloc((os_mailQ_cb *)&pool, millisec);
-      check();
-      return t;
+      return (T *)osMailCAlloc((os_mailQ_cb *)&pool, millisec);
    }
 
    /**
@@ -1285,10 +1273,7 @@ public:
     * @return Pointer to allocated block or nullptr on failure.
     */
    T *callocISR(uint32_t millisec) {
-      check();
-      auto t =  (T *)osMailCAlloc((osMailQId)&pool, 0);
-      check();
-      return t;
+      return (T *)osMailCAlloc((osMailQId)&pool, 0);
    }
 
    /**
@@ -1301,10 +1286,7 @@ public:
     * @return osErrorParameter:  The value to the parameter queue_id is incorrect.
     */
    osStatus free(T *mail) {
-      check();
-      auto t = osMailFree((osMailQId)&pool, mail);
-      check();
-      return t;
+      return osMailFree((osMailQId)&pool, mail);
    }
 
    /**
@@ -1319,10 +1301,7 @@ public:
     * @return osErrorParameter:  A parameter is invalid or outside of a permitted range.
     */
    osEvent get(uint32_t millisec=osWaitForever) {
-      check();
-      auto t = osMailGet((os_mailQ_cb *)&pool, millisec);
-      check();
-      return  t;
+      return osMailGet((os_mailQ_cb *)&pool, millisec);
    }
 
    /**
@@ -1334,10 +1313,7 @@ public:
     * @return osErrorParameter:  A parameter is invalid or outside of a permitted range.
     */
    osEvent getISR() {
-      check();
-      auto t = osMailGet((os_mailQ_cb *)&pool, 0);
-      check();
-      return t;
+      return osMailGet((os_mailQ_cb *)&pool, 0);
    }
 
    /**
@@ -1361,7 +1337,6 @@ public:
     * @return osErrorParameter:  A parameter is invalid or outside of a permitted range.
     */
    osStatus put(T *mail) {
-      check();
       return osMailPut((os_mailQ_cb *)&pool, mail);
    }
    /**
@@ -1370,7 +1345,6 @@ public:
     * @return CMSIS mail queue ID
     */
    osMailQId getId() {
-      check();
       return (osMailQId)queue;
    }
 };

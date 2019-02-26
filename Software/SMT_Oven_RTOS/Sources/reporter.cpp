@@ -91,31 +91,33 @@ static void writeThermocoupleStatus() {
    lcd.setInversion(false);
    lcd.clearFrameBuffer();
    lcd.gotoXY(0,0);
-   lcd.putSpace(14); lcd.putString("Status Oven  ColdJn\n");
+   lcd.putSpace(14); lcd.write("Status Oven  ColdJn\n");
    lcd.drawHorizontalLine(9);
    lcd.gotoXY(0, 12);
 
    // Get temperatures
    const DataPoint &dataPoint = temperatureSensors.getLastMeasurement();
-
+   lcd.setWidth(6);
    for (unsigned t=0; t<TemperatureSensors::NUM_THERMOCOUPLES; t++) {
       float temperature, coldReference;
       Max31855::ThermocoupleStatus status = dataPoint.getTemperature(t, temperature);
       coldReference = temperatureSensors.getColdReferences(t);
 
-      lcd.printf("T%d:", t+1); lcd.putSpace(2);
+      lcd.write("T").write(t+1);lcd.putSpace(2);
       if (status == Max31855::TH_ENABLED) {
-         lcd.printf("%-4s %5.1f\x7F %5.1f\x7F\n", Max31855::getStatusName(status), temperature, coldReference);
+         lcd.write(Max31855::getStatusName(status)).write(" ").write(temperature).write("\x7F ").write(coldReference).writeln("\x7F");
+//         lcd.printf("%-4s %5.1f\x7F %5.1f\x7F\n", Max31855::getStatusName(status), temperature, coldReference);
       }
       else if (status != Max31855::TH_MISSING) {
          temperature = 0;
-         lcd.printf("%-4s  ----  %5.1f\x7F\n", Max31855::getStatusName(status), coldReference);
+         lcd.write(Max31855::getStatusName(status)).write("  ----  ").write(coldReference).writeln("\x7F ");
       }
       else {
          temperature = 0;
-         lcd.printf("%-4s\n", Max31855::getStatusName(status));
+         lcd.writeln(Max31855::getStatusName(status));
       }
    }
+   lcd.setWidth(0);
    if (fTextPrompt != nullptr) {
       fTextPrompt();
    }

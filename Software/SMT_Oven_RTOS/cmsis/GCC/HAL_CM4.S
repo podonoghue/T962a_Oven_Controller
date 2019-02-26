@@ -51,40 +51,40 @@
         .align  2
 
 
-#/*--------------------------- rt_set_PSP ------------------------------------*/
-#
-# #       void rt_set_PSP (U32 stack);
-#
-#        .thumb_func
-#        .type   rt_set_PSP, %function
-#        .global rt_set_PSP
-#rt_set_PSP:
-#        .fnstart
-#        .cantunwind
-#
-#        MSR     PSP,R0
-#        BX      LR
-#
-#        .fnend
-#        .size   rt_set_PSP, .-rt_set_PSP
-#
-#
-#/*--------------------------- rt_get_PSP ------------------------------------*/
-#
-# #       U32 rt_get_PSP (void);
-#
-#        .thumb_func
-#        .type   rt_get_PSP, %function
-#        .global rt_get_PSP
-#rt_get_PSP:
-#        .fnstart
-#        .cantunwind
-#
-#        MRS     R0,PSP
-#        BX      LR
-#
-#        .fnend
-#        .size   rt_get_PSP, .-rt_get_PSP
+/*--------------------------- rt_set_PSP ------------------------------------*/
+
+#       void rt_set_PSP (U32 stack);
+
+        .thumb_func
+        .type   rt_set_PSP, %function
+        .global rt_set_PSP
+rt_set_PSP:
+        .fnstart
+        .cantunwind
+
+        MSR     PSP,R0
+        BX      LR
+
+        .fnend
+        .size   rt_set_PSP, .-rt_set_PSP
+
+
+/*--------------------------- rt_get_PSP ------------------------------------*/
+
+#       U32 rt_get_PSP (void);
+
+        .thumb_func
+        .type   rt_get_PSP, %function
+        .global rt_get_PSP
+rt_get_PSP:
+        .fnstart
+        .cantunwind
+
+        MRS     R0,PSP
+        BX      LR
+
+        .fnend
+        .size   rt_get_PSP, .-rt_get_PSP
 
 
 /*--------------------------- os_set_env ------------------------------------*/
@@ -114,60 +114,60 @@ os_set_env:
         .size   os_set_env, .-os_set_env
 
 
-#/*--------------------------- _alloc_box ------------------------------------*/
-#
-##      void *_alloc_box (void *box_mem);
-#       /* Function wrapper for Unprivileged/Privileged mode. */
-#
-#        .thumb_func
-#        .type   _alloc_box, %function
-#        .global _alloc_box
-#_alloc_box:
-#        .fnstart
-#        .cantunwind
-#
-#        LDR     R12,=rt_alloc_box
-#        MRS     R3,IPSR
-#        LSLS    R3,#24
-#        IT      NE
-#        BXNE    R12
-#        MRS     R3,CONTROL
-#        LSLS    R3,#31
-#        IT      EQ
-#        BXEQ    R12
-#        SVC     0
-#        BX      LR
-#
-#        .fnend
-#        .size   _alloc_box, .-_alloc_box
-#
-#
-#/*--------------------------- _free_box -------------------------------------*/
-#
-##       U32 _free_box (void *box_mem, void *box);
-#        /* Function wrapper for Unprivileged/Privileged mode. */
-#
-#        .thumb_func
-#        .type   _free_box, %function
-#        .global _free_box
-#_free_box:
-#        .fnstart
-#        .cantunwind
-#
-#        LDR     R12,=rt_free_box
-#        MRS     R3,IPSR
-#        LSLS    R3,#24
-#        IT      NE
-#        BXNE    R12
-#        MRS     R3,CONTROL
-#        LSLS    R3,#31
-#        IT      EQ
-#        BXEQ    R12
-#        SVC     0
-#        BX      LR
-#
-#        .fnend
-#        .size   _free_box, .-_free_box
+/*--------------------------- _alloc_box ------------------------------------*/
+
+#      void *_alloc_box (void *box_mem);
+       /* Function wrapper for Unprivileged/Privileged mode. */
+
+        .thumb_func
+        .type   _alloc_box, %function
+        .global _alloc_box
+_alloc_box:
+        .fnstart
+        .cantunwind
+
+        LDR     R12,=rt_alloc_box
+        MRS     R3,IPSR
+        LSLS    R3,#24
+        IT      NE
+        BXNE    R12
+        MRS     R3,CONTROL
+        LSLS    R3,#31
+        IT      EQ
+        BXEQ    R12
+        SVC     0
+        BX      LR
+
+        .fnend
+        .size   _alloc_box, .-_alloc_box
+
+
+/*--------------------------- _free_box -------------------------------------*/
+
+#       U32 _free_box (void *box_mem, void *box);
+        /* Function wrapper for Unprivileged/Privileged mode. */
+
+        .thumb_func
+        .type   _free_box, %function
+        .global _free_box
+_free_box:
+        .fnstart
+        .cantunwind
+
+        LDR     R12,=rt_free_box
+        MRS     R3,IPSR
+        LSLS    R3,#24
+        IT      NE
+        BXNE    R12
+        MRS     R3,CONTROL
+        LSLS    R3,#31
+        IT      EQ
+        BXEQ    R12
+        SVC     0
+        BX      LR
+
+        .fnend
+        .size   _free_box, .-_free_box
 
 
 /*-------------------------- SVC_Handler ------------------------------------*/

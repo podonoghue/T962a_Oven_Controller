@@ -19,7 +19,6 @@
  */
 #include <stdint.h>
 #include <math.h>
-//#include <cstdio>       // snprintf()
 #include <ctype.h>      // isspace() etc
 #include "hardware.h"
 
@@ -60,7 +59,7 @@ enum EndOfLineType {
 /**
  * Padding for integers
  */
-enum Padding {
+enum Padding : uint8_t {
    Padding_None ,         //!< No padding
    Padding_LeadingSpaces, //!< Pad with leading spaces
    Padding_LeadingZeroes, //!< Pad with leading zeroes
@@ -124,17 +123,27 @@ protected:
    /**
     * Width used for integers numbers
     */
-   unsigned fWidth = 0;
+   uint8_t fWidth = 0;
+
+   /**
+    * How to pad the digits on left of floating point number
+    */
+   Padding fFloatPadding = Padding_None;
 
    /**
     * Precision used for floating point numbers
     */
-   unsigned fPrecision = 3;
+   uint8_t fFloatWidth = 0;
 
    /**
-    * Precision multiplier used for floating point numbers (10^fPrecision)
+    * Precision used for floating point numbers
     */
-   unsigned fPrecisionMultiplier = 1000;
+   uint8_t fFloatPrecision = 3;
+
+   /**
+    * Precision multiplier used for floating point numbers (10^fFloatPrecision)
+    */
+   unsigned fFloatPrecisionMultiplier = 1000;
 
    /**
     * Construct formatter interface
@@ -195,6 +204,16 @@ protected:
     * @param[in]  ch - character to send
     */
    virtual void _writeChar(char ch) = 0;
+
+   /**
+    *  Flush output data
+    */
+   virtual void flushOutput() = 0;
+
+   /**
+    *  Flush input data
+    */
+   virtual void flushInput() = 0;
 
 public:
    /**
@@ -283,12 +302,26 @@ public:
     *
     * @return Reference to self
     */
-   FormattedIO &setPrecision(unsigned precision) {
-      fPrecision = precision;
-      fPrecisionMultiplier = 1;
-      while (precision-->0) {
-         fPrecisionMultiplier *= 10;
+   /**
+    *
+    * @param precision Number of digits to the right of decimal point
+    * @param padding   How to pad on the left of the number (Padding_LeadingSpaces, Padding_None, Padding_LeadingZeroes)
+    * @param width     Number of characters to the left of decimal point
+    * @return
+    */
+   FormattedIO &setFloatFormat( unsigned  precision,
+                                Padding   padding  = Padding_None,
+                                unsigned  width    = 0) {
+      if (padding == Padding_TrailingSpaces) {
+         padding = Padding_LeadingSpaces;
       }
+      fFloatPrecision           = precision;
+      fFloatPrecisionMultiplier = 1;
+      while (precision-->0) {
+         fFloatPrecisionMultiplier *= 10;
+      }
+      fFloatPadding = padding;
+      fFloatWidth   = width;
       return *this;
    }
 
@@ -522,8 +555,8 @@ public:
       fWidth               = 0;
       fPadding             = Padding_None;
       fRadix               = Radix_10;
-      fPrecision           = 3;
-      fPrecisionMultiplier = 1000;
+      fFloatPrecision           = 3;
+      fFloatPrecisionMultiplier = 1000;
       return *this;
    }
 
@@ -763,15 +796,16 @@ public:
     */
    FormattedIO __attribute__((noinline)) &write(double value) {
       char buff[20];
+      bool isNegative = false;
       if (value<0) {
-         write('-');
          value = -value;
+         isNegative = true;
       }
-      ultoa(buff, (long)value, Radix_10, Padding_None, 0);
+      ultoa(buff, (long)value, Radix_10, fFloatPadding, fFloatWidth, isNegative);
       write(buff).write('.');
       ultoa(buff, 
-           ((long)round(value*fPrecisionMultiplier))%fPrecisionMultiplier, 
-           Radix_10, Padding_LeadingZeroes, fPrecision);
+           ((long)round(value*fFloatPrecisionMultiplier))%fFloatPrecisionMultiplier,
+           Radix_10, Padding_LeadingZeroes, fFloatPrecision);
       write(buff);
       return *this;
    }
@@ -1344,16 +1378,6 @@ public:
       setPadding(padding);
       return *this;
    }
-
-   /**
-    *  Flush output data
-    */
-   virtual void flushOutput() = 0;
-
-   /**
-    *  Flush input data
-    */
-   virtual void flushInput() = 0;
 
    /**
     * Print an array as a hex table.

@@ -727,7 +727,6 @@ public:
       spi->MCR |= SPI_MCR_HALT_MASK;
       // Release mutex
       osStatus status = mutex().release();
-//      CMSIS::Thread::yield();
       if (status != osOK) {
          CMSIS::setAndCheckCmsisErrorCode(status);
       }

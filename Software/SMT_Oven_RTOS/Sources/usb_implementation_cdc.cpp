@@ -218,7 +218,7 @@ ErrorCode Usb0::sofCallback(uint16_t frameNumber) {
    // On,  flash briefly off  - USB activity, connected
    if ((frameNumber&0xFF)==0) {
       // Every ~256 ms
-      switch (frameNumber&0x03) {
+      switch ((frameNumber>>8)&0x3) {
          case 0:
             // LED on if configured, off if not
 //            UsbLed::write(fConnectionState == USBconfigured);

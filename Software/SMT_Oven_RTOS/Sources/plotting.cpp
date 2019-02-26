@@ -149,8 +149,9 @@ static void drawAxis(int profileIndex) {
    // Name
    lcd.gotoXY(NAME_OFFSET_X, NAME_OFFSET_Y);
    lcd.setInversion(true);
-   lcd.printf("%d:%s", profileIndex, (const volatile char *)(profiles[profileIndex].description));
-   lcd.putChar('\n');
+   lcd.write(profileIndex).write(":").write((const char *)(profiles[profileIndex].description));
+//   lcd.printf("%d:%s", profileIndex, (const volatile char *)(profiles[profileIndex].description));
+   lcd.write('\n');
    lcd.setInversion(false);
 }
 

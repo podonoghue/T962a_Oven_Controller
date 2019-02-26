@@ -38,7 +38,7 @@ switch $tcl_platform(os) {
     default            {error "Must configure comPort"}
 }
 set waitSecs 5
-set nTries   10000
+set nTries   1000000
 
 #
 # A cheap version of expect.

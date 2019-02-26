@@ -1132,8 +1132,6 @@ os_InRegs osCallback_type svcTimerCall (osTimerId timer_id) {
 
 osStatus isrMessagePut (osMessageQId queue_id, uint32_t info, uint32_t millisec);
 
-extern void iterateMessageboxQueue(void *q);
-
 /// Timer Tick (called each SysTick)
 void sysTimerTick (void) {
   os_timer_cb *pt, *p;
@@ -1149,8 +1147,7 @@ void sysTimerTick (void) {
     os_timer_head = p;
     status = isrMessagePut(osMessageQId_osTimerMessageQ, (uint32_t)pt, 0U);
     if (status != osOK) {
-       iterateMessageboxQueue(osMessageQId_osTimerMessageQ);
-       os_error(OS_ERR_TIMER_OVF);
+      os_error(OS_ERR_TIMER_OVF);
     }
     if (pt->type == (uint8_t)osTimerPeriodic) {
       rt_timer_insert(pt, pt->icnt);

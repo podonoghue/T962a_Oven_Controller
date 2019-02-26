@@ -20,38 +20,38 @@ void ProfileNameSetting::draw() {
    lcd.clearFrameBuffer();
 
    lcd.gotoXY(10, 0);
-   lcd.setInversion(true); lcd.putString(" Edit Name "); lcd.setInversion(false);
+   lcd.setInversion(true); lcd.write(" Edit Name "); lcd.setInversion(false);
 
    lcd.gotoXY(0, 1*lcd.FONT_HEIGHT+3);
-   lcd.putString(nameBuffer);
+   lcd.write(nameBuffer);
 
    // Highlight selected edit letter
    lcd.gotoXY(editPosition*lcd.FONT_WIDTH, 1*lcd.FONT_HEIGHT+3);
    lcd.setInversion(true);
-   lcd.putChar(nameBuffer[editPosition]);
+   lcd.write(nameBuffer[editPosition]);
    lcd.setInversion(false);
 
    // Draw letter selection list
    for (unsigned index=0; index<sizeof(letters); index++) {
       lcd.gotoXY((index%LETTER_GRID_WIDTH)*lcd.FONT_WIDTH,
             (2+(index/LETTER_GRID_WIDTH))*lcd.FONT_HEIGHT+6);
-      lcd.putChar(letters[index]);
+      lcd.write(letters[index]);
    }
 
    // Highlight selected entry letter
    lcd.gotoXY((letterPosition%LETTER_GRID_WIDTH)*lcd.FONT_WIDTH,
          (2+(letterPosition/LETTER_GRID_WIDTH))*lcd.FONT_HEIGHT+6);
    lcd.setInversion(true);
-   lcd.putChar(letters[letterPosition]);
+   lcd.write(letters[letterPosition]);
    lcd.setInversion(false);
 
    // Draw menu
    lcd.gotoXY(0,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putLeftArrow();    lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putRightArrow();   lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Sel");  lcd.putSpace(2); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Del");  lcd.putSpace(2); lcd.setInversion(false); lcd.putSpace(6);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("EXIT"); lcd.putSpace(2); lcd.setInversion(false);
+   lcd.setInversion(true).putSpace(3); lcd.putLeftArrow();  lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true).putSpace(3); lcd.putRightArrow(); lcd.putSpace(4); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true).putSpace(3); lcd.write("Sel");    lcd.putSpace(2); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true).putSpace(3); lcd.write("Del");    lcd.putSpace(2); lcd.setInversion(false); lcd.putSpace(6);
+   lcd.setInversion(true).putSpace(3); lcd.write("EXIT");   lcd.putSpace(2); lcd.setInversion(false);
 
    lcd.refreshImage();
    lcd.setGraphicMode();
@@ -127,7 +127,7 @@ void EditProfile::drawScreen() {
       offset--;
    }
    lcd.setInversion(false); lcd.clearFrameBuffer();
-   lcd.setInversion(true);  lcd.putString("  Edit Profile\n");  lcd.setInversion(false);
+   lcd.setInversion(true);  lcd.write("  Edit Profile\n");  lcd.setInversion(false);
 
    for (int item=0; item<NUM_ITEMS; item++) {
       // Check visible
@@ -139,15 +139,15 @@ void EditProfile::drawScreen() {
       }
       lcd.setInversion(item == selection);
       lcd.gotoXY(0, (item+1-offset)*lcd.FONT_HEIGHT);
-      lcd.printf(items[item]->getDescription());
+      lcd.write(items[item]->getDescription());
    }
    lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
    lcd.setInversion(false); lcd.putSpace(4);
-   lcd.setInversion(true);  lcd.putString(" ");      lcd.putUpArrow();   lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(3);
-   lcd.setInversion(true);  lcd.putString(" ");      lcd.putDownArrow(); lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(3);
-   lcd.setInversion(true);  lcd.putString(" + ");    lcd.setInversion(false);            lcd.putSpace(3);
-   lcd.setInversion(true);  lcd.putString(" - ");    lcd.setInversion(false);            lcd.putSpace(3);
-   lcd.setInversion(true);  lcd.putString(" Exit "); lcd.setInversion(false);            lcd.putSpace(3);
+   lcd.setInversion(true);  lcd.write(" "); lcd.putUpArrow();   lcd.write(" "); lcd.setInversion(false); lcd.putSpace(3);
+   lcd.setInversion(true);  lcd.write(" "); lcd.putDownArrow(); lcd.write(" "); lcd.setInversion(false); lcd.putSpace(3);
+   lcd.setInversion(true);  lcd.write(" + ");                                   lcd.setInversion(false); lcd.putSpace(3);
+   lcd.setInversion(true);  lcd.write(" - ");                                   lcd.setInversion(false); lcd.putSpace(3);
+   lcd.setInversion(true);  lcd.write(" Exit ");                                lcd.setInversion(false); lcd.putSpace(3);
 
    lcd.refreshImage();
    lcd.setGraphicMode();
@@ -226,15 +226,15 @@ void EditProfile::run(NvSolderProfile &nvProfile) {
    do {
       if (editProfile.doit() || changed) {
          changed = true;
-         char buff[100];
+         USBDM::StringFormatter_T<100> sf;
          if (!tempProfile.isValid()) {
-            snprintf(buff, sizeof(buff), "%s\n\nProfile is invalid\nPlease check", tempProfile.description);
-            messageBox("Profile changed", buff, MSG_OK);
+            sf.write(tempProfile.description).write("\n\nProfile is invalid\nPlease check");
+            messageBox("Profile changed", sf.toString(), MSG_OK);
             rc = MSG_IS_CANCEL;
          }
          else {
-            snprintf(buff, sizeof(buff), "%s\n\nSave Profile changes?", tempProfile.description);
-            rc = messageBox("Profile changed", buff, MSG_YES_NO_CANCEL);
+            sf.write(tempProfile.description).write("\n\nSave Profile changes?");
+            rc = messageBox("Profile changed", sf.toString(), MSG_YES_NO_CANCEL);
             if (rc == MSG_IS_YES) {
                // Update profile in NV ram
                nvProfile = tempProfile;

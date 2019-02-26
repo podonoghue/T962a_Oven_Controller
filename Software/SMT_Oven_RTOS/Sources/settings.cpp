@@ -6,7 +6,6 @@
  *  Created on: 25 Sep 2016
  *      Author: podonoghue
  */
-#include <stdio.h>
 #include "settings.h"
 #include "lcd_st7920.h"
 #include "configure.h"
@@ -159,35 +158,37 @@ private:
       lcd.clearFrameBuffer();
 
       lcd.setInversion(true);
-      lcd.putSpace(3); lcd.putString("Fan Test"); lcd.putSpace(3);
+      lcd.putSpace(3); lcd.write("Fan Test"); lcd.putSpace(3);
 
       lcd.gotoXY(0, 2*lcd.FONT_HEIGHT);
       lcd.setInversion(false);
-      lcd.putSpace(3); lcd.printf("Speed = %d%%\n\n",  (int)minimumFanSpeed);
-      lcd.putSpace(3); lcd.printf("Kick  = %d cycles", (int)fanKickTime);
+      lcd.putSpace(3).write("Speed = ").write((int)minimumFanSpeed).write("%\n\n");
+//      lcd.putSpace(3); lcd.printf("Speed = %d%%\n\n",  (int)minimumFanSpeed);
+      lcd.putSpace(3).write("Kick  = ").write((int)fanKickTime).write(" cycles\n\n");
+//      lcd.putSpace(3); lcd.printf("Kick  = %d cycles", (int)fanKickTime);
 
       lcd.gotoXY(55, lcd.LCD_HEIGHT-2*lcd.FONT_HEIGHT);
       if (kickMode) {
-         lcd.setInversion(true);  lcd.putSpace(8); lcd.putString("Kick");  lcd.putSpace(7);
+         lcd.setInversion(true);  lcd.putSpace(8); lcd.write("Kick");  lcd.putSpace(7);
       }
       else {
-         lcd.setInversion(true);  lcd.putSpace(5); lcd.putString("Speed");  lcd.putSpace(4);
+         lcd.setInversion(true);  lcd.putSpace(5); lcd.write("Speed");  lcd.putSpace(4);
       }
       lcd.gotoXY(3, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
       if (power) {
-         lcd.setInversion(true);  lcd.putSpace(3); lcd.putString("Off");  lcd.putSpace(2);
+         lcd.setInversion(true);  lcd.putSpace(3); lcd.write("Off");  lcd.putSpace(2);
       }
       else {
-         lcd.setInversion(true);  lcd.putSpace(6); lcd.putString("On");  lcd.putSpace(5);
+         lcd.setInversion(true);  lcd.putSpace(6); lcd.write("On");  lcd.putSpace(5);
       }
       lcd.setInversion(false); lcd.putSpace(3);
-      lcd.setInversion(true);  lcd.putSpace(3); lcd.putString("Sel");  lcd.putSpace(2);
+      lcd.setInversion(true);  lcd.putSpace(3); lcd.write("Sel");  lcd.putSpace(2);
       lcd.setInversion(false); lcd.putSpace(3);
-      lcd.setInversion(true);  lcd.putString(" + ");
+      lcd.setInversion(true);  lcd.write(" + ");
       lcd.setInversion(false); lcd.putSpace(3);
-      lcd.setInversion(true);  lcd.putString(" - ");
+      lcd.setInversion(true);  lcd.write(" - ");
       lcd.setInversion(false); lcd.putSpace(3);
-      lcd.setInversion(true);  lcd.putSpace(3); lcd.putString("Exit"); lcd.putSpace(2);
+      lcd.setInversion(true);  lcd.putSpace(3); lcd.write("Exit"); lcd.putSpace(2);
 
       lcd.refreshImage();
       lcd.setGraphicMode();
@@ -270,19 +271,18 @@ public:
  * Controls range and default values etc.
  * Also used by the Settings object to initialise FlexRAM objects
  */
-//                                      nvVariable        description                min   max  incr  default  test function
-const Setting_T<int> fanSetting      {minimumFanSpeed, "Reflow fan speed %3d%%",     5,  100,  5,   30,      FanTest::testFan};
-const Setting_T<int> kickSetting     {fanKickTime,     "Fan Kick Cycles  %3d",       0,   50,  1,   10,      FanTest::testFan};
-const Setting_T<int> thermo1Setting  {t1Offset,        "Thermo 1 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting_T<int> thermo2Setting  {t2Offset,        "Thermo 2 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting_T<int> thermo3Setting  {t3Offset,        "Thermo 3 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting_T<int> thermo4Setting  {t4Offset,        "Thermo 4 Offset  %3d\x7F", -30,   30,  1,   0,       nullptr};
-const Setting_T<int> heaterSetting   {maxHeaterTime,   "Max heater time %4d",       10, 1000, 10, 600,       nullptr};
-const Setting_T<int> beepSetting     {beepTime,        "Beep time        %3ds",      0,   30,  1,   0,       Settings::testBeep};
-
-const Setting_T<float> pidKpSetting  {pidKp,           "PID Kp      %6.1f",        0.5,  60.00,  0.1,  40.0f,   nullptr};
-const Setting_T<float> pidKiSetting  {pidKi,           "PID Ki        %6.3f",      0.0,   1.00,  0.001, 0.050f, nullptr};
-const Setting_T<float> pidKdSetting  {pidKd,           "PID Kd      %6.1f",        0.0, 200.00,  0.1,  62.5f,   nullptr};
+//                                      nvVariable        description       min    max   incr  default     unit   test function
+const Setting_T<int> fanSetting      {minimumFanSpeed, "Reflow fan speed ",   5,   100,     5,     30,      "%",  FanTest::testFan};
+const Setting_T<int> kickSetting     {fanKickTime,     "Fan Kick Cycles  ",   0,    50,     1,     10,       "",  FanTest::testFan};
+const Setting_T<int> thermo1Setting  {t1Offset,        "Thermo 1 Offset  ", -30,    30,     1,      0,   "\x7F",  nullptr};
+const Setting_T<int> thermo2Setting  {t2Offset,        "Thermo 2 Offset  ", -30,    30,     1,      0,   "\x7F",  nullptr};
+const Setting_T<int> thermo3Setting  {t3Offset,        "Thermo 3 Offset  ", -30,    30,     1,      0,   "\x7F",  nullptr};
+const Setting_T<int> thermo4Setting  {t4Offset,        "Thermo 4 Offset  ", -30,    30,     1,      0,   "\x7F",  nullptr};
+const Setting_T<int> heaterSetting   {maxHeaterTime,   "Max heater time ",   10,  1000,    10,    600,      "s",  nullptr};
+const Setting_T<int> beepSetting     {beepTime,        "Beep time        ",   0,    30,     1,      0,      "s",  Settings::testBeep};
+const Setting_T<float> pidKpSetting  {pidKp,           "PID Kp      ",        0.5,  60.00,  0.1,   40.0f,    "",  nullptr};
+const Setting_T<float> pidKiSetting  {pidKi,           "PID Ki       ",       0.0,   1.00,  0.001,  0.050f,  "",  nullptr};
+const Setting_T<float> pidKdSetting  {pidKd,           "PID Kd      ",        0.0, 200.00,  0.1,   62.5f,    "",  nullptr};
 
 /**
  * Describes the settings and limits for same
@@ -316,7 +316,7 @@ void Settings::drawScreen() {
       offset--;
    }
    lcd.setInversion(false); lcd.clearFrameBuffer();
-   lcd.setInversion(true);  lcd.putString("  Settings Menu\n"); lcd.setInversion(false);
+   lcd.setInversion(true);  lcd.write("  Settings Menu\n"); lcd.setInversion(false);
    for (int item=0; item<NUM_ITEMS; item++) {
       if (item<offset) {
          continue;
@@ -326,14 +326,14 @@ void Settings::drawScreen() {
       }
       lcd.setInversion(item == selection);
       lcd.gotoXY(0, (item+1-offset)*lcd.FONT_HEIGHT);
-      lcd.putString(menu[item]->getDescription());
+      lcd.write(menu[item]->getDescription());
    }
    lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-   lcd.setInversion(true);  lcd.putString(" ");      lcd.putUpArrow();   lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(5);
-   lcd.setInversion(true);  lcd.putString(" ");      lcd.putDownArrow(); lcd.putString(" "); lcd.setInversion(false); lcd.putSpace(5);
-   lcd.setInversion(true);  lcd.putString(" + ");    lcd.setInversion(false);            lcd.putSpace(5);
-   lcd.setInversion(true);  lcd.putString(" - ");    lcd.setInversion(false);            lcd.putSpace(5);
-   lcd.setInversion(true);  lcd.putString(" Exit "); lcd.setInversion(false);
+   lcd.setInversion(true);  lcd.write(" ");      lcd.putUpArrow();   lcd.write(" "); lcd.setInversion(false); lcd.putSpace(5);
+   lcd.setInversion(true);  lcd.write(" ");      lcd.putDownArrow(); lcd.write(" "); lcd.setInversion(false); lcd.putSpace(5);
+   lcd.setInversion(true);  lcd.write(" + ");    lcd.setInversion(false);            lcd.putSpace(5);
+   lcd.setInversion(true);  lcd.write(" - ");    lcd.setInversion(false);            lcd.putSpace(5);
+   lcd.setInversion(true);  lcd.write(" Exit "); lcd.setInversion(false);
 
    lcd.refreshImage();
    lcd.setGraphicMode();

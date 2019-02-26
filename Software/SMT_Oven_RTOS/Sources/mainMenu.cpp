@@ -61,7 +61,7 @@ static void drawScreen() {
       offset--;
    }
    lcd.setInversion(false);  lcd.clearFrameBuffer();
-   lcd.setInversion(true);   lcd.putString("  Main Menu\n"); lcd.setInversion(false);
+   lcd.setInversion(true);   lcd.write("  Main Menu\n"); lcd.setInversion(false);
    for (int item=0; item<NUM_ITEMS; item++) {
       if (item<offset) {
          continue;
@@ -71,14 +71,14 @@ static void drawScreen() {
       }
       lcd.setInversion(item == selection);
       lcd.gotoXY(0, (item-offset+1)*lcd.FONT_HEIGHT);
-      lcd.putString(menu[item].desciption);
+      lcd.write(menu[item].desciption);
    }
    lcd.setInversion(false);
    lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
    lcd.setInversion(true);  lcd.putSpace(8);     lcd.putUpArrow();   lcd.putSpace(9); lcd.setInversion(false); lcd.putSpace(5);
    lcd.setInversion(true);  lcd.putSpace(8);     lcd.putDownArrow(); lcd.putSpace(9); lcd.setInversion(false); lcd.putSpace(5);
    lcd.setInversion(false); lcd.putSpace(42);
-   lcd.setInversion(true);  lcd.putString(" SEL "); lcd.setInversion(false);
+   lcd.setInversion(true);  lcd.write(" SEL "); lcd.setInversion(false);
 
    lcd.refreshImage();
    lcd.setGraphicMode();
@@ -88,8 +88,8 @@ void displayBusy() {
    lcd.setInversion(false);  lcd.clearFrameBuffer();
 
    lcd.gotoXY(0, 20);
-   lcd.printf("  Locked for \n");
-   lcd.printf("  Remote use");
+   lcd.write("  Locked for \n");
+   lcd.write("  Remote use");
    lcd.refreshImage();
    lcd.setGraphicMode();
 }

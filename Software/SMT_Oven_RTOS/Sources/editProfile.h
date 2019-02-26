@@ -10,6 +10,7 @@
 #define SOURCES_EDITPROFILE_H_
 
 #include <SolderProfile.h>
+#include "stringFormatter.h"
 
 class ProfileSetting {
 public:
@@ -54,6 +55,8 @@ private:
    /** Description format string  as for printf() */
    const char * const description;
    /** Increment/decrement size */
+   const char * const unit;
+   /** Increment/decrement size */
    const T delta;
    /** Default value for reset */
    const T defaultValue;
@@ -73,11 +76,13 @@ public:
    ProfileSetting_T(
          T &value,
          const char *description,
+         const char *unit,
          T delta,
          T defaultValue,
          T min,
          T max) :
-            value(value), description(description), delta(delta), defaultValue(defaultValue), min(min), max(max) {
+            value(value), description(description), unit(unit), delta(delta), defaultValue(defaultValue), min(min), max(max) {
+      using namespace USBDM;
       set((T)value);
    }
    /**
@@ -86,8 +91,13 @@ public:
     * @return Pointer to static buffer containing description
     */
    virtual const char *getDescription() const {
-      snprintf(buff, sizeof(buff), description, (T)value);
-      return buff;
+      using namespace USBDM;
+
+      StringFormatter sf(buff, STRING_LENGTH);
+      sf.setFloatFormat(1, Padding_LeadingSpaces, 3);
+      sf.write(description).write(value).write(unit);
+
+      return sf.toString();
    }
    /**
     * Set value
@@ -239,17 +249,17 @@ private:
 
    /** Describes the editable items */
    ProfileSetting *items[NUM_ITEMS] = {
-         //                             value,                 description                  delta default minimum maximum
+         //                             value,                 description          unit     delta  default  minimum   maximum
          new ProfileNameSetting        (profile.description),
-         new ProfileSetting_T<uint16_t>(profile.liquidus,      "Liquidus T.  %3d\177C",        1,    183,   120,    250),
-         new ProfileSetting_T<uint16_t>(profile.preheatTime,   "Preheat Time %3ds",            1,     90,    60,    200),
-         new ProfileSetting_T<uint16_t>(profile.soakTemp1,     "Soak temp. 1 %3d\177C",        1,    140,    80,    160),
-         new ProfileSetting_T<uint16_t>(profile.soakTemp2,     "Soak temp. 2 %3d\177C",        1,    183,   150,    250),
-         new ProfileSetting_T<uint16_t>(profile.soakTime,      "Soak time    %3ds",            1,    120,    60,    300),
-         new ProfileSetting_T<float>   (profile.rampUpSlope,   "Ramp up      %3.1f\177C/s",  0.1f,  3.0f,  0.1f,   6.0f),
-         new ProfileSetting_T<uint16_t>(profile.peakTemp,      "Peak temp.   %3d\177C",        1,    210,   180,    300),
-         new ProfileSetting_T<uint16_t>(profile.peakDwell,     "Peak dwell   %3ds",            1,     20,     1,     30),
-         new ProfileSetting_T<float>   (profile.rampDownSlope, "Ramp down    %3.1f\177C/s", 0.1f,  -3.0f, -6.0f,  -0.1f),
+         new ProfileSetting_T<uint16_t>(profile.liquidus,      "Liquidus temp.  ",  "\177C",     1,    183,      120,      250),
+         new ProfileSetting_T<uint16_t>(profile.preheatTime,   "Preheat Time    ",  "s",         1,     90,       60,      200),
+         new ProfileSetting_T<uint16_t>(profile.soakTemp1,     "Soak temp. 1    ",  "\177C",     1,    140,       80,      160),
+         new ProfileSetting_T<uint16_t>(profile.soakTemp2,     "Soak temp. 2    ",  "\177C",     1,    183,      150,      250),
+         new ProfileSetting_T<uint16_t>(profile.soakTime,      "Soak time       ",  "s",         1,    120,       60,      300),
+         new ProfileSetting_T<float>   (profile.rampUpSlope,   "Ramp up    ",       "\177C/s",   0.1f,   3.0f,     0.1f,     6.0f),
+         new ProfileSetting_T<uint16_t>(profile.peakTemp,      "Peak temp.      ",  "\177C",     1,    210,      180,      300),
+         new ProfileSetting_T<uint16_t>(profile.peakDwell,     "Peak dwell      ",  "s",         1,     20,        1,       30),
+         new ProfileSetting_T<float>   (profile.rampDownSlope, "Ramp down  ",       "\177C/s",   0.1f,  -3.0f,    -6.0f,    -0.1f),
    };
 
    /**

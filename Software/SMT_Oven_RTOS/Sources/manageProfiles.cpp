@@ -22,15 +22,20 @@ static void putProfileMenu(const NvSolderProfile &profile) {
    constexpr int yMenuOffset = 8;
    lcd.gotoXY(xMenuOffset, yMenuOffset);
    lcd.setInversion(true);
-   lcd.putSpace(1); lcd.putString("F1"); lcd.putLeftArrow(); lcd.putSpace(2);
+   lcd.putSpace(1); lcd.write("F1"); lcd.putLeftArrow(); lcd.putSpace(2);
    lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*1);
-   lcd.putSpace(1); lcd.putString("F2"); lcd.putRightArrow(); lcd.putSpace(2);
+   lcd.putSpace(1); lcd.write("F2"); lcd.putRightArrow(); lcd.putSpace(2);
    lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*2);
-   lcd.putSpace(1); lcd.putString("F3"); lcd.putSpace(2); lcd.putString(editable?"E":" "); lcd.putSpace(1);
+   if (editable) {
+      lcd.putSpace(1); lcd.write("F3"); lcd.putSpace(2); lcd.write("E"); lcd.putSpace(1);
+   }
+   else {
+      lcd.putSpace(24);
+   }
    lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*3);
-   lcd.putSpace(1); lcd.putString("F4"); lcd.putSpace(2); lcd.putString("C"); lcd.putSpace(1);
+   lcd.putSpace(1); lcd.write("F4"); lcd.putSpace(2); lcd.write("C"); lcd.putSpace(1);
    lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*4);
-   lcd.putSpace(1); lcd.putString("S "); lcd.putEnter(); lcd.putSpace(2);
+   lcd.putSpace(1); lcd.write("S "); lcd.putEnter(); lcd.putSpace(2);
    lcd.setInversion(false);
 }
 

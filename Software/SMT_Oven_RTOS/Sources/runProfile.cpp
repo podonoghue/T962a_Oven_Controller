@@ -31,15 +31,16 @@ namespace Monitor {
 void monitor() {
    static auto prompt = []() {
       lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("T1");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("T2");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("T3");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("T4");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
-      lcd.setInversion(true); lcd.putSpace(4); lcd.putString("Exit"); lcd.putSpace(4); lcd.setInversion(false);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.write("T1");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.write("T2");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.write("T3");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.write("T4");   lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
+      lcd.setInversion(true); lcd.putSpace(4); lcd.write("Exit"); lcd.putSpace(4); lcd.setInversion(false);
       lcd.gotoXY(0, 12+4*lcd.FONT_HEIGHT+2);
       float temp = temperatureSensors.getLastMeasurement().getAverageTemperature();
       if (!isnan(temp)) {
-         lcd.printf("Average T=%0.1f\x7F", temp);
+         lcd.write("Average T=").write(temp).write("\x7F ");
+//         lcd.printf("Average T=%0.1f\x7F", temp);
       }
    };
 
@@ -377,10 +378,11 @@ void runProfile() {
    if (!checkThermocouples()) {
       return;
    }
-
-   char buff[100];
-   snprintf(buff, sizeof(buff), "%d:%s\n\nRun Profile?", (int)currentProfileIndex, (const volatile char *)profiles[currentProfileIndex].description);
-   MessageBoxResult rc = messageBox("Run Profile", buff, MSG_YES_NO);
+   USBDM::StringFormatter_T<100> sf;
+   sf.write((int)currentProfileIndex).write(":")
+     .write((const char *)profiles[currentProfileIndex].description)
+     .write("\n\nRun Profile?");
+   MessageBoxResult rc = messageBox("Run Profile", sf.toString(), MSG_YES_NO);
    if (rc != MSG_IS_YES) {
       return;
    }
@@ -390,18 +392,18 @@ void runProfile() {
    // Menu for thermocouple screen
    static auto textPrompt = []() {
       lcd.gotoXY(lcd.LCD_WIDTH-lcd.FONT_WIDTH*10-6, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Plot");  lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Stop");  lcd.putSpace(3); lcd.setInversion(false);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.write("Plot");  lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(6);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.write("Stop");  lcd.putSpace(3); lcd.setInversion(false);
 
       lcd.gotoXY(0, 12+4*lcd.FONT_HEIGHT+2);
-      lcd.printf("%2ds", (int)round(pid.getElapsedTime()));
+      lcd.write((int)round(pid.getElapsedTime())).write("s ");
       lcd.gotoXY(5*lcd.FONT_WIDTH+1, 12+4*lcd.FONT_HEIGHT+2);
-      lcd.printf("T=%5.1f\x7F", pid.getInput());
+      lcd.write("T=").write(pid.getInput()).write(" ");
       lcd.gotoXY(13*lcd.FONT_WIDTH+2, 12+4*lcd.FONT_HEIGHT+2);
-      lcd.printf("Set=%3d\x7F", (int)round(pid.getSetpoint()));
+      lcd.write("Set=").write((int)round(pid.getSetpoint())).write("\x7F ");
 
       lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-      lcd.putString(Reporter::getStateName(state));
+      lcd.write(Reporter::getStateName(state));
    };
 
    // Menu for plot screen
@@ -413,11 +415,12 @@ void runProfile() {
 
       lcd.setInversion(true);
       lcd.gotoXY(xTimeOffset, yTimeOffset);
-      lcd.printf("%3ds", (int)round(pid.getElapsedTime()));
+      lcd.write((int)round(pid.getElapsedTime())).write("s");
+//      lcd.printf("%3ds", (int)round(pid.getElapsedTime()));
       lcd.gotoXY(xMenuOffset, yMenuOffset);
-      lcd.putSpace(1); lcd.putString("F4"); lcd.putSpace(1); lcd.putString("Th");
+      lcd.putSpace(1); lcd.write("F4"); lcd.putSpace(1); lcd.write("Th");
       lcd.gotoXY(xMenuOffset, yMenuOffset+lcd.FONT_HEIGHT*1);
-      lcd.putSpace(1); lcd.putString("S");  lcd.putSpace(1); lcd.putString("Stp");
+      lcd.putSpace(1); lcd.write("S");  lcd.putSpace(1); lcd.write("Stp");
       lcd.setInversion(false);
    };
 
@@ -461,13 +464,13 @@ void runProfile() {
    Buzzer::play();
    static auto completedPrompt = []() {
       lcd.gotoXY(0, 12+4*lcd.FONT_HEIGHT+2);
-      lcd.printf("%4ds", (int)round(pid.getElapsedTime()));
+      lcd.write((int)round(pid.getElapsedTime())).write("s ");
       lcd.gotoXY(5*lcd.FONT_WIDTH+2, 12+4*lcd.FONT_HEIGHT+2);
-      lcd.printf("T=%0.1f\x7F Set=%3d\x7F", pid.getInput(), (int)round(pid.getSetpoint()));
-
+      lcd.write("T=").write(pid.getInput())
+            .write("\x7F Set=").write((int)round(pid.getSetpoint())).write("\x7F  ");
       lcd.gotoXY(128-4-lcd.FONT_WIDTH*17+2*4, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
       lcd.setInversion(true); lcd.putSpace(3);
-      lcd.putString((state==s_complete)?"Complete - Exit":"Failed   - Exit");
+      lcd.write((state==s_complete)?"Complete - Exit":"Failed   - Exit");
       lcd.putSpace(3); lcd.setInversion(false);
    };
 
@@ -490,42 +493,39 @@ void runProfile() {
 void drawManualScreen() {
    lcd.clearFrameBuffer();
 
-   lcd.setInversion(true); lcd.putString("  Manual Mode\n"); lcd.setInversion(false);
-
-   lcd.printf("On Time   = %5.1fs\n", pid.getElapsedTime());
-
-   lcd.printf("Set Temp  = %5.1f\x7F\n", pid.getSetpoint());
-
-   lcd.printf("Oven Temp = %5.1f\x7F\n", temperatureSensors.getLastTemperature());
+   lcd.setInversion(true); lcd.write("  Manual Mode\n"); lcd.setInversion(false);
+   lcd.write("On Time   = ").write(pid.getElapsedTime()).writeln("s");
+   lcd.write("Set Temp  = ").write(pid.getSetpoint()).writeln("\x7F");
+   lcd.write("Oven Temp = ").write(temperatureSensors.getLastTemperature()).writeln("\x7F");
 
    if (ovenControl.getHeaterDutycycle() == 0) {
-      lcd.printf("Heater = off\n");
+      lcd.write("Heater = off\n");
    }
    else {
-      lcd.printf("Heater = on (%d%%)\n", ovenControl.getHeaterDutycycle());
+      lcd.write("Heater = on (").write(ovenControl.getHeaterDutycycle()).writeln("%)");
    }
    if (ovenControl.getFanDutycycle() == 0) {
-      lcd.printf("Fan    = off\n");
+      lcd.write("Fan    = off\n");
    }
    else {
-      lcd.printf("Fan    = on (%d%%) \n", ovenControl.getFanDutycycle());
+      lcd.write("Fan    = on (").write(ovenControl.getFanDutycycle()).writeln("%)");
    }
    lcd.gotoXY(7*lcd.FONT_WIDTH+22, lcd.LCD_HEIGHT-2*lcd.FONT_HEIGHT);
    if (state == s_manual) {
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Temp");  lcd.putSpace(2);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.write("Temp");  lcd.putSpace(2);
    }
    else {
-      lcd.setInversion(true); lcd.putSpace(6); lcd.putString("Fan");  lcd.putSpace(5);
+      lcd.setInversion(true); lcd.putSpace(6); lcd.write("Fan");  lcd.putSpace(5);
    }
    if (state != s_manual) {
       lcd.gotoXY(0, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-      lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Fan");  lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(3);
+      lcd.setInversion(true); lcd.putSpace(3); lcd.write("Fan");  lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(3);
    }
    lcd.gotoXY(0+3*lcd.FONT_WIDTH+6+5, lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Heat"); lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(5);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("+");    lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(5);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("-");    lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(5);
-   lcd.setInversion(true); lcd.putSpace(3); lcd.putString("Exit"); lcd.putSpace(3); lcd.setInversion(false);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.write("Heat"); lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(5);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.write("+");    lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(5);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.write("-");    lcd.putSpace(3); lcd.setInversion(false); lcd.putSpace(5);
+   lcd.setInversion(true); lcd.putSpace(3); lcd.write("Exit"); lcd.putSpace(3); lcd.setInversion(false);
 
    lcd.refreshImage();
    lcd.setGraphicMode();

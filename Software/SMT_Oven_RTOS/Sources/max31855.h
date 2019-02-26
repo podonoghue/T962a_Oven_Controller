@@ -19,12 +19,12 @@ class Max31855 {
 
 public:
    enum ThermocoupleStatus {
-      TH_ENABLED,          // Enabled and OK
-      TH_OPEN,             // No probe or open circuit
-      TH_SHORT_VCC,        // Probe short to Vcc
-      TH_SHORT_GND,        // Probe short to Gnd
-      TH_MISSING,          // No response - Max31855 not present at that address
-      TH_DISABLED=0b111,   // Available but disabled (Temperature reading will still be valid)
+      TH_ENABLED,          //!< Enabled and OK
+      TH_OPEN,             //!< No probe or open circuit
+      TH_SHORT_VCC,        //!< Probe short to Vcc
+      TH_SHORT_GND,        //!< Probe short to Gnd
+      TH_MISSING,          //!< No response - Max31855 not present at that address
+      TH_DISABLED=0b111,   //!< Available but disabled (Temperature reading will still be valid)
    };
 
 protected:
@@ -46,8 +46,10 @@ protected:
 
    /** The result of last Temperature measurements */
    float                lastTemperature;
+
    /** The result of last Cold Reference Temperature measurements */
    float                lastColdReference;
+
    /** The status of last Temperature measurements */
    ThermocoupleStatus   lastStatus;
 
@@ -87,12 +89,12 @@ public:
     */
    static const char *getStatusName(ThermocoupleStatus status) {
       switch (status) {
-      case TH_ENABLED   : return "OK";    // OK!
+      case TH_ENABLED   : return "OK  ";  // OK!
       case TH_OPEN      : return "Open";  // No probe or open circuit
-      case TH_SHORT_VCC : return "Vcc";   // Probe short to Vcc
-      case TH_SHORT_GND : return "Gnd";   // Probe short to Gnd
+      case TH_SHORT_VCC : return "Vcc ";  // Probe short to Vcc
+      case TH_SHORT_GND : return "Gnd ";  // Probe short to Gnd
       case TH_MISSING   : return "----";  // No response - Max31855 not present at that address
-      case TH_DISABLED  : return "Dis";   // OK but disabled
+      case TH_DISABLED  : return "Dis ";  // OK but disabled
       default           : return "????";  // Unknown
       }
    }
@@ -143,11 +145,11 @@ public:
             0xFF, 0xFF, 0xFF, 0xFF,
       };
       {
-      PulseTp tp(8);
+//      PulseTp tp(8);
 
       spi.startTransaction(spiConfig);
       {
-         PulseTp tp(5);
+//         PulseTp tp(5);
          spi.txRx(sizeof(data), (uint8_t*)nullptr, data);
       }
       spi.endTransaction();

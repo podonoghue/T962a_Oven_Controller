@@ -10,7 +10,8 @@
 #define SOURCES_SETTINGS_H_
 
 #include "flash.h"
-#include <SolderProfile.h>
+#include "SolderProfile.h"
+#include "stringFormatter.h"
 
 /** Length of beep in seconds */
 extern USBDM::Nonvolatile<int> beepTime;
@@ -141,9 +142,11 @@ protected:
    /** Default value used when resetting variable */
    const T defaultValue;
 
+   /** Unit for variable */
+   const char *unit;
+
    /** Function called to test function associated with variable */
    void (*func)(const Setting *setting);
-
 
 public:
 
@@ -158,10 +161,11 @@ public:
     * @param[in] max          Maximum value
     * @param[in] delta        Change size for +/-
     * @param[in] defaultValue Default value for restore default
+    * @param[in] unit         Unit for setting
     * @param[in] func         Action function
     */
-   constexpr Setting_T(USBDM::Nonvolatile<T> &nvVariable, const char *desc, T min, T max, T delta, T defaultValue, void (*func)(const Setting *setting) ) :
-      nvVariable(nvVariable), description(desc), min(min), max(max), delta(delta), defaultValue(defaultValue), func(func)
+   constexpr Setting_T(USBDM::Nonvolatile<T> &nvVariable, const char *desc, T min, T max, T delta, T defaultValue, const char *unit, void (*func)(const Setting *setting) ) :
+      nvVariable(nvVariable), description(desc), min(min), max(max), delta(delta), defaultValue(defaultValue), unit(unit), func(func)
    {}
 
    /**
@@ -172,8 +176,9 @@ public:
     * @note This uses an internal static buffer that is shared by all Settings objects
     */
    virtual const char* getDescription() const {
-      snprintf(getBuff(), BUF_SIZE, description, (T)nvVariable);
-      return getBuff();
+      USBDM::StringFormatter sf(getBuff(), BUF_SIZE);
+      sf.write(description).write((T)nvVariable).write(unit);
+      return sf.toString();
    }
 
    /**

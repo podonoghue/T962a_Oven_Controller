@@ -7,7 +7,6 @@
  *      Author: podonoghue
  ============================================================================
  */
-#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "cmsis.h"
@@ -73,6 +72,8 @@ public:
 using namespace USBDM;
 
 void initialise() {
+   using namespace USBDM;
+
    Buzzer::init();
    OvenFanLed::init();
    HeaterLed::init();
@@ -80,6 +81,7 @@ void initialise() {
    Spare::setDutyCycle(0);
    ovenControl.initialise();
    Tp1::setOutput(PinDriveStrength_High);
+   lcd.setFloatFormat(1,Padding_LeadingSpaces,3);
 }
 
 int main() {
@@ -99,7 +101,7 @@ int main() {
    if (getError() != E_NO_ERROR) {
       char buff[100];
       lcd.clear();
-      lcd.printf("Error in initialisation \n  %s\n", getErrorMessage());
+      lcd.write("Error in initialisation \n  ").writeln(getErrorMessage());
       console.write(buff);
    }
 

@@ -28,14 +28,12 @@ public:
    struct Command {
       uint8_t data[100];
       unsigned size;
-      bool     deleted;
    };
 
    /** Structure holding (part of) a response */
    struct Response{
       uint8_t  data[1000];
       unsigned size;
-      bool     deleted;
    };
 
 protected:
@@ -109,23 +107,12 @@ public:
       return (RemoteInterface::Response*)status.value.p;
    }
 
-   static void *allocatedBuffers[4];
-   static unsigned allocIndex;
-   static unsigned deallocIndex;
-
    /**
     * Used to free response buffer
     *
-    * @param[in,out] response Response buffer to free
+    * @param[in] response Response buffer to free
     */
    static void freeResponseBuffer(RemoteInterface::Response *response) {
-      if(allocatedBuffers[deallocIndex] != response) {
-         __BKPT();
-      }
-      allocatedBuffers[deallocIndex++] = nullptr;
-      if (deallocIndex>=(sizeof(allocatedBuffers)/sizeof(allocatedBuffers[0]))) {
-         deallocIndex = 0;
-      }
       RemoteInterface::responseQueue.free(response);
    }
 
@@ -136,18 +123,7 @@ public:
     * @return nullptr Failed allocation
     */
    static Response *allocResponseBuffer() {
-      Response *t = responseQueue.alloc();
-      if(t == nullptr) {
-         __BKPT();
-      }
-      if(allocatedBuffers[allocIndex] != nullptr) {
-         __BKPT();
-      }
-      allocatedBuffers[allocIndex++] = t;
-      if (allocIndex>=(sizeof(allocatedBuffers)/sizeof(allocatedBuffers[0]))) {
-         allocIndex = 0;
-      }
-      return t;
+      return responseQueue.alloc();
    }
 
    /**
@@ -175,6 +151,5 @@ public:
     */
    static void putData(int size, volatile const uint8_t *buff);
 };
-
 
 #endif /* SOURCES_REMOTEINTERFACE_H_ */

@@ -6,7 +6,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include "configure.h"
 
 class StepResponse {
@@ -28,7 +27,8 @@ public:
          temperature       = getTemperature();
          fan               = ovenControl.getFanDutycycle();
          heater            = ovenControl.getHeaterDutycycle();
-         printf("%4d, %4d, %4d, %5.1f\n", time, fan, heater, temperature);
+         USBDM::console.write(time).write(", ").write(fan).write(", ").write(heater).write(", ").writeln(temperature);
+//         printf("%4d, %4d, %4d, %5.1f\n", time, fan, heater, temperature);
       }
       return (buttons.getButton() == SwitchValue::SW_S);
    }
@@ -53,8 +53,8 @@ public:
    }
 
    void run() {
-      printf("Step response\n\n");
-      printf("Time, Fan, Heater, Temperature\n");
+      USBDM::console.write("Step response\n\n");
+      USBDM::console.write("Time, Fan, Heater, Temperature\n");
 
       abort = 0;
       time = 0;
@@ -90,7 +90,7 @@ public:
          report();
       }
       ovenControl.setFanDutycycle(0);
-      printf("Step response - done\n\n");
+      USBDM::console.write("Step response - done\n\n");
    }
 };
 
@@ -103,6 +103,3 @@ bool  StepResponse::printflag;
 bool  StepResponse::abort;
 
 StepResponse stepResponse;
-
-
-

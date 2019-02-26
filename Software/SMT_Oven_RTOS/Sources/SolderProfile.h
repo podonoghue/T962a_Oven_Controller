@@ -9,7 +9,6 @@
 #ifndef SOURCES_SOLDERPROFILE_H_
 #define SOURCES_SOLDERPROFILE_H_
 
-#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include "flash.h"

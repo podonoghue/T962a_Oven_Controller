@@ -34,15 +34,15 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
    lcd.setInversion(false);
    lcd.clearFrameBuffer();
    lcd.gotoXY(0,0);
-   lcd.putSpace(5); lcd.setInversion(true); lcd.putChar(' '); lcd.putString(title); lcd.putChar(' '); lcd.setInversion(false);
+   lcd.putSpace(5); lcd.setInversion(true); lcd.write(' '); lcd.write(title); lcd.write(' '); lcd.setInversion(false);
 
    lcd.gotoXY(0, 12+lcd.FONT_HEIGHT);
-   lcd.putString(message);
+   lcd.write(message);
    SwitchValue sw;
    switch(selection) {
       case MSG_OK:
          lcd.gotoXY(lcd.LCD_WIDTH-(4*lcd.FONT_WIDTH+4)+4,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-         lcd.setInversion(true); lcd.putString(" OK "); lcd.setInversion(false);
+         lcd.setInversion(true); lcd.write(" OK "); lcd.setInversion(false);
          lcd.refreshImage();
          lcd.setGraphicMode();
          waitForPress(SwitchValue::SW_S);
@@ -50,9 +50,9 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
 
       case MSG_OK_CANCEL:
          lcd.gotoXY(lcd.LCD_WIDTH-(12*lcd.FONT_WIDTH+2*4)+4,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-         lcd.setInversion(true); lcd.putString(" OK "); lcd.setInversion(false);
+         lcd.setInversion(true); lcd.write(" OK "); lcd.setInversion(false);
          lcd.putSpace(4);
-         lcd.setInversion(true); lcd.putString(" CANCEL "); lcd.setInversion(false);
+         lcd.setInversion(true); lcd.write(" CANCEL "); lcd.setInversion(false);
          lcd.refreshImage();
          lcd.setGraphicMode();
          sw = waitForPress(SwitchValue::SW_F4|SwitchValue::SW_S);
@@ -60,9 +60,9 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
 
       case MSG_YES_NO:
          lcd.gotoXY(lcd.LCD_WIDTH-(9*lcd.FONT_WIDTH+2*4)+4,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-         lcd.setInversion(true); lcd.putString(" YES "); lcd.setInversion(false);
+         lcd.setInversion(true); lcd.write(" YES "); lcd.setInversion(false);
          lcd.putSpace(4);
-         lcd.setInversion(true); lcd.putString(" NO "); lcd.setInversion(false);
+         lcd.setInversion(true); lcd.write(" NO "); lcd.setInversion(false);
          lcd.refreshImage();
          lcd.setGraphicMode();
          sw = waitForPress(SwitchValue::SW_F4|SwitchValue::SW_S);
@@ -70,11 +70,11 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
 
       case MSG_YES_NO_CANCEL:
          lcd.gotoXY(lcd.LCD_WIDTH-(11*lcd.FONT_WIDTH+9*4)+4,lcd.LCD_HEIGHT-lcd.FONT_HEIGHT);
-         lcd.setInversion(true); lcd.putSpace(4); lcd.putString("YES"); lcd.putSpace(4); lcd.setInversion(false);
+         lcd.setInversion(true); lcd.putSpace(4); lcd.write("YES"); lcd.putSpace(4); lcd.setInversion(false);
          lcd.putSpace(4);
-         lcd.setInversion(true); lcd.putSpace(4); lcd.putString("NO"); lcd.putSpace(4); lcd.setInversion(false);
+         lcd.setInversion(true); lcd.putSpace(4); lcd.write("NO"); lcd.putSpace(4); lcd.setInversion(false);
          lcd.putSpace(4);
-         lcd.setInversion(true); lcd.putSpace(4); lcd.putString("CANCEL"); lcd.putSpace(4); lcd.setInversion(false);
+         lcd.setInversion(true); lcd.putSpace(4); lcd.write("CANCEL"); lcd.putSpace(4); lcd.setInversion(false);
          lcd.refreshImage();
          lcd.setGraphicMode();
          sw = waitForPress(SwitchValue::SW_F3|SwitchValue::SW_F4|SwitchValue::SW_S);
@@ -86,10 +86,10 @@ MessageBoxResult messageBox(const char *title, const char *message, MessageBoxSe
 //static void test1(MessageBoxResult selection) {
 //   lcd.gotoXY(10,lcd.LCD_HEIGHT-2*lcd.FONT_HEIGHT);
 //   switch(selection) {
-//   case MessageBoxResult::MSG_IS_OK :     lcd.putString("MSG_IS_OK");      break;
-//   case MessageBoxResult::MSG_IS_YES :    lcd.putString("MSG_IS_YES");     break;
-//   case MessageBoxResult::MSG_IS_NO :     lcd.putString("MSG_IS_NO");      break;
-//   case MessageBoxResult::MSG_IS_CANCEL : lcd.putString("MSG_IS_CANCEL");  break;
+//   case MessageBoxResult::MSG_IS_OK :     lcd.write("MSG_IS_OK");      break;
+//   case MessageBoxResult::MSG_IS_YES :    lcd.write("MSG_IS_YES");     break;
+//   case MessageBoxResult::MSG_IS_NO :     lcd.write("MSG_IS_NO");      break;
+//   case MessageBoxResult::MSG_IS_CANCEL : lcd.write("MSG_IS_CANCEL");  break;
 //   }
 //   lcd.refreshImage();
 //   lcd.setGraphicMode();

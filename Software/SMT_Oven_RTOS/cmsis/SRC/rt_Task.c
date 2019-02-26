@@ -40,7 +40,6 @@
 #include "rt_MemBox.h"
 #include "rt_Robin.h"
 #include "rt_HAL_CM.h"
-#include "stdint.h"
 
 /*----------------------------------------------------------------------------
  *      Global Variables
@@ -51,29 +50,6 @@ struct OS_TSK os_tsk;
 
 /* Task Control Blocks of idle demon */
 struct OS_TCB os_idle_TCB;
-
-/**
-  \brief   Get Process Stack Pointer
-  \details Returns the current value of the Process Stack Pointer (PSP).
-  \return               PSP Register value
- */
-__attribute__( ( always_inline ) ) inline uint32_t __get_PSP(void)
-{
-  uint32_t result;
-
-  __asm__ volatile ("MRS %0, psp\n"  : "=r" (result) );
-  return(result);
-}
-
-/**
-  \brief   Set Process Stack Pointer
-  \details Assigns the given value to the Process Stack Pointer (PSP).
-  \param [in]    topOfProcStack  Process Stack Pointer value to set
- */
-__attribute__( ( always_inline ) ) inline void __set_PSP(uint32_t topOfProcStack)
-{
-   __asm__ volatile ("MSR psp, %0\n" : : "r" (topOfProcStack) : "sp");
-}
 
 
 /*----------------------------------------------------------------------------
@@ -287,8 +263,7 @@ OS_RESULT rt_tsk_delete (OS_TID task_id) {
   if ((task_id == 0U) || (task_id == os_tsk.run->task_id)) {
     /* Terminate itself. */
     os_tsk.run->state     = INACTIVE;
-    os_tsk.run->tsk_stack = __get_PSP();
-//    os_tsk.run->tsk_stack = rt_get_PSP ();
+    os_tsk.run->tsk_stack = rt_get_PSP ();
     rt_stk_check ();
     p_MCB = os_tsk.run->p_mlnk;
     while (p_MCB) {

@@ -325,7 +325,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Time for cold start (corrected for 12 leap years since 1970)
    static constexpr uint32_t coldStartTime = 
@@ -443,7 +443,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Indicates need for special handling of CLKDIV1 register
    static constexpr int ERRATA_E2448 = 0;
@@ -946,7 +946,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Default value for ADCx_CFG1 register
    static constexpr uint32_t cfg1  = 
@@ -1219,7 +1219,7 @@ public:
    static constexpr bool irqHandlerInstalled = 1;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 9;
@@ -1368,7 +1368,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 9;
@@ -1450,7 +1450,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** 
     *  Enable clock to Cmt
@@ -1679,7 +1679,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Number of DMA channels implemented
    static constexpr unsigned NumChannels = 16;
@@ -1767,7 +1767,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** 
     *  Enable clock to Ewm
@@ -2067,7 +2067,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** Minimum resolution for PWM interval */
    static constexpr uint32_t minimumResolution=50;
@@ -2251,7 +2251,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** Minimum resolution for PWM interval */
    static constexpr uint32_t minimumResolution=100;
@@ -2412,7 +2412,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
 };
 
@@ -2433,7 +2433,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
 };
 
@@ -2454,7 +2454,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
 };
 
@@ -2475,7 +2475,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
 };
 
@@ -2496,7 +2496,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
 };
 
@@ -2545,7 +2545,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /**
     * Get input clock frequency
@@ -2802,7 +2802,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 16;
@@ -2923,7 +2923,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /**
     * Get input clock frequency
@@ -3150,7 +3150,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** 
     *  Enable clock to Pdb0
@@ -3243,7 +3243,7 @@ public:
    static constexpr bool irqHandlerInstalled = (1 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Default value for PIT load value register
    static constexpr uint32_t pit_ldval  = 4799;
@@ -3347,7 +3347,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
 };
 
@@ -3498,7 +3498,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** 
     *  Enable clock to Spi0
@@ -3632,7 +3632,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** 
     *  Enable clock to Uart0
@@ -3755,7 +3755,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** 
     *  Enable clock to Uart1
@@ -3866,7 +3866,7 @@ public:
    static constexpr bool irqHandlerInstalled = (0 == 1);
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    /** 
     *  Enable clock to Uart2
@@ -4076,7 +4076,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
@@ -4240,7 +4240,7 @@ public:
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
-   static constexpr uint32_t irqLevel =  7;
+   static constexpr uint32_t irqLevel =  8;
 
 };
 
