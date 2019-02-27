@@ -136,7 +136,7 @@ void RemoteInterface::logThermocoupleStatus(int time, bool lastEntry) {
    sf.write(';');
    if (lastEntry) {
       // Terminate the whole transfer sequence
-      sf.write("\n\r\0");
+      sf.write("\n\r");
    }
    response->size = sf.length();
    send(response);
@@ -370,10 +370,10 @@ bool RemoteInterface::doCommand(Command *cmd) {
          return false;
       }
       if (parseThermocouples(reinterpret_cast<char*>(&cmd->data[6]))) {
-         sf.write("OK\n\r\0");
+         sf.write("OK\n\r");
       }
       else {
-         sf.write("Failed - Data error\n\r\0");
+         sf.write("Failed - Data error\n\r");
       }
       interactiveMutex.release();
       response->size = sf.length();
@@ -393,7 +393,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
             sf.write(',');
          }
          else {
-            sf.write(";\n\r\0");
+            sf.write(";\n\r");
          }
       }
       response->size = sf.length();
@@ -410,10 +410,10 @@ bool RemoteInterface::doCommand(Command *cmd) {
          return false;
       }
       if (parsePidParameters(reinterpret_cast<char*>(&cmd->data[4]))) {
-         sf.write("OK\n\r\0");
+         sf.write("OK\n\r");
       }
       else {
-         sf.write("Failed - Data error\n\r\0");
+         sf.write("Failed - Data error\n\r");
       }
       interactiveMutex.release();
       response->size = sf.length();
@@ -428,7 +428,7 @@ bool RemoteInterface::doCommand(Command *cmd) {
       response->data[0] = (uint8_t)'\0';
       sf.write((float)pidKp).write(',');
       sf.write((float)pidKi).write(',');
-      sf.write((float)pidKd).write("\n\r\0");
+      sf.write((float)pidKd).write("\n\r");
       response->size = sf.length();
       send(response);
    }
@@ -443,10 +443,10 @@ bool RemoteInterface::doCommand(Command *cmd) {
          return false;
       }
       if (parseProfile(reinterpret_cast<char*>(&cmd->data[5]))) {
-         sf.write("OK\n\r\0");
+         sf.write("OK\n\r");
       }
       else {
-         sf.write("Failed - Data error\n\r\0");
+         sf.write("Failed - Data error\n\r");
       }
       interactiveMutex.release();
       response->size = sf.length();
@@ -519,10 +519,11 @@ bool RemoteInterface::doCommand(Command *cmd) {
          return false;
       }
       RunProfile::abortRunProfile();
-      // Unlock previous lock
-      interactiveMutex.release();
       // Unlock interface
-      interactiveMutex.release();
+      osStatus mutexStatus;
+      do {
+         mutexStatus = interactiveMutex.release();
+      } while (mutexStatus == osOK);
       sf.write("OK\n\r");
       response->size = sf.length();
       send(response);
@@ -541,15 +542,15 @@ bool RemoteInterface::doCommand(Command *cmd) {
       if (state == s_complete) {
          // Unlock previous lock
          interactiveMutex.release();
-         sf.write("OK\n\r\0");
+         sf.write("OK\n\r");
       }
       else if (state == s_fail) {
          // Unlock interface
          interactiveMutex.release();
-         sf.write("Failed\n\r\0");
+         sf.write("Failed\n\r");
       }
       else {
-         sf.write("Running\n\r\0");
+         sf.write("Running\n\r");
       }
       // Unlock interface
       interactiveMutex.release();
