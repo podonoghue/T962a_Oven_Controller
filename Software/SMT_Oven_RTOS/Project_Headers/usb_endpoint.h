@@ -181,7 +181,7 @@ protected:
     * @param[in]  endpointNumber End-point number
     * @param[in]  usb            Reference to USB hardware
     */
-   constexpr Endpoint(
+   Endpoint(
          int endpointNumber,
          unsigned endpointSize,
          EndPointType endPointType,
