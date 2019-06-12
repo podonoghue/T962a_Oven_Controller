@@ -306,9 +306,41 @@ public:
 
    /**
     * Set channel Callback function\n
+    * Note that one callback may be shared by multiple channels of the timer
+    *
+    * @param[in] callback Callback function to execute on channel interrupt.\n
+    *                     Use nullptr to remove callback.
+    * @param[in] channel  Channel to set callback for.
+    *
+    * @return E_NO_ERROR            No error
+    * @return E_HANDLER_ALREADY_SET Handler already set
+    *
+    * @note Channel callbacks may be shared by multiple channels of the timer.
+    *       It is necessary to identify the originating channel in the callback
+    */
+   static ErrorCode INLINE_RELEASE setChannelCallback(FtmChannelCallbackFunction callback, unsigned channel) {
+      static_assert(Info::irqHandlerInstalled, "FTM not configure for interrupts");
+      static_assert(Info::NumChannelVectors > 1, "This function should not be used when all timer channels share a single callback");
+      if (callback == nullptr) {
+         sChannelCallbacks[channel/ChannelVectorRatio] = unhandledChannelCallback;
+         return E_NO_ERROR;
+      }
+#ifdef DEBUG_BUILD
+      // Callback is shared across multiple channels. Check if callback already assigned
+      if ((sChannelCallbacks[channel/ChannelVectorRatio] != unhandledChannelCallback) &&
+          (sChannelCallbacks[channel/ChannelVectorRatio] != nullptr) &&
+          (sChannelCallbacks[channel/ChannelVectorRatio] != callback)) {
+         return setErrorCode(ErrorCode::E_HANDLER_ALREADY_SET);
+      }
+#endif
+      sChannelCallbacks[channel/ChannelVectorRatio] = callback;
+      return E_NO_ERROR;
+   }
+
+   /**
+    * Set channel Callback function\n
     * Note that one callback is shared by all channels of the timer
     *
-    * @param[in] channel  Channel to set callback for.
     * @param[in] callback Callback function to execute on channel interrupt.\n
     *                     Use nullptr to remove callback.
     *
@@ -318,20 +350,22 @@ public:
     * @note Channel callbacks may be shared by multiple channels of the timer.
     *       It is necessary to identify the originating channel in the callback
     */
-   static ErrorCode INLINE_RELEASE setChannelCallback(unsigned channel, FtmChannelCallbackFunction callback) {
+   static ErrorCode INLINE_RELEASE setChannelCallback(FtmChannelCallbackFunction callback) {
       static_assert(Info::irqHandlerInstalled, "FTM not configure for interrupts");
+      static_assert(Info::NumChannelVectors == 1, "This function should only be used when all timer channels share a single callback");
       if (callback == nullptr) {
-         sChannelCallbacks[channel/ChannelVectorRatio] = unhandledChannelCallback;
+         sChannelCallbacks[0] = unhandledChannelCallback;
          return E_NO_ERROR;
       }
 #ifdef DEBUG_BUILD
       // Callback is shared across multiple channels. Check if callback already assigned
-      if ((sChannelCallbacks[channel/ChannelVectorRatio] != unhandledChannelCallback) &&
-          (sChannelCallbacks[channel/ChannelVectorRatio] != callback)) {
+      if ((sChannelCallbacks[0] != unhandledChannelCallback) &&
+          (sChannelCallbacks[0] != nullptr) &&
+          (sChannelCallbacks[0] != callback)) {
          return setErrorCode(ErrorCode::E_HANDLER_ALREADY_SET);
       }
 #endif
-      sChannelCallbacks[channel/ChannelVectorRatio] = callback;
+      sChannelCallbacks[0] = callback;
       return E_NO_ERROR;
    }
 
@@ -416,12 +450,10 @@ public:
       tmr().MOD     = Info::modulo;
       tmr().SC      = Info::sc;
       tmr().EXTTRIG = Info::exttrig;
-      //TODO Make configurable
       tmr().CONF    = FTM_CONF_BDMMODE(1);
-      //TODO Make configurable
       tmr().COMBINE = FTM_COMBINE_FAULTEN0_MASK|FTM_COMBINE_FAULTEN1_MASK|FTM_COMBINE_FAULTEN2_MASK|FTM_COMBINE_FAULTEN3_MASK;
 
-      enableNvicInterrupts();
+      enableNvicInterrupts(Info::irqLevel);
    }
 
    /**
@@ -439,9 +471,11 @@ public:
 
       enable();
 	  
-      // Clear call-backs
+      // Map NULL callback to unhandledChannelCallback
       for (unsigned channel=0; channel<Info::NumChannelVectors; channel++) {
-         sChannelCallbacks[channel] = unhandledChannelCallback;
+         if (sChannelCallbacks[channel] == nullptr) {
+            sChannelCallbacks[channel] = unhandledChannelCallback;
+         }
       }
 
       // Disable so immediate effect
@@ -683,7 +717,8 @@ public:
    /**
     * Set period
     *
-    * @param[in] period Period in seconds as a float
+    * @param[in] period   Period in seconds as a float
+    * @param[in] suspend  Whether to suspend timer during change.
     *
     * @return E_NO_ERROR  => success
     * @return E_TOO_SMALL => failed to find suitable values
@@ -694,7 +729,7 @@ public:
     * @note The Timer is stopped while being modified
     * @note The counter load value (CNTIN) is cleared
     */
-   static ErrorCode setPeriod(float period) {
+   static ErrorCode setPeriod(float period, bool suspend=false) {
       float inputClock = Info::getInputClockFrequency();
       int prescaleFactor=1;
       int prescalerValue=0;
@@ -722,7 +757,7 @@ public:
             uint32_t sc = tmr().SC;
             tmr().SC = 0;
             (void)tmr().SC;
-            setPeriodInTicks(periodInTicks, false);
+            setPeriodInTicks(periodInTicks, suspend);
             tmr().SC  = (sc&~FTM_SC_PS_MASK)|FTM_SC_PS(prescalerValue);
             return E_NO_ERROR;
          }
@@ -1175,7 +1210,7 @@ public:
     *
     * @note The actual CnV register update may be delayed by the FTM register synchronisation mechanism
     */
-   static void setDutyCycle(int dutyCycle, int channel) {
+   static void setDutyCycle(unsigned dutyCycle, int channel) {
       if (tmr().SC&FTM_SC_CPWMS_MASK) {
          tmr().CONTROLS[channel].CnV  = (dutyCycle*tmr().MOD)/100;
       }
@@ -1296,6 +1331,17 @@ public:
     */
    static void forceChannelOutputs(uint32_t enableMask, uint32_t outputMask) {
       tmr().SWOCTRL = (enableMask&0xFF)|((outputMask<<8)&0xFF00);
+   }
+
+   /**
+    * Set current value of channel outputs.\n
+    * This value is overwritten by the next channel action.
+    *
+    * @param channelValueMask
+    */
+   static void setChanelOutputs(uint32_t channelValueMask) {
+      tmr().OUTINIT = channelValueMask;
+      tmr().MODE    |= FTM_MODE_INIT_MASK;
    }
 
 public:
@@ -1485,7 +1531,7 @@ public:
        *
        * @note The actual CnV register update will be delayed by the FTM register synchronisation mechanism
        */
-      static INLINE_RELEASE void setDutyCycle(int dutyCycle) {
+      static INLINE_RELEASE void setDutyCycle(unsigned dutyCycle) {
          Ftm::setDutyCycle(dutyCycle, channel);
       }
 
@@ -1612,9 +1658,13 @@ public:
        *       It is necessary to identify the originating channel in the callback
        */
       static ErrorCode INLINE_RELEASE setChannelCallback(FtmChannelCallbackFunction callback) {
-         return Ftm::setChannelCallback(channel, callback);
+         if constexpr (Info::NumChannelVectors > 1) {
+            return Ftm::setChannelCallback(callback, channel);
+         }
+         else {
+            return Ftm::setChannelCallback(callback);
+         }
       }
-
 
       /*******************************
        *  PIN Functions
@@ -1898,7 +1948,7 @@ public:
 
 template<class Info> FtmCallbackFunction         FtmBase_T<Info>::sToiCallback        = FtmBase_T<Info>::unhandledCallback;
 template<class Info> FtmCallbackFunction         FtmBase_T<Info>::sFaultCallback      = FtmBase_T<Info>::unhandledCallback;
-template<class Info> FtmChannelCallbackFunction  FtmBase_T<Info>::sChannelCallbacks[];
+template<class Info> FtmChannelCallbackFunction  FtmBase_T<Info>::sChannelCallbacks[] = {nullptr};
 
 #ifdef USBDM_FTM0_IS_DEFINED
 /**
@@ -1906,15 +1956,6 @@ template<class Info> FtmChannelCallbackFunction  FtmBase_T<Info>::sChannelCallba
  */
 class Ftm0 : public FtmBase_T<Ftm0Info> {};
 
-/**
- * Template class representing a FTM0 Timer channel.
- *
- * @tparam channel Timer channel
- *
- * @deprecated
- */
-template <int channel>
-class Ftm0Channel : public Ftm0::Channel<channel> {};
 #endif
 
 #ifdef USBDM_FTM1_IS_DEFINED
@@ -1923,15 +1964,6 @@ class Ftm0Channel : public Ftm0::Channel<channel> {};
  */
 class Ftm1 : public FtmBase_T<Ftm1Info> {};
 
-/**
- * Template class representing a FTM0 Timer channel.
- *
- * @tparam channel Timer channel
- *
- * @deprecated
- */
-template <int channel>
-class Ftm1Channel : public Ftm1::Channel<channel> {};
 #endif
 
 #ifdef USBDM_FTM2_IS_DEFINED
@@ -1940,15 +1972,6 @@ class Ftm1Channel : public Ftm1::Channel<channel> {};
  */
 class Ftm2 : public FtmBase_T<Ftm2Info> {};
 
-/**
- * Template class representing a FTM0 Timer channel.
- *
- * @tparam channel Timer channel
- *
- * @deprecated
- */
-template <int channel>
-class Ftm2Channel : public Ftm2::Channel<channel> {};
 #endif
 
 #ifdef USBDM_FTM3_IS_DEFINED
@@ -1957,17 +1980,9 @@ class Ftm2Channel : public Ftm2::Channel<channel> {};
  */
 class Ftm3 : public FtmBase_T<Ftm3Info> {};
 
-/**
- * Template class representing a FTM0 Timer channel.
- *
- * @tparam channel Timer channel
- *
- * @deprecated
- */
-template <int channel>
-class Ftm3Channel : public Ftm3::Channel<channel> {};
 #endif
 
+#ifdef FTM_QDCTRL_QUADEN_MASK
 /**
  *  Quadrature Decoder Mode\n
  *  Selects the encoding mode used in the Quadrature Decoder mode.
@@ -2228,6 +2243,7 @@ public:
       return (bool)(tmr().QDCTRL & FTM_QDCTRL_TOFDIR_MASK);
    }
 };
+#endif // defined(FTM_QDCTRL_QUADEN_MASK)
 
 
 #ifdef USBDM_FTM0_INFOQUAD_IS_DEFINED

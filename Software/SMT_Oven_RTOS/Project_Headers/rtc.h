@@ -114,7 +114,7 @@ public:
     *                        Use nullptr to remove callback.
     */
    static void setAlarmCallback(RTCCallbackFunction callback) {
-      usbdm_assert(Info::irqHandlerInstalled, "RTC not configure for interrupts");
+      static_assert(Info::irqAlarmHandlerInstalled, "RTC not configure for alarm interrupts");
       if (callback == nullptr) {
          callback = unhandledCallback;
       }
@@ -128,7 +128,7 @@ public:
     *                        Use nullptr to remove callback.
     */
    static void setSecondsCallback(RTCCallbackFunction callback) {
-      usbdm_assert(Info::irqHandlerInstalled, "RTC not configure for interrupts");
+      static_assert(Info::irqSecondsHandlerInstalled, "RTC not configure for seconds interrupts");
       if (callback == nullptr) {
          callback = unhandledCallback;
       }
@@ -227,12 +227,11 @@ public:
 
    /**
     * Enable interrupts in NVIC
-    * Any pending NVIC interrupts are first cleared.
     */
    static void enableNvicInterrupts() {
-      enableNvicInterrupt(Info::irqNums[0]);
+      NVIC_EnableIRQ(Info::irqNums[0]);
       if (Info::irqCount>1) {
-         enableNvicInterrupt(Info::irqNums[1]);
+         NVIC_EnableIRQ(Info::irqNums[1]);
       }
    }
 

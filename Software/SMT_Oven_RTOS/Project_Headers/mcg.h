@@ -38,9 +38,9 @@ extern volatile uint32_t SystemMcgFllClock;
 /** MCGPLLCLK - Output of PLL */
 extern volatile uint32_t SystemMcgPllClock;
 /** Core/System clock (from MCGOUTCLK/CLKDIV) */
-extern volatile uint32_t SystemCoreClock;
+//extern volatile uint32_t SystemCoreClock;
 /** Bus clock (from MCGOUTCLK/CLKDIV) */
-extern volatile uint32_t SystemBusClock;
+//extern volatile uint32_t SystemBusClock;
 /** LPO - Low power oscillator 1kHz clock available in LP modes */
 extern volatile uint32_t SystemLpoClock;
 
@@ -112,7 +112,6 @@ public:
 
    /**
     * Enable interrupts in NVIC
-    * Any pending NVIC interrupts are first cleared.
     */
    static void enableNvicInterrupts() {
       NVIC_EnableIRQ(McgInfo::irqNums[0]);

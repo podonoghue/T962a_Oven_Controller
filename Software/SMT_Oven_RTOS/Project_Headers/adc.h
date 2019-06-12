@@ -92,17 +92,6 @@ enum AdcAveraging {
 };
 
 /**
- * ADC input clock source.
- */
-enum AdcClockSource {
-   AdcClockSource_Bus      = ADC_CFG1_ADICLK(0), //!< Bus Clock
-   AdcClockSource_Busdiv2  = ADC_CFG1_ADICLK(1), //!< Bus Clock / 2
-   AdcClockSource_Alt      = ADC_CFG1_ADICLK(2), //!< Alternate clock (ALTCLK)
-   AdcClockSource_Asynch   = ADC_CFG1_ADICLK(3), //!< Asynchronous clock (ADACK Internal ADC clock source)
-   AdcClockSource_Default  = AdcClockSource_Bus
-};
-
-/**
  * ADC clock divider
  */
 enum AdcClockDivider {
@@ -163,7 +152,7 @@ enum AdcMuxsel {
  */
 enum AdcPower {
    AdcPower_Normal  = ADC_CFG1_ADLPC(0), //!< Normal power operation
-   AdcPower_Lowl    = ADC_CFG1_ADLPC(1), //!< Low power operation
+   AdcPower_Low     = ADC_CFG1_ADLPC(1), //!< Low power operation
 };
 
 /**
@@ -384,7 +373,7 @@ public:
       adc().CV1  = Info::cv1;
       adc().CV1  = Info::cv2;
 	  
-      enableNvicInterrupts();
+      enableNvicInterrupts(Info::irqLevel);
    }
 
    /**
@@ -392,7 +381,6 @@ public:
     *
     * @param[in] adcResolution   Resolution for converter e.g. AdcResolution_16bit_se
     * @param[in] adcClockSource  Clock source e.g. AdcClockSource_Asynch
-    * @param[in] adcClockDivider Clock divider e.g. AdcClockDivider_4
     * @param[in] adcSample       Input sample interval. Allows use of higher input impedance sources
     * @param[in] adcPower        Allows reduced power consumption but with restricted input clock speed
     * @param[in] adcMuxsel       Selects between A/B multiplexor inputs on channels 4-8
@@ -407,7 +395,6 @@ public:
    static void configure(
          AdcResolution   adcResolution,
          AdcClockSource  adcClockSource  = AdcClockSource_Default,
-         AdcClockDivider adcClockDivider = AdcClockDivider_1,
          AdcSample       adcSample       = AdcSample_Normal,
          AdcPower        adcPower        = AdcPower_Normal,
          AdcMuxsel       adcMuxsel       = AdcMuxsel_B,
@@ -415,16 +402,69 @@ public:
          AdcAsyncClock   adcAsyncClock   = AdcAsyncClock_Disabled
          ) {
       enable();
-      adc().CFG1 = adcResolution|adcClockSource|adcClockDivider|adcPower|(adcSample&ADC_CFG1_ADLSMP_MASK);
+      adc().CFG1 = adcResolution|adcClockSource|calculateClockDivider(adcClockSource)|adcPower|(adcSample&ADC_CFG1_ADLSMP_MASK);
       adc().CFG2 = adcMuxsel|adcClockRange|adcAsyncClock|(adcSample&ADC_CFG2_ADLSTS_MASK);
    }
 
    /**
+    * Get ADC maximum conversion value for an single-ended range
+    *
+    * @param adcResolution
+    *
+    * @return range e.g. AdcResolution_8bit_se => (2^8)-1
+    */
+   static constexpr unsigned getSinglendeddMaximum(AdcResolution adcResolution) {
+      switch(adcResolution) {
+         case AdcResolution_8bit_se:  return (1<<8)-1;
+         case AdcResolution_10bit_se: return (1<<10)-1;
+         case AdcResolution_12bit_se: return (1<<12)-1;
+         case AdcResolution_16bit_se: return (1<<16)-1;
+         default:                     return 0;
+      }
+   }
+
+   /**
+    * Get ADC maximum conversion value for an differential range
+    *
+    * @param adcResolution
+    *
+    * @return range e.g. AdcResolution_9bit_diff => (2^8)-1
+    */
+   static constexpr int getDifferentialMaximum(AdcResolution adcResolution) {
+      switch(adcResolution) {
+         case AdcResolution_9bit_diff:   return (1<<8)-1;
+         case AdcResolution_11bit_diff:  return (1<<10)-1;
+         case AdcResolution_13bit_diff:  return (1<<12)-1;
+         case AdcResolution_16bit_diff:  return (1<<15)-1;
+         default:                     return 0;
+      }
+   }
+   /**
+    * Calculate ADC clock divider (ADC_CFG1_ADIV)
+    *
+    * @param adcClockSource
+    *
+    * @return ADC_CFG1_ADIV value
+    */
+   static unsigned calculateClockDivider(AdcClockSource adcClockSource) {
+      static constexpr unsigned MinClock =  2000000;
+      static constexpr unsigned MaxClock = 12000000;
+      unsigned clockFrequency = Info::getInputClockFrequency(adcClockSource);
+      unsigned adiv;
+      for (adiv=0; adiv<=3; adiv++) {
+         if ((clockFrequency <= MaxClock) && (clockFrequency >= MinClock)) {
+            break;
+         }
+         clockFrequency /= 2;
+      }
+      return ADC_CFG1_ADIV(adiv);
+   }
+
+   /**
     * Enable interrupts in NVIC
-    * Any pending NVIC interrupts are first cleared.
     */
    static void enableNvicInterrupts() {
-      enableNvicInterrupt(Info::irqNums[0]);
+      NVIC_EnableIRQ(Info::irqNums[0]);
    }
 
    /**
@@ -602,6 +642,7 @@ public:
       }
    }
 
+#ifdef ADC_SC2_DMAEN_MASK
    /**
     * Enable/disable DMA.
     *
@@ -616,6 +657,7 @@ public:
          adc().SC2 &= ~ADC_SC2_DMAEN_MASK;
       }
    }
+#endif
 
 protected:
    /**
@@ -872,52 +914,6 @@ template<class Info> ADCCallbackFunction AdcBase_T<Info>::sCallback = AdcBase::u
  */
 class Adc0 : public AdcBase_T<Adc0Info> {};
 
-/**
- * Template class representing an ADC0 channel
- *
- * Example
- * @code
- * // Instantiate the ADC channel (for ADC0 channel 6)
- * using Adc = USBDM::Adc0Channel<6>;
- *
- * // Set ADC resolution
- * Adc.setMode(AdcResolution_16bit_se);
- *
- * // Read ADC value
- * uint32_t value = Adc.readAnalogue();
- * @endcode
- *
- * @tparam channel ADC channel
- *
- * @deprecated
- */
-template<int channel>
-class Adc0Channel : public Adc0::Channel<channel> {};
-
-#ifdef USBDM_ADC0_INFODM_IS_DEFINED
-/**
- * Template class representing an ADC0 differential channel
- *
- * Example
- * @code
- * // Instantiate the differential ADC0 channels (for ADC0_DM0, ADC0_DP0)
- * using Adc = USBDM::Adc0DiffChannel<0>;
- *
- * // Set ADC resolution
- * Adc.setMode(AdcResolution_11bit_diff );
- *
- * // Read ADC value
- * uint32_t value = Adc0.readAnalogue();
- * @endcode
- *
- * @tparam channel ADC channel
- *
- * @deprecated
- */
-template<int channel>
-class Adc0DiffChannel : public Adc0::DiffChannel<channel> {};
-#endif
-
 #endif
 
 #ifdef USBDM_ADC1_IS_DEFINED
@@ -926,51 +922,6 @@ class Adc0DiffChannel : public Adc0::DiffChannel<channel> {};
  */
 class Adc1 : public AdcBase_T<Adc1Info> {};
 
-/**
- * Template class representing an ADC1 channel
- *
- * Example
- * @code
- * // Instantiate the ADC channel (for ADC1 channel 6)
- * using Adc = USBDM::Adc1Channel<6>;
- *
- * // Set ADC resolution
- * Adc.setMode(AdcResolution_16bit_se);
- *
- * // Read ADC value
- * uint32_t value = Adc.readAnalogue();
- * @endcode
- *
- * @tparam channel ADC channel
- *
- * @deprecated
- */
-template<int channel>
-class Adc1Channel : public Adc1::Channel<channel> {};
-
-#ifdef USBDM_ADC1_INFODM_IS_DEFINED
-/**
- * Template class representing an ADC1 differential channel
- *
- * Example
- * @code
- * // Instantiate the differential ADC1 channels (for ADC1_DM0, ADC1_DP0)
- * using Adc = USBDM::Adc1DiffChannel<0>;
- *
- * // Set ADC resolution
- * Adc.setMode(AdcResolution_11bit_diff );
- *
- * // Read ADC value
- * uint32_t value = Adc.readAnalogue();
- * @endcode
- *
- * @tparam channel ADC channel
- *
- * @deprecated
- */
-template<int channel>
-class Adc1DiffChannel : public Adc1::DiffChannel<channel> {};
-#endif
 #endif
 
 /**

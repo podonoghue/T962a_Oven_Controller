@@ -224,7 +224,7 @@ public:
     */
    static void setCallback(PDBCallbackFunction callback) {
 
-      usbdm_assert(Info::irqHandlerInstalled, "PDB not configure for interrupts");
+      static_assert(Info::irqHandlerInstalled, "PDB not configure for interrupts");
       if (callback == nullptr) {
          callback = unhandledCallback;
       }
@@ -239,7 +239,7 @@ public:
     */
    static void setErrorCallback(PDBCallbackFunction callback) {
 
-      usbdm_assert(Info::irqHandlerInstalled, "PDB not configure for interrupts");
+      static_assert(Info::irqHandlerInstalled, "PDB not configure for interrupts");
       if (callback == nullptr) {
          callback = unhandledCallback;
       }
@@ -331,7 +331,7 @@ public:
       // Configure and trigger register load
       pdb().SC = Info::pdb_sc|PDB_SC_PDBEN_MASK|PDB_SC_LDOK_MASK;
 
-      enableNvicInterrupts();
+      enableNvicInterrupts(Info::irqLevel);
    }
 
    /**
@@ -403,10 +403,9 @@ public:
 
    /**
     * Enable interrupts in NVIC
-    * Any pending NVIC interrupts are first cleared.
     */
    static void enableNvicInterrupts() {
-      enableNvicInterrupt(Info::irqNums[0]);
+      NVIC_EnableIRQ(Info::irqNums[0]);
    }
 
    /**

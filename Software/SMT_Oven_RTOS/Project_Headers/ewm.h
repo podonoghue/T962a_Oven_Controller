@@ -102,7 +102,7 @@ public:
     *                     Use nullptr to remove callback.
     */
    static void setCallback(EWMCallbackFunction callback) {
-      usbdm_assert(Info::irqHandlerInstalled, "EWM not configured for interrupts");
+      static_assert(Info::irqHandlerInstalled, "EWM not configured for interrupts");
       if (callback == nullptr) {
          callback = unhandledCallback;
       }
@@ -252,10 +252,9 @@ public:
 
    /**
     * Enable interrupts in NVIC
-    * Any pending NVIC interrupts are first cleared.
     */
    static void enableNvicInterrupts() {
-      enableNvicInterrupt(Info::irqNums[0]);
+      NVIC_EnableIRQ(Info::irqNums[0]);
    }
 
    /**

@@ -99,6 +99,9 @@ static inline void disablePortClocks(uint32_t clockMask) {
    __DMB();
 };
 
+/*
+ * PORT clock masks
+ */
 #if defined(SIM_SCGC5_PORTA_MASK)
 static constexpr uint32_t PORTA_CLOCK_MASK = SIM_SCGC5_PORTA_MASK;
 #endif
@@ -360,7 +363,7 @@ static constexpr PcrValue pcrValue(uint32_t flags) {
  * Default PCR setting for pins (excluding multiplexor value)
  * High drive strength + Pull-up
  */
-static constexpr PcrValue DEFAULT_PCR = pcrValue(PinPull_Up, PinDriveStrength_High);
+static constexpr PcrValue DEFAULT_PCR = pcrValue(PinPull_None, PinDriveStrength_Low);
 
 /**
  * Default PCR value for pins used as GPIO (including multiplexor value)
@@ -373,6 +376,12 @@ static constexpr PcrValue GPIO_DEFAULT_PCR = pcrValue(PinPull_None, PinDriveStre
  * High drive strength + Pull-up + Open-drain (if available)
  */
 static constexpr PcrValue I2C_DEFAULT_PCR =  pcrValue(PinPull_Up, PinDriveStrength_High, PinDriveMode_OpenDrain);
+
+/**
+ * Default PCR setting for I2S pins (excluding multiplexor value)
+ * High drive strength + Pull-up + Open-drain (if available)
+ */
+static constexpr PcrValue I2S_DEFAULT_PCR =  pcrValue(PinPull_Up, PinDriveStrength_High, PinDriveMode_OpenDrain);
 
 /**
  * Default PCR setting for (E)XTAL pins (excluding multiplexor value)

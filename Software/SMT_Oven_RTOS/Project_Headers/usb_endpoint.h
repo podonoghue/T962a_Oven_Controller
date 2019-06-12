@@ -179,9 +179,12 @@ protected:
     * Constructor
     *
     * @param[in]  endpointNumber End-point number
+    * @param[in]  endpointSize   Size of endpoint buffer
+    * @param[in]  endPointType   Endpoint type (Control, Bulk, Interrupt)
+    * @param[in]  dataBuffer     Endpoint buffer
     * @param[in]  usb            Reference to USB hardware
     */
-   Endpoint(
+   constexpr Endpoint(
          int endpointNumber,
          unsigned endpointSize,
          EndPointType endPointType,

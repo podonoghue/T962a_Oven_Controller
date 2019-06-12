@@ -77,10 +77,10 @@ using F4Button = USBDM::GpioB<0, USBDM::ActiveLow>;
 using SButton  = USBDM::GpioB<16, USBDM::ActiveLow>;
 
 /** Case fan PWM output */
-using CaseFan  = USBDM::Ftm0Channel<2>;
+using CaseFan  = USBDM::Ftm0::Channel<2>;
 
 /** Spare fan PWM output */
-using Spare    = USBDM::Ftm0Channel<3>;
+using Spare    = USBDM::Ftm0::Channel<3>;
 
 /**
  * Oven fan LED - Wrapper for GPIO

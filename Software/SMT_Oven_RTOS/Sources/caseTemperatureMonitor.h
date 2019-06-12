@@ -33,7 +33,7 @@ class CaseTemperatureMonitor : private CMSIS::TimerClass {
     */
    void callback() override {
       float coldReference = tempSensor.getCaseTemperature();
-      int dutyCycle = MIN_FAN_SPEED + (100*(coldReference-START_TEMP))/(MAX_TEMP-START_TEMP);
+      unsigned dutyCycle = MIN_FAN_SPEED + (100*(coldReference-START_TEMP))/(MAX_TEMP-START_TEMP);
       if (dutyCycle<MIN_FAN_SPEED) {
          dutyCycle = 0;
       }
@@ -54,7 +54,7 @@ public:
 
       CaseFan::Ftm::configure(FtmMode_LeftAlign, FtmClockSource_System, FtmPrescale_16);
       CaseFan::Ftm::setPeriod(20*USBDM::ms);
-      CaseFan::setDutyCycle(0);
+      CaseFan::setDutyCycle(0U);
 
       // Check every 5 seconds
 //      start(5000 /* ms */);

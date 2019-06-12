@@ -110,9 +110,9 @@ constexpr inline UsbRequestDirection REQ_DIRECTION(uint8_t bmRequestType) {
 /**
  * Create bmRequestType from recipient, type and direction
  *
- * @param recipient
- * @param type
- * @param direction
+ * @param usbRequestDirection
+ * @param usbRequestType
+ * @param usbRequestRecipient
  *
  * @return
  */
@@ -400,7 +400,6 @@ struct MS_CompatibleIdFeatureDescriptor {
    uint8_t  bCompatibleId[8];        //!<
    uint8_t  bSubCompatibleId[8];     //!<
    uint8_t  bReserved3[6];
-
 };
 
 struct MS_PropertiesFeatureDescriptor;

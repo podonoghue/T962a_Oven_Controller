@@ -218,7 +218,7 @@ void CMT_IRQHandler(void)                     WEAK_DEFAULT_HANDLER;
 void RTC_Alarm_IRQHandler(void)               WEAK_DEFAULT_HANDLER;
 void RTC_Seconds_IRQHandler(void)             WEAK_DEFAULT_HANDLER;
 void PDB0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
-void USBDCD_IRQHandler(void)                  WEAK_DEFAULT_HANDLER;
+void USBDCD0_IRQHandler(void)                 WEAK_DEFAULT_HANDLER;
 void DAC0_IRQHandler(void)                    WEAK_DEFAULT_HANDLER;
 void MCG_IRQHandler(void)                     WEAK_DEFAULT_HANDLER;
 void LPTMR0_IRQHandler(void)                  WEAK_DEFAULT_HANDLER;
@@ -312,7 +312,7 @@ VectorTable const __vector_table = {
       USBDM::PitChannel<3>::irqHandler,        /*   67,   51  Periodic Interrupt Timer                                                         */
       PDB0_IRQHandler,                         /*   68,   52  Programmable Delay Block                                                         */
       USBDM::Usb0::irqHandler,                 /*   69,   53  Universal Serial Bus                                                             */
-      USBDCD_IRQHandler,                       /*   70,   54  USB Device Charger Detection                                                     */
+      USBDCD0_IRQHandler,                      /*   70,   54  USB Device Charger Detection                                                     */
       Default_Handler,                         /*   71,   55                                                                                   */
       DAC0_IRQHandler,                         /*   72,   56  Digital to Analogue Converter                                                    */
       MCG_IRQHandler,                          /*   73,   57  Multipurpose Clock Generator                                                     */

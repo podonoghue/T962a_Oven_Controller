@@ -78,7 +78,7 @@ void initialise() {
    OvenFanLed::init();
    HeaterLed::init();
    Spare::Ftm::enable();
-   Spare::setDutyCycle(0);
+   Spare::setDutyCycle(0U);
    ovenControl.initialise();
    Tp1::setOutput(PinDriveStrength_High);
    lcd.setFloatFormat(1,Padding_LeadingSpaces,3);

@@ -30,6 +30,30 @@ namespace USBDM {
  */
 /* Template:_common_settings.xml */
 
+   /**
+    * @tparam  T  Type of comparison object (inferred)
+    * @param   a  Left-hand object for comparison
+    * @param   b  Right-hand object for comparison
+    *
+    * @return Smaller of a or b
+    */
+   template<class T> 
+   constexpr T min(const T a, const T b) {
+      return (b < a) ? b : a;
+   }
+
+   /**
+    * @tparam  T  Type of comparison object (inferred)
+    * @param   a  Left-hand object for comparison
+    * @param   b  Right-hand object for comparison
+    *
+    * @return Larger of a or b
+    */
+   template<class T> 
+   constexpr T max(const T a, const T b) {
+      return (b > a) ? b : a;
+   }
+
 #if defined(PCC)
 
 /** Dummy port information for pins without an associated PCR */
@@ -76,27 +100,52 @@ constexpr PortInfo  __attribute__((unused)) NoPortInfo {0, 0, (IRQn_Type)-1};
 
 #ifdef SIM_SCGC5_PORTA_MASK
 /** Port information for PORTA */
-constexpr PortInfo  __attribute__((unused)) PortAInfo {PORTA_BasePtr, SIM_SCGC5_PORTA_MASK, PORTA_IRQn};
+#ifndef PORTA_IRQS
+constexpr PortInfo  __attribute__((unused)) PortAInfo {PORTA_BasePtr, SIM_SCGC5_PORTA_MASK, ((IRQn_Type)-1)};
+#else
+constexpr IRQn_Type PORTA_IRQS_AR[] = PORTA_IRQS;
+constexpr PortInfo  __attribute__((unused)) PortAInfo {PORTA_BasePtr, SIM_SCGC5_PORTA_MASK, PORTA_IRQS_AR[0]};
+#endif
 #endif
 
 #ifdef SIM_SCGC5_PORTB_MASK
 /** Port information for PORTB */
-constexpr PortInfo  __attribute__((unused)) PortBInfo {PORTB_BasePtr, SIM_SCGC5_PORTB_MASK, PORTB_IRQn};
+#ifndef PORTB_IRQS
+constexpr PortInfo  __attribute__((unused)) PortBInfo {PORTB_BasePtr, SIM_SCGC5_PORTB_MASK, ((IRQn_Type)-1)};
+#else
+constexpr IRQn_Type PORTB_IRQS_AR[] = PORTB_IRQS;
+constexpr PortInfo  __attribute__((unused)) PortBInfo {PORTB_BasePtr, SIM_SCGC5_PORTB_MASK, PORTB_IRQS_AR[0]};
+#endif
 #endif
 
 #ifdef SIM_SCGC5_PORTC_MASK
 /** Port information for PORTC */
-constexpr PortInfo  __attribute__((unused)) PortCInfo {PORTC_BasePtr, SIM_SCGC5_PORTC_MASK, PORTC_IRQn};
+#ifndef PORTC_IRQS
+constexpr PortInfo  __attribute__((unused)) PortCInfo {PORTC_BasePtr, SIM_SCGC5_PORTC_MASK, ((IRQn_Type)-1)};
+#else
+constexpr IRQn_Type PORTC_IRQS_AR[] = PORTC_IRQS;
+constexpr PortInfo  __attribute__((unused)) PortCInfo {PORTC_BasePtr, SIM_SCGC5_PORTC_MASK, PORTC_IRQS_AR[0]};
+#endif
 #endif
 
 #ifdef SIM_SCGC5_PORTD_MASK
 /** Port information for PORTD */
-constexpr PortInfo  __attribute__((unused)) PortDInfo {PORTD_BasePtr, SIM_SCGC5_PORTD_MASK, PORTD_IRQn};
+#ifndef PORTD_IRQS
+constexpr PortInfo  __attribute__((unused)) PortDInfo {PORTD_BasePtr, SIM_SCGC5_PORTD_MASK, ((IRQn_Type)-1)};
+#else
+constexpr IRQn_Type PORTD_IRQS_AR[] = PORTD_IRQS;
+constexpr PortInfo  __attribute__((unused)) PortDInfo {PORTD_BasePtr, SIM_SCGC5_PORTD_MASK, PORTD_IRQS_AR[0]};
+#endif
 #endif
 
 #ifdef SIM_SCGC5_PORTE_MASK
 /** Port information for PORTE */
-constexpr PortInfo  __attribute__((unused)) PortEInfo {PORTE_BasePtr, SIM_SCGC5_PORTE_MASK, PORTE_IRQn};
+#ifndef PORTE_IRQS
+constexpr PortInfo  __attribute__((unused)) PortEInfo {PORTE_BasePtr, SIM_SCGC5_PORTE_MASK, ((IRQn_Type)-1)};
+#else
+constexpr IRQn_Type PORTE_IRQS_AR[] = PORTE_IRQS;
+constexpr PortInfo  __attribute__((unused)) PortEInfo {PORTE_BasePtr, SIM_SCGC5_PORTE_MASK, PORTE_IRQS_AR[0]};
+#endif
 #endif
 
 #endif // defined(PCC)
@@ -134,6 +183,8 @@ extern void mapAllPins();
  */
 class Osc0Info {
 public:
+   // Template:osc0_mk
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = OSC0_BasePtr;
 
@@ -141,11 +192,6 @@ public:
    __attribute__((always_inline)) static volatile OSC_Type &osc() {
       return *(OSC_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 0;
-
-   // Template:osc0_mk
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
@@ -251,6 +297,8 @@ public:
  */
 class RtcInfo {
 public:
+   // Template:rtc_tamper_wpon
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = RTC_BasePtr;
 
@@ -259,17 +307,14 @@ public:
       return *(RTC_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 2;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      RTC_Alarm_IRQn, RTC_Seconds_IRQn, };
-
-   // Template:rtc_tamper_wpon
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = 0;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Frequency of RTC External Clock or Crystal
    static constexpr uint32_t osc_input_freq = 32768UL;
@@ -321,15 +366,24 @@ public:
       RTC_RAR_TSRR(1);  // Time Seconds Register Read
    #endif
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = RTC_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqAlarmHandlerInstalled   = 0;
+
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqSecondsHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
 
    //! Time for cold start (corrected for 12 leap years since 1970)
    static constexpr uint32_t coldStartTime = 
-            ((((2017-1970)*365UL +
+            ((((2019-1970)*365UL +
                (181) +
                (1+12-1))*24 +
               (12))*60 +
@@ -422,6 +476,8 @@ public:
  */
 class McgInfo {
 public:
+   // Template:mcg_mk
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = MCG_BasePtr;
 
@@ -430,14 +486,11 @@ public:
       return *(MCG_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
    //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      MCG_IRQn, };
+   static constexpr IRQn_Type irqNums[]  = MCG_IRQS;
 
-   // Template:mcg_mk
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
@@ -571,12 +624,37 @@ public:
  * along with simple accessor functions.
  */
    /**
+    * Selects the ERCLK32K clock source
+    */
+   enum SimOsc32kSel {
+      SimOsc32kSel_Osc32kClk  = SIM_SOPT1_OSC32KSEL(0), //!< OSC0 operating as 32K oscillator
+      SimOsc32kSel_Rtc32kClk  = SIM_SOPT1_OSC32KSEL(2), //!< Rtc32k clock
+      SimOsc32kSel_LpoClk     = SIM_SOPT1_OSC32KSEL(3), //!< LPO Clock
+   };
+
+   /**
     * Peripheral Clock sources
     */
    enum SimPeripheralClockSource {
       SimPeripheralClockSource_McgFll = SIM_SOPT2_PLLFLLSEL(0), //!< MCG FLL Clock
       SimPeripheralClockSource_McgPll = SIM_SOPT2_PLLFLLSEL(1), //!< MCG PLL Clock
+   #ifdef USB_CLK_RECOVER_IRC_EN_REG_EN_MASK
       SimPeripheralClockSource_Irc48m = SIM_SOPT2_PLLFLLSEL(3), //!< IRC 48MHz clock
+   #endif
+   };
+
+   /**
+    * Selects the clock to output on the CLKOUT pin.
+    */
+   enum SimClkoutSel {
+      SimClkoutSel_Reserved0 = SIM_SOPT2_CLKOUTSEL(0),  //!<
+      SimClkoutSel_Reserved1 = SIM_SOPT2_CLKOUTSEL(1),  //!<
+      SimClkoutSel_Flash     = SIM_SOPT2_CLKOUTSEL(2),  //!< Flash
+      SimClkoutSel_Lpo       = SIM_SOPT2_CLKOUTSEL(3),  //!< LPO (1kHz)
+      SimClkoutSel_McgirClk  = SIM_SOPT2_CLKOUTSEL(4),  //!< McgirClk
+      SimClkoutSel_RTC       = SIM_SOPT2_CLKOUTSEL(5),  //!< RTC 32.768kHz
+      SimClkoutSel_OscerClk0 = SIM_SOPT2_CLKOUTSEL(6),  //!< OscerClk0
+      SimClkoutSel_Reserved7 = SIM_SOPT2_CLKOUTSEL(7),  //!<
    };
 
    /**
@@ -624,6 +702,8 @@ public:
 
 class SimInfo {
 public:
+   // Template:sim_mk22d5
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = SIM_BasePtr;
 
@@ -631,11 +711,6 @@ public:
    __attribute__((always_inline)) static volatile SIM_Type &sim() {
       return *(SIM_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 0;
-
-   // Template:sim_mk22d5
 
    //! System Options Register 1
    static constexpr uint32_t sopt1 = 
@@ -657,6 +732,24 @@ public:
          case SIM_SOPT1_OSC32KSEL(2) : return RtcInfo::getExternalClock();
          case SIM_SOPT1_OSC32KSEL(3) : return 1000;
       }
+   }
+
+   /**
+    * Set ERCLK32K clock source
+    *
+    * @param simOsc32kSel Clock source
+    */
+   static void setErc32kClock(SimOsc32kSel simOsc32kSel) {
+      sim().SOPT1 = (sim().SOPT1&~SIM_SOPT1_OSC32KSEL_MASK) | simOsc32kSel;
+   }
+
+   /**
+    * Selects the clock to output on the CLKOUT pin.
+    *
+    * @param simClkoutSel
+    */
+   static void setClkout(SimClkoutSel simClkoutSel) {
+      sim().SOPT2 = (sim().SOPT2&~SIM_SOPT2_CLKOUTSEL_MASK) | simClkoutSel;
    }
 
    /**
@@ -917,8 +1010,24 @@ public:
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
+#ifndef USBDM_CLOCK_SOURCES_DEFINED
+#define USBDM_CLOCK_SOURCES_DEFINED
+   /**
+    * ADC input clock source.
+    */
+   enum AdcClockSource {
+      AdcClockSource_Bus      = ADC_CFG1_ADICLK(0), //!< Bus Clock
+      AdcClockSource_Busdiv2  = ADC_CFG1_ADICLK(1), //!< Bus Clock / 2
+      AdcClockSource_Alt      = ADC_CFG1_ADICLK(2), //!< Alternate clock (ALTCLK)
+      AdcClockSource_Asynch   = ADC_CFG1_ADICLK(3), //!< Asynchronous clock (ADACK Internal ADC clock source)
+      AdcClockSource_Default  = AdcClockSource_Asynch
+   };
+#endif
+
 class Adc0Info {
 public:
+   // Template:adc0_diff_a
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = ADC0_BasePtr;
 
@@ -927,26 +1036,55 @@ public:
       return *(ADC_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      ADC0_IRQn, };
-
-   // Template:adc0_diff_a
-
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = ADC0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
+
+   /**
+    *  Get input clock frequency for ADC
+    *  
+    *  @param adcClockSource Clock source chosen for ADC
+    *
+    *  @return Frequency in Hz
+    */
+   static unsigned getInputClockFrequency(AdcClockSource adcClockSource) {
+      switch (adcClockSource) {
+         case AdcClockSource_Bus:
+            return SystemBusClock;
+         case AdcClockSource_Busdiv2:
+            return SystemBusClock/2;
+         case AdcClockSource_Alt:
+            return  Osc0Info::getOscerClock();;
+         case AdcClockSource_Asynch:
+            return 2000000; // Actually varies with ADLPC/ADHSC
+         default:
+            return 0;
+            break;
+      }
+   }
+
+   /**
+    *  Get input clock frequency for ADC
+    *
+    *  @return Frequency in Hz
+    */
+   static unsigned getInputClockFrequency() {
+      return getInputClockFrequency((AdcClockSource)(adc().CFG1 & ADC_CFG1_ADICLK_MASK));
+   }
 
    //! Default value for ADCx_CFG1 register
    static constexpr uint32_t cfg1  = 
@@ -1127,6 +1265,8 @@ public:
  */
 class Cmp0Info {
 public:
+   // Template:cmp0_pstm7
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = CMP0_BasePtr;
 
@@ -1134,15 +1274,6 @@ public:
    __attribute__((always_inline)) static volatile CMP_Type &cmp() {
       return *(CMP_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      CMP0_IRQn, };
-
-   // Template:cmp0_pstm7
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
@@ -1215,6 +1346,12 @@ public:
 #endif
    }
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = CMP0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 1;
 
@@ -1276,6 +1413,8 @@ public:
  */
 class Cmp1Info {
 public:
+   // Template:cmp0_pstm7
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = CMP1_BasePtr;
 
@@ -1283,15 +1422,6 @@ public:
    __attribute__((always_inline)) static volatile CMP_Type &cmp() {
       return *(CMP_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      CMP1_IRQn, };
-
-   // Template:cmp0_pstm7
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
@@ -1364,6 +1494,12 @@ public:
 #endif
    }
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = CMP1_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
 
@@ -1423,6 +1559,8 @@ public:
  */
 class CmtInfo {
 public:
+   // Template:cmt_0
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = CMT_BasePtr;
 
@@ -1431,20 +1569,23 @@ public:
       return *(CMT_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      CMT_IRQn, };
-
-   // Template:cmt_0
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = CMT_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
@@ -1588,6 +1729,8 @@ public:
  */
 class Crc0Info {
 public:
+   // Template:crc0_0x40032000
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = CRC0_BasePtr;
 
@@ -1595,11 +1738,6 @@ public:
    __attribute__((always_inline)) static volatile CRC_Type &crc() {
       return *(CRC_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 0;
-
-   // Template:crc0_0x40032000
 
    static constexpr uint32_t gpoly =  0;
 
@@ -1654,6 +1792,8 @@ public:
  */
 class Dma0Info {
 public:
+   // Template:dma0_16ch
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = DMA0_BasePtr;
 
@@ -1662,21 +1802,36 @@ public:
       return *(DMA_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 17;
+   /** 
+    *  Enable clock to Dma0
+    */
+   static void enableClock() {
+#ifdef PCC
+      // DMA is always clocked
+#else
+      SIM->SCGC7 |= SIM_SCGC7_DMA_MASK;
+#endif
+   }
+
+   /** 
+    *  Disable clock to Dma0
+    */
+   static void disableClock() {
+#ifdef PCC
+      // DMA is always clocked
+#else
+      SIM->SCGC7 &= ~SIM_SCGC7_DMA_MASK;
+#endif
+   }
 
    //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      DMA0_IRQn, DMA1_IRQn, DMA2_IRQn, DMA3_IRQn, 
-      DMA4_IRQn, DMA5_IRQn, DMA6_IRQn, DMA7_IRQn, 
-      DMA8_IRQn, DMA9_IRQn, DMA10_IRQn, DMA11_IRQn, 
-      DMA12_IRQn, DMA13_IRQn, DMA14_IRQn, DMA15_IRQn, 
-      DMA_Error_IRQn, };
+   static constexpr IRQn_Type irqNums[]  = DMA0_IRQS;
 
-   // Template:dma0_16ch
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -1707,6 +1862,8 @@ public:
  */
 class Dmamux0Info {
 public:
+   // Template:dmamux0_16ch_trig_mk22d5
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = DMAMUX0_BasePtr;
 
@@ -1715,11 +1872,47 @@ public:
       return *(DMAMUX_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 0;
+   /** 
+    *  Enable clock to Dmamux0
+    */
+   static void enableClock() {
+#ifdef PCC
+      PccInfo::enableDmamux0Clock();
+#else
+      SIM->SCGC6 |= SIM_SCGC6_DMAMUX0_MASK;
+#endif
+   }
 
-   // Template:dmamux0_16ch_trig_mk22d5
+   /** 
+    *  Disable clock to Dmamux0
+    */
+   static void disableClock() {
+#ifdef PCC
+      PccInfo::disableDmamux0Clock();
+#else
+      SIM->SCGC6 &= ~SIM_SCGC6_DMAMUX0_MASK;
+#endif
+   }
 
+   // Number of DMA channels implemented
+   static constexpr unsigned NumChannels = 16;
+
+   static constexpr uint8_t chcfg0_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg1_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg2_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg3_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg4_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg5_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg6_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg7_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg8_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg9_source  = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg10_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg11_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg12_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg13_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg14_source = DMAMUX_CHCFG_SOURCE(0);
+   static constexpr uint8_t chcfg15_source = DMAMUX_CHCFG_SOURCE(0);
 };
 
 /** 
@@ -1740,6 +1933,8 @@ public:
  */
 class EwmInfo {
 public:
+   // Template:ewm_int
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = EWM_BasePtr;
 
@@ -1748,23 +1943,26 @@ public:
       return *(EWM_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      WDOG_IRQn, };
-
-   // Template:ewm_int
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = EWM_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -1837,6 +2035,8 @@ public:
  */
 class FtflInfo {
 public:
+   // Template:ftfl_64k_flexrom
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = FTFL_BasePtr;
 
@@ -1844,15 +2044,6 @@ public:
    __attribute__((always_inline)) static volatile FTFL_Type &ftfl() {
       return *(FTFL_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 2;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      FTF_Command_IRQn, FTF_ReadCollision_IRQn, };
-
-   // Template:ftfl_64k_flexrom
 
    struct EepromSizes {
       const uint16_t size;    // EEPROM size
@@ -1932,6 +2123,18 @@ public:
    //! FlexNVM - EEPROM partition
    static constexpr SplitSel partitionSplit = SplitSel_A4_B4_8ths;
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = FTFL_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
+   //! Class based callback handler has been installed in vector table
+   static constexpr bool irqHandlerInstalled = 0;
+
+   //! Default IRQ level
+   static constexpr uint32_t irqLevel =  8;
+
    /** 
     *  Enable clock to Ftfl
     */
@@ -1977,7 +2180,13 @@ public:
    // Template:ftm
 
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Number of signals available in info table
    static constexpr int numSignals  = 2;
@@ -2016,21 +2225,6 @@ public:
  */
 class Ftm0Info {
 public:
-   //! Hardware base address as uint32_t 
-   static constexpr uint32_t baseAddress = FTM0_BasePtr;
-
-   //! Hardware base pointer
-   __attribute__((always_inline)) static volatile FTM_Type &ftm() {
-      return *(FTM_Type *)baseAddress;
-   }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      FTM0_IRQn, };
-
    // Template:ftm0_8ch
 
    //! Map all allocated pins on a peripheral when enabled
@@ -2042,8 +2236,22 @@ public:
    //! Number of channel event vectors implemented
    static constexpr unsigned NumChannelVectors = 1;
 
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = FTM0_BasePtr;
+
+   //! Hardware base pointer
+   __attribute__((always_inline)) static volatile FTM_Type &ftm() {
+      return *(FTM_Type *)baseAddress;
+   }
+
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Timer external input frequency 
    static constexpr uint32_t ftmExternalClock =  0;
@@ -2063,6 +2271,12 @@ public:
        0x0|                              // External Trigger Enable
        FTM_EXTTRIG_INITTRIGEN(0);    // Initialization Trigger Enable 
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = FTM0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
 
@@ -2070,10 +2284,10 @@ public:
    static constexpr uint32_t irqLevel =  8;
 
    /** Minimum resolution for PWM interval */
-   static constexpr uint32_t minimumResolution=50;
+   static constexpr uint32_t minimumResolution=1?50:0;
 
    /** Minimum usable interval in ticks */      
-   static constexpr uint32_t minimumInterval=20;
+   static constexpr uint32_t minimumInterval=1?20:0;
 
    /**
     * Get input clock frequency
@@ -2200,21 +2414,6 @@ public:
  */
 class Ftm1Info {
 public:
-   //! Hardware base address as uint32_t 
-   static constexpr uint32_t baseAddress = FTM1_BasePtr;
-
-   //! Hardware base pointer
-   __attribute__((always_inline)) static volatile FTM_Type &ftm() {
-      return *(FTM_Type *)baseAddress;
-   }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      FTM1_IRQn, };
-
    // Template:ftm1_2ch
 
    //! Map all allocated pins on a peripheral when enabled
@@ -2226,8 +2425,22 @@ public:
    //! Number of channel event vectors implemented
    static constexpr unsigned NumChannelVectors = 1;
 
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = FTM1_BasePtr;
+
+   //! Hardware base pointer
+   __attribute__((always_inline)) static volatile FTM_Type &ftm() {
+      return *(FTM_Type *)baseAddress;
+   }
+
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Timer external input frequency 
    static constexpr uint32_t ftmExternalClock =  0;
@@ -2247,6 +2460,12 @@ public:
        0x0|                              // External Trigger Enable
        FTM_EXTTRIG_INITTRIGEN(0);    // Initialization Trigger Enable 
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = FTM1_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
 
@@ -2254,10 +2473,10 @@ public:
    static constexpr uint32_t irqLevel =  8;
 
    /** Minimum resolution for PWM interval */
-   static constexpr uint32_t minimumResolution=100;
+   static constexpr uint32_t minimumResolution=1?100:0;
 
    /** Minimum usable interval in ticks */      
-   static constexpr uint32_t minimumInterval=20;
+   static constexpr uint32_t minimumInterval=1?20:0;
 
    /**
     * Get input clock frequency
@@ -2408,8 +2627,9 @@ public:
 
    //! Describes the port/gpio
    static constexpr PinInfo pinInfo { PortAInfo, GPIOA_BasePtr, 0, GPIO_DEFAULT_PCR  };
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -2429,8 +2649,9 @@ public:
 
    //! Describes the port/gpio
    static constexpr PinInfo pinInfo { PortBInfo, GPIOB_BasePtr, 0, GPIO_DEFAULT_PCR  };
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -2450,8 +2671,9 @@ public:
 
    //! Describes the port/gpio
    static constexpr PinInfo pinInfo { PortCInfo, GPIOC_BasePtr, 0, GPIO_DEFAULT_PCR  };
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -2471,8 +2693,9 @@ public:
 
    //! Describes the port/gpio
    static constexpr PinInfo pinInfo { PortDInfo, GPIOD_BasePtr, 0, GPIO_DEFAULT_PCR  };
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -2492,8 +2715,9 @@ public:
 
    //! Describes the port/gpio
    static constexpr PinInfo pinInfo { PortEInfo, GPIOE_BasePtr, 0, GPIO_DEFAULT_PCR  };
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -2518,6 +2742,8 @@ public:
  */
 class I2c0Info {
 public:
+   // Template:i2c0_mk10d5
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = I2C0_BasePtr;
 
@@ -2526,20 +2752,17 @@ public:
       return *(I2C_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      I2C0_IRQn, };
-
-   // Template:i2c0_mk10d5
-
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = I2C_DEFAULT_PCR;
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = I2C0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
@@ -2624,6 +2847,8 @@ public:
  */
 class I2s0Info {
 public:
+   // Template:i2s0_1ch
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = I2S0_BasePtr;
 
@@ -2632,23 +2857,20 @@ public:
       return *(I2S_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 2;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      I2S0_Tx_IRQn, I2S0_Rx_IRQn, };
-
-   // Template:i2s0_1ch
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = I2C_DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue  = I2S_DEFAULT_PCR;
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = I2S0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    /** 
     *  Enable clock to I2s0
@@ -2724,21 +2946,6 @@ public:
  */
 class LlwuInfo {
 public:
-   //! Hardware base address as uint32_t 
-   static constexpr uint32_t baseAddress = LLWU_BasePtr;
-
-   //! Hardware base pointer
-   __attribute__((always_inline)) static volatile LLWU_Type &llwu() {
-      return *(LLWU_Type *)baseAddress;
-   }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      LLWU_IRQn, };
-
    // Template:llwu_pe4_filt2_rst
 
    // Module wake ups
@@ -2752,8 +2959,22 @@ public:
       LLWU_ME_WUME6(0) |  //
       LLWU_ME_WUME7(0);   // RTC Seconds
 
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = LLWU_BasePtr;
+
+   //! Hardware base pointer
+   __attribute__((always_inline)) static volatile LLWU_Type &llwu() {
+      return *(LLWU_Type *)baseAddress;
+   }
+
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
@@ -2797,6 +3018,12 @@ public:
    static constexpr uint8_t rst =
       LLWU_RST_LLRSTE(1) |  // Low-Leakage Mode RESET Enable
       LLWU_RST_RSTFILT(0);  // Digital Filter On RESET Pin
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = LLWU_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
@@ -2879,6 +3106,8 @@ public:
  */
 class Lptmr0Info {
 public:
+   // Template:lptmr0
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = LPTMR0_BasePtr;
 
@@ -2887,17 +3116,14 @@ public:
       return *(LPTMR_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      LPTMR0_IRQn, };
-
-   // Template:lptmr0
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
@@ -2919,8 +3145,14 @@ public:
       LPTMR_CSR_TPP(0)|
       LPTMR_CSR_TPS(0);
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = LPTMR0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -3025,6 +3257,36 @@ public:
  * @}
  */
 /**
+ * @addtogroup MCM_Group MCM, Miscellaneous Control Module
+ * @brief Abstraction for Miscellaneous Control Module
+ * @{
+ */
+#define USBDM_MCM_IS_DEFINED
+/**
+ * Peripheral information for MCM, Miscellaneous Control Module.
+ * 
+ * This may include pin information, constants, register addresses, and default register values,
+ * along with simple accessor functions.
+ */
+class McmInfo {
+public:
+   // Template:mcm_mk11d5
+
+   //! Hardware base address as uint32_t 
+   static constexpr uint32_t baseAddress = MCM_BasePtr;
+
+   //! Hardware base pointer
+   __attribute__((always_inline)) static volatile MCM_Type &mcm() {
+      return *(MCM_Type *)baseAddress;
+   }
+
+};
+
+/** 
+ * End group MCM_Group
+ * @}
+ */
+/**
  * @addtogroup PDB_Group PDB, Programmable Delay Block
  * @brief Abstraction for Programmable Delay Block
  * @{
@@ -3038,6 +3300,8 @@ public:
  */
 class Pdb0Info {
 public:
+   // Template:pdb0_2ch_2pt_1dac_2po
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = PDB0_BasePtr;
 
@@ -3046,17 +3310,14 @@ public:
       return *(PDB_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      PDB0_IRQn, };
-
-   // Template:pdb0_2ch_2pt_1dac_2po
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
@@ -3146,6 +3407,12 @@ public:
       return SystemBusClock;
    }
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = PDB0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
 
@@ -3219,6 +3486,11 @@ public:
  */
 class PitInfo {
 public:
+   // Template:pit_4ch_chain
+
+   //! Number of PIT channels
+   static constexpr uint32_t NumChannels  = 4;
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = PIT_BasePtr;
 
@@ -3227,20 +3499,14 @@ public:
       return *(PIT_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 4;
-
    //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      PIT0_IRQn, PIT1_IRQn, PIT2_IRQn, PIT3_IRQn, };
+   static constexpr IRQn_Type irqNums[]  = PIT_IRQS;
 
-   // Template:pit_4ch_chain
-
-   //! Number of PIT channels
-   static constexpr uint32_t NumChannels  = 4;
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (1 == 1);
+   static constexpr bool irqHandlerInstalled = 1;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -3304,6 +3570,8 @@ public:
  */
 class PmcInfo {
 public:
+   // Template:pmc_mk
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = PMC_BasePtr;
 
@@ -3311,15 +3579,6 @@ public:
    __attribute__((always_inline)) static volatile PMC_Type &pmc() {
       return *(PMC_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      PMC_IRQn, };
-
-   // Template:pmc_mk
 
    //! Default value for Low Voltage Detect Status And Control 1 register
    static constexpr uint32_t pmc_lvdsc1  = 
@@ -3343,6 +3602,12 @@ public:
       PMC_REGSC_BGBE(0);  // Bandgap Buffer Enable   
 
    #endif
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = PMC_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
 
@@ -3409,6 +3674,8 @@ public:
  */
 class SmcInfo {
 public:
+   // Template:smc_mk11d5
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = SMC_BasePtr;
 
@@ -3416,11 +3683,6 @@ public:
    __attribute__((always_inline)) static volatile SMC_Type &smc() {
       return *(SMC_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 0;
-
-   // Template:smc_mk11d5
 
    // Power Mode Protection Register
    static constexpr uint8_t pmprot =  
@@ -3471,6 +3733,8 @@ public:
  */
 class Spi0Info {
 public:
+   // Template:spi0_mk_pcsis6
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = SPI0_BasePtr;
 
@@ -3479,20 +3743,23 @@ public:
       return *(SPI_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      SPI0_IRQn, };
-
-   // Template:spi0_mk_pcsis6
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = true;
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = SPI0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
@@ -3605,6 +3872,8 @@ public:
  */
 class Uart0Info {
 public:
+   // Template:uart0_mk10d7_c7816
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = UART0_BasePtr;
 
@@ -3613,23 +3882,26 @@ public:
       return *(UART_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 2;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      UART0_RxTx_IRQn, UART0_Error_IRQn, };
-
-   // Template:uart0_mk10d7_c7816
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = UART0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -3728,6 +4000,8 @@ public:
  */
 class Uart1Info {
 public:
+   // Template:uart1_mk10d10
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = UART1_BasePtr;
 
@@ -3736,23 +4010,26 @@ public:
       return *(UART_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 2;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      UART1_RxTx_IRQn, UART1_Error_IRQn, };
-
-   // Template:uart1_mk10d10
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = UART1_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -3839,6 +4116,8 @@ public:
  */
 class Uart2Info {
 public:
+   // Template:uart1_mk10d10
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = UART2_BasePtr;
 
@@ -3847,23 +4126,26 @@ public:
       return *(UART_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 2;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      UART2_RxTx_IRQn, UART2_Error_IRQn, };
-
-   // Template:uart1_mk10d10
-
    //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = DEFAULT_PCR;
+   static constexpr uint32_t defaultPcrValue = 
+      PORT_PCR_LK(0) |    // Lock Register
+      PORT_PCR_DSE(0) |   // Drive Strength Enable
+      PORT_PCR_ODE(0) |   // Open Drain Enable
+      PORT_PCR_PFE(0) |   // Passive Filter Enable
+      PORT_PCR_SRE(0) |   // Slew Rate Enable
+      PORT_PCR_PS(0);     // Pull device
 
    //! Map all allocated pins on a peripheral when enabled
    static constexpr bool mapPinsOnEnable = false;
 
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = UART2_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
+
    //! Class based callback handler has been installed in vector table
-   static constexpr bool irqHandlerInstalled = (0 == 1);
+   static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
@@ -3959,6 +4241,8 @@ public:
  */
 class Usb0Info {
 public:
+   // Template:usb0_otg_c
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = USB0_BasePtr;
 
@@ -3967,17 +4251,14 @@ public:
       return *(USB_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
-   //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      USB0_IRQn, };
-
-   // Template:usb0_otg_c
-
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
+
+   //! IRQ numbers for hardware
+   static constexpr IRQn_Type irqNums[]  = USB0_IRQS;
+
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 1;
@@ -4046,31 +4327,32 @@ public:
  * @brief Abstraction for USB Device Charger Detection
  * @{
  */
-#define USBDM_USBDCD_IS_DEFINED
+#define USBDM_USBDCD0_IS_DEFINED
 /**
  * Peripheral information for USBDCD, USB Device Charger Detection.
  * 
  * This may include pin information, constants, register addresses, and default register values,
  * along with simple accessor functions.
  */
-class UsbdcdInfo {
+class Usbdcd0Info {
 public:
+   // Template:usbdcd0_v1_1
+
+   using USBHSDCD_Type = USBDCD_Type;
+
    //! Hardware base address as uint32_t 
-   static constexpr uint32_t baseAddress = USBDCD_BasePtr;
+   static constexpr uint32_t baseAddress = USBDCD0_BasePtr;
 
    //! Hardware base pointer
    __attribute__((always_inline)) static volatile USBDCD_Type &usbdcd() {
       return *(USBDCD_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
    //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      USBDCD_IRQn, };
+   static constexpr IRQn_Type irqNums[]  = USBDCD0_IRQS;
 
-   // Template:usbdcd_v1_1
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
@@ -4078,26 +4360,23 @@ public:
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
 
-   //! Base value for PCR (excluding MUX value)
-   static constexpr uint32_t defaultPcrValue  = 0;
-
    /** 
-    *  Enable clock to Usbdcd
+    *  Enable clock to Usbdcd0
     */
    static void enableClock() {
 #ifdef PCC
-      PccInfo::enableUsbdcdClock();
+      PccInfo::enableUsbdcd0Clock();
 #else
       SIM->SCGC6 |= SIM_SCGC6_USBDCD_MASK;
 #endif
    }
 
    /** 
-    *  Disable clock to Usbdcd
+    *  Disable clock to Usbdcd0
     */
    static void disableClock() {
 #ifdef PCC
-      PccInfo::disableUsbdcdClock();
+      PccInfo::disableUsbdcd0Clock();
 #else
       SIM->SCGC6 &= ~SIM_SCGC6_USBDCD_MASK;
 #endif
@@ -4123,6 +4402,8 @@ public:
  */
 class VrefInfo {
 public:
+   // Template:vref_c
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = VREF_BasePtr;
 
@@ -4130,11 +4411,6 @@ public:
    __attribute__((always_inline)) static volatile VREF_Type &vref() {
       return *(VREF_Type *)baseAddress;
    }
-
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 0;
-
-   // Template:vref_c
 
    //! Base value for PCR (excluding MUX value)
    static constexpr uint32_t defaultPcrValue  = 0;
@@ -4219,6 +4495,8 @@ public:
  */
 class WdogInfo {
 public:
+   // Template:wdog_mk
+
    //! Hardware base address as uint32_t 
    static constexpr uint32_t baseAddress = WDOG_BasePtr;
 
@@ -4227,20 +4505,31 @@ public:
       return *(WDOG_Type *)baseAddress;
    }
 
-   //! Number of IRQs for hardware
-   static constexpr uint32_t irqCount  = 1;
-
    //! IRQ numbers for hardware
-   static constexpr IRQn_Type irqNums[]  = {
-      WDOG_IRQn, };
+   static constexpr IRQn_Type irqNums[]  = WDOG_IRQS;
 
-   // Template:wdog_mk
+   //! Number of IRQs for hardware
+   static constexpr uint32_t irqCount  = sizeof(irqNums)/sizeof(irqNums[0]);
 
    //! Class based callback handler has been installed in vector table
    static constexpr bool irqHandlerInstalled = 0;
 
    //! Default IRQ level
    static constexpr uint32_t irqLevel =  8;
+
+   /**
+    * Get input clock frequency
+    *
+    * @return Input clock frequency as a uint32_t in Hz
+    */
+   static uint32_t getInputClockFrequency() {
+   
+      switch(wdog().STCTRLH&WDOG_STCTRLH_CLKSRC_MASK) {
+      default:
+      case WDOG_STCTRLH_CLKSRC(0): return SystemLpoClock; // LPO
+      case WDOG_STCTRLH_CLKSRC(1): return SystemBusClock; // Alt = System Bus Clock
+      }
+   }
 
 };
 
@@ -4275,8 +4564,8 @@ namespace USBDM {
  * @brief Abstraction for Analogue Input
  * @{
  */
-using Adc_p8               = const USBDM::Adc0Channel<19>;
-using Adc_p7               = const USBDM::Adc0Channel<0>;
+using Adc_p8               = const USBDM::Adc0::Channel<19>;
+using Adc_p7               = const USBDM::Adc0::Channel<0>;
 /** 
  * End group ADC_Group
  * @}
@@ -4286,8 +4575,8 @@ using Adc_p7               = const USBDM::Adc0Channel<0>;
  * @brief Abstraction for PWM, Input capture and Output compare
  * @{
  */
-using Ftm_p36              = const USBDM::Ftm0Channel<2>;
-using Ftm_p37              = const USBDM::Ftm0Channel<3>;
+using Ftm_p36              = const USBDM::Ftm0::Channel<2>;
+using Ftm_p37              = const USBDM::Ftm0::Channel<3>;
 /** 
  * End group FTM_Group
  * @}

@@ -170,6 +170,7 @@ public:
     * @param[in]  theCallback Callback function to execute on interrupt
     */
    static void setCallback(WDOGCallbackFunction theCallback) {
+      static_assert(Info::irqHandlerInstalled, "WDOG not configured for interrupts");
       if (theCallback == nullptr) {
          theCallback = unhandledCallback;
       }
@@ -181,7 +182,7 @@ public:
    /**
     * Basic enable WDOG.
     *
-    * Dummy function
+    * Dummy function as always clocked.
     */
    static void enable() {
    }
@@ -206,27 +207,47 @@ public:
    }
 
    /**
-    * Sets watchdog pre-scaler value.
+    * Sets watchdog pre-scaler and time-out value in ticks.
     * The watchdog clock is divided by this value to provide the prescaled WDOG_CLK
     *
-    * @param value [1.8]
+    * @param prescaler [1.8]
+    * @param ticks
     *
-    * @note This is a protected operation which requires unlock
+    * @note This is a protected operation which uses unlock
     */
-   static void setPrescaler(uint8_t value) {
-      wdog().PRESC = WDOG_PRESC_PRESCVAL(value-1);
+   static void setTimeout(uint8_t prescaler, unsigned ticks) {
+      // Disable interrupts while accessing watchdog
+      CriticalSection cs;
+      writeUnlock(WdogUnlock1, WdogUnlock2);
+      wdog().PRESC = WDOG_PRESC_PRESCVAL(prescaler-1);
+      wdog().TOVALH = ticks>>16;
+      wdog().TOVALL = ticks;
    }
 
    /**
-    * Sets the watchdog time-out value.
+    * Sets the watchdog time-out value in seconds.
     *
-    * @param value
+    * @param seconds
     *
-    * @note This is a protected operation which requires unlock
+    * @note This is a protected operation which uses unlock
+    * @note This adjusts both the prescaler and the timeout value.
     */
-   static void setTimeout(uint32_t value) {
-      wdog().TOVALH = value>>16;
-      wdog().TOVALL = value;
+   static ErrorCode setTimeout(float seconds) {
+      unsigned prescaler;
+      uint64_t timerValue;
+      uint32_t inputClockFreq = WdogInfo::getInputClockFrequency();
+
+      for (prescaler = 1; prescaler++; ) {
+         if (prescaler>8) {
+            return setErrorCode(E_TOO_LARGE);
+         }
+         timerValue = (uint64_t)((seconds*inputClockFreq)/prescaler);
+         if (timerValue <= 0xFFFF) {
+            break;
+         }
+      }
+      setTimeout(prescaler, timerValue);
+      return E_NO_ERROR;
    }
 
    /**
@@ -237,6 +258,9 @@ public:
     * @note This is a protected operation which requires unlock
     */
    static void setWindow(uint32_t value) {
+      // Disable interrupts while accessing watchdog
+      CriticalSection cs;
+      writeUnlock(WdogUnlock1, WdogUnlock2);
       wdog().WINH = value>>16;
       wdog().WINL = value;
    }
@@ -279,19 +303,39 @@ public:
    /**
     * Configure watchdog
     *
-    * @note This is a protected operation which requires unlock
+    * @note This is a protected operation which uses unlock
+    * @note Register changes after unlock is enabled
     */
    static __attribute__((always_inline)) void configure(
          WdogEnable        wdogEnable,
          WdogClock         wdogClock,
          WdogWindow        wdogWindow          = WdogWindow_Disabled,
          WdogInterrupt     wdogInterrupt       = WdogInterrupt_Disabled,
-         WdogAllowUpdate   wdogAllowUpdate     = WdogAllowUpdate_Enabled,
          WdogEnableInDebug wdogEnableInDebug   = WdogEnableInDebug_Disabled,
          WdogEnableInStop  wdogEnableInStop    = WdogEnableInStop_Disabled,
          WdogEnableInWait  wdogEnableInWait    = WdogEnableInWait_Disabled ) {
+
       enable();
-      wdog().STCTRLH = wdogEnable|wdogClock|wdogInterrupt|wdogWindow|wdogAllowUpdate|wdogEnableInDebug|wdogEnableInStop|wdogEnableInWait;
+
+      // Protect sequence from interrupts
+      CriticalSection cs;
+
+      // Unlock before changing settings
+      writeUnlock(WdogUnlock1, WdogUnlock2);
+
+      wdog().STCTRLH = wdogEnable|wdogClock|wdogInterrupt|wdogWindow|WdogAllowUpdate_Enabled|wdogEnableInDebug|wdogEnableInStop|wdogEnableInWait;
+   }
+
+   /**
+    * Lock watchdog register against further changes
+    */
+   static void lockRegisters() {
+      // Protect sequence from interrupts
+      CriticalSection cs;
+
+      // Unlock before changing settings
+      writeUnlock(WdogUnlock1, WdogUnlock2);
+      wdog().STCTRLH &= ~WDOG_STCTRLH_ALLOWUPDATE_MASK;
    }
 
    /**
@@ -334,6 +378,8 @@ public:
     * @note This is a protected operation which requires unlock
     */
    static void enableInterrupt(bool enable=true) {
+      // Protect sequence from interrupts
+      CriticalSection cs;
       if (enable) {
          wdog().STCTRLH |= WDOG_STCTRLH_IRQRSTEN_MASK;
       }

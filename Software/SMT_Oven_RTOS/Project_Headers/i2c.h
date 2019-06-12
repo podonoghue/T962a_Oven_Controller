@@ -288,10 +288,9 @@ public:
 
    /**
     * Enable interrupts in NVIC
-    * Any pending NVIC interrupts are first cleared.
     */
    static void enableNvicInterrupts() {
-      enableNvicInterrupt(Info::irqNums[0]);
+      NVIC_EnableIRQ(Info::irqNums[0]);
    }
 
    /**
@@ -400,7 +399,7 @@ public:
     *                     Use nullptr to remove callback.
     */
    static __attribute__((always_inline)) void setCallback(I2cCallbackFunction callback) {
-      usbdm_assert(Info::irqHandlerInstalled, "I2C not configured for interrupts");
+      static_assert(Info::irqHandlerInstalled, "I2C not configured for interrupts");
       if (callback == nullptr) {
          callback = I2c::unhandledCallback;
       }
@@ -514,6 +513,27 @@ using I2c1 = I2cBase_T<I2c1Info>;
  * Refer @ref I2cBase_T
  */
 using I2c2 = I2cBase_T<I2c2Info>;
+
+#if defined(USBDM_I2C3_IS_DEFINED)
+/**
+ * @brief Class representing the I2C2 interface
+ *
+ * <b>Example</b>
+ * Refer @ref I2cBase_T
+ */
+using I2c3 = I2cBase_T<I2c3Info>;
+#endif
+
+#if defined(USBDM_I2C4_IS_DEFINED)
+/**
+ * @brief Class representing the I2C4 interface
+ *
+ * <b>Example</b>
+ * Refer @ref I2cBase_T
+ */
+using I2c4 = I2cBase_T<I2c4Info>;
+#endif
+
 #endif
 
 /**

@@ -323,7 +323,7 @@ public:
     *                     Use nullptr to remove callback.
     */
    static void setCallback(CMPCallbackFunction callback) {
-      usbdm_assert(Info::irqHandlerInstalled, "CMP not configured for interrupts");
+      static_assert(Info::irqHandlerInstalled, "CMP not configured for interrupts");
       if (callback == nullptr) {
          callback = unhandledCallback;
       }
@@ -366,7 +366,7 @@ public:
       cmp().DACCR = Info::daccr;
       cmp().MUXCR = Info::muxcr;
 
-      enableNvicInterrupts();
+      enableNvicInterrupts(Info::irqLevel);
    }
 
    /**
@@ -648,10 +648,9 @@ public:
 
    /**
     * Enable interrupts in NVIC
-    * Any pending NVIC interrupts are first cleared.
     */
    static void enableNvicInterrupts() {
-      enableNvicInterrupt(Info::irqNums[0]);
+      NVIC_EnableIRQ(Info::irqNums[0]);
    }
 
    /**

@@ -21,7 +21,7 @@
 #include "derivative.h"
 #include "hardware.h"
 #include "formatted_io.h"
-#include "queue.h"
+#include "uart_queue.h"
 #ifdef __CMSIS_RTOS
 #include "cmsis.h"
 #endif
@@ -169,7 +169,7 @@ public:
    /**
     * Construct UART interface
     *
-    * @param[in]  lpuart Reference to UART hardware
+    * @param[in]  uart Reference to UART hardware
     */
    Uart(volatile UART_Type &uart) : uart(uart) {
    }
@@ -559,7 +559,6 @@ public:
 
    /**
     * Enable interrupts in NVIC
-    * Any pending NVIC interrupts are first cleared.
     */
    static void enableNvicInterrupts() {
       NVIC_EnableIRQ(Info::irqNums[0]);
@@ -750,11 +749,11 @@ public:
    /**
     * Queue for Buffered reception (if used)
     */
-   static Queue<char, rxSize> rxQueue;
+   static UartQueue<char, rxSize> rxQueue;
    /**
     * Queue for Buffered transmission (if used)
     */
-   static Queue<char, txSize> txQueue;
+   static UartQueue<char, txSize> txQueue;
 
 protected:
 
@@ -981,8 +980,8 @@ public:
    }
 };
 
-template<class Info, int rxSize, int txSize> Queue<char, rxSize> UartBuffered_T<Info, rxSize, txSize>::rxQueue;
-template<class Info, int rxSize, int txSize> Queue<char, txSize> UartBuffered_T<Info, rxSize, txSize>::txQueue;
+template<class Info, int rxSize, int txSize> UartQueue<char, rxSize> UartBuffered_T<Info, rxSize, txSize>::rxQueue;
+template<class Info, int rxSize, int txSize> UartQueue<char, txSize> UartBuffered_T<Info, rxSize, txSize>::txQueue;
 template<class Info, int rxSize, int txSize> volatile uint32_t   UartBuffered_T<Info, rxSize, txSize>::fReadLock  = 0;
 template<class Info, int rxSize, int txSize> volatile uint32_t   UartBuffered_T<Info, rxSize, txSize>::fWriteLock = 0;
 
