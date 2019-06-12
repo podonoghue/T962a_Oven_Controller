@@ -102,9 +102,6 @@ public class OvenCommunicationSerialPundit extends OvenCommunication {
       } catch (SerialComException e) {
          close();
          throw new OvenCommunicationException("Failed to open Oven serial port\nCheck serial port name", e); 
-      } catch (IOException e) {
-         close();
-         throw new OvenCommunicationException("Creation of Serial Communication Manager failed", e); 
       }
    }
 
